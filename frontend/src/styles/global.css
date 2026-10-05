@@ -1,0 +1,418 @@
+/*
+ * Global styles: the whole visual language of the site.
+ * Black text on white, one sans-serif face, no boxes, borders or buttons.
+ * The work supplies the color; the page stays out of the way.
+ */
+
+:root {
+  --ink: #000;
+  --paper: #fff;
+  --quiet: #8a8a8a;
+  --font: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+h1 {
+  font-size: inherit;
+  font-weight: 500;
+  margin: 0 0 0.25em;
+}
+
+p {
+  margin: 0 0 1em;
+}
+
+.quiet {
+  color: var(--quiet);
+}
+
+/* Form controls look like plain text. Buttons are words. */
+input,
+textarea,
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  outline: none;
+}
+
+button {
+  cursor: pointer;
+  margin-right: 1em;
+}
+
+button:hover {
+  text-decoration: underline;
+}
+
+.is-active {
+  color: var(--ink);
+  text-decoration: underline;
+}
+
+::placeholder {
+  color: var(--quiet);
+}
+
+/* ---- Page frame ---- */
+
+.site-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 16px;
+}
+
+.site-footer {
+  padding: 64px 16px 24px;
+}
+
+.page {
+  padding: 32px 16px 0;
+}
+
+.column {
+  max-width: 640px;
+  padding: 48px 16px 0;
+  margin: 0 auto;
+}
+
+.intro {
+  max-width: 520px;
+  margin-bottom: 32px;
+}
+
+/* ---- Home grid ---- */
+
+.tag-filter {
+  margin-bottom: 40px;
+}
+
+.tag-filter button {
+  color: var(--quiet);
+}
+
+.tag-filter button.is-key {
+  color: var(--ink);
+}
+
+.tag-filter button.is-active {
+  color: var(--ink);
+  text-decoration: underline;
+}
+
+/* Search, view size and sort, on one line that wraps on phones. */
+.browse-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 32px;
+  margin-bottom: 40px;
+}
+
+.search-field {
+  width: 220px;
+  max-width: 100%;
+  border-bottom: 1px solid transparent;
+}
+
+.search-field:focus {
+  border-bottom-color: var(--ink);
+}
+
+.search-field::-webkit-search-cancel-button {
+  display: none;
+}
+
+/* Rows view: one line per entry; columns line up on wide screens, wrap on phones. */
+.entry-row {
+  display: grid;
+  grid-template-columns: 100px minmax(0, 2fr) 90px minmax(0, 1fr);
+  gap: 16px;
+  padding: 6px 0;
+  transition: opacity 0.3s;
+}
+
+.entry-row:hover {
+  text-decoration: none;
+}
+
+.entry-row:hover .entry-row-title {
+  text-decoration: underline;
+}
+
+.entry-row.is-faded {
+  opacity: 0.15;
+}
+
+/* On phones, rows show just date and title. */
+@media (max-width: 640px) {
+  .entry-row {
+    grid-template-columns: 90px minmax(0, 1fr);
+  }
+
+  .entry-row > span:nth-child(n + 3) {
+    display: none;
+  }
+}
+
+/* Masonry: entries flow down columns. The size sets the narrowest a column may be. */
+.entry-grid {
+  column-gap: 40px;
+}
+
+.entry-grid-small {
+  columns: 140px;
+  column-gap: 24px;
+}
+
+.entry-grid-medium {
+  columns: 220px;
+}
+
+.entry-grid-large {
+  columns: 420px;
+}
+
+.entry-grid-small .entry-card {
+  margin-bottom: 28px;
+  font-size: 13px;
+}
+
+.entry-grid-small .entry-card-why {
+  display: none;
+}
+
+.entry-card {
+  display: block;
+  break-inside: avoid;
+  margin-bottom: 48px;
+  transition: opacity 0.3s;
+}
+
+.entry-card:hover {
+  text-decoration: none;
+}
+
+.entry-card:hover .entry-card-title {
+  text-decoration: underline;
+}
+
+.entry-card.is-faded {
+  opacity: 0.15;
+}
+
+.entry-cover {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-bottom: 10px;
+}
+
+.entry-card > span {
+  display: block;
+}
+
+/* "Why it's here", cut off after three lines in the grid. (Needs the extra
+   .entry-card so it beats the display: block rule above.) */
+.entry-card .entry-card-why {
+  margin-top: 4px;
+  font-size: 13px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ---- Entry page ---- */
+
+/* Pictures run down the page one after another, at full column width. */
+.media-series {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.media-view {
+  margin: 0;
+}
+
+.media-view img,
+.media-view video,
+.media-view iframe {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 0;
+}
+
+.media-view iframe {
+  aspect-ratio: 16 / 9;
+}
+
+.media-view figcaption {
+  margin-top: 6px;
+  font-size: 13px;
+}
+
+.wall-label {
+  margin-bottom: 24px;
+}
+
+.related {
+  margin-top: 48px;
+}
+
+.related p {
+  margin-bottom: 0.25em;
+}
+
+/* ---- Studio (owner) ---- */
+
+.entry-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 64px;
+}
+
+.entry-form input,
+.entry-form textarea {
+  width: 100%;
+  resize: vertical;
+}
+
+.entry-form label {
+  cursor: pointer;
+}
+
+.media-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.media-editor-item {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.media-editor-item img {
+  width: 96px;
+  height: auto;
+  flex-shrink: 0;
+}
+
+.media-editor-item > div {
+  flex: 1;
+}
+
+.tag-notes {
+  margin-top: 64px;
+}
+
+.tag-notes-row {
+  margin-bottom: 20px;
+}
+
+.tag-notes-row p {
+  margin-bottom: 4px;
+}
+
+.tag-notes-row textarea {
+  width: 100%;
+  resize: vertical;
+}
+
+.entry-index p {
+  margin-bottom: 0.4em;
+}
+
+/* ---- Crosshair cursor (see components/CrosshairCursor.tsx) ---- */
+
+/* With a mouse, hide the normal pointer everywhere except text fields. */
+@media (pointer: fine) {
+  html,
+  a,
+  button,
+  label {
+    cursor: none;
+  }
+
+  input,
+  textarea {
+    cursor: text;
+  }
+}
+
+/* The cursor is white, and "difference" blending inverts whatever is
+   beneath it: black on the white page, a negative over a photo. */
+.crosshair {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  pointer-events: none;
+  mix-blend-mode: difference;
+  opacity: 0;
+}
+
+.crosshair.is-visible {
+  opacity: 1;
+}
+
+.crosshair.is-over-text-field {
+  opacity: 0;
+}
+
+/* A small dot, centered on the mouse position. */
+.crosshair-shape {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: #fff;
+  transition:
+    width 0.15s ease,
+    height 0.15s ease;
+}
+
+/* Over something clickable: the dot grows a little, inverting more of what's under it. */
+.crosshair.is-over-clickable .crosshair-shape {
+  width: 16px;
+  height: 16px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crosshair-shape {
+    transition: none;
+  }
+}
