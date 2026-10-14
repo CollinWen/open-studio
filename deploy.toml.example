@@ -1,0 +1,22 @@
+# Every deploy setting in one place. Copy to deploy.toml (never committed) and fill in.
+# `python deploy.py` reads it and passes each value to Fly.io and Firebase.
+# Local development still uses backend/.env.
+
+[site]
+domain = "yourdomain.com"        # site at yourdomain.com, API at api., media at media.
+
+[fly]
+app = "open-studio-api"          # the name `fly launch` gave the backend
+
+[firebase]
+project = "open-studio-12345"    # Firebase project ID (console → Project settings)
+
+[r2]
+account_id = ""                  # Cloudflare dashboard → R2 → Account ID
+access_key_id = ""               # from the R2 API token
+secret_access_key = ""
+bucket = "open-studio-media"
+
+[secrets]
+owner_token = ""                 # your admin password; long and random
+openrouter_api_key = ""

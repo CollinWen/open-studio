@@ -1,0 +1,56 @@
+# Deploy: on every push to main, run the backend tests, then ship the backend
+# (Fly.io) and the site (Firebase) with deploy.py, exactly as a hand deploy would.
+#
+# GitHub secrets it needs (repo → Settings → Secrets and variables → Actions):
+#   DEPLOY_TOML                the whole deploy.toml file   (gh secret set DEPLOY_TOML < deploy.toml)
+#   FLY_API_TOKEN              from `flyctl tokens create deploy`
+#   FIREBASE_SERVICE_ACCOUNT   Firebase console → Project settings → Service accounts → Generate key
+
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:   # also runnable by hand from the Actions tab
+
+concurrency: deploy    # never two deploys at once
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - name: Backend tests
+        working-directory: backend
+        run: |
+          pip install -r requirements.txt
+          python -m pytest
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install frontend and deploy tools
+        run: |
+          npm ci --prefix frontend
+          npm install -g firebase-tools
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Write deploy settings and Firebase key
+        env:
+          DEPLOY_TOML: ${{ secrets.DEPLOY_TOML }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          printf '%s' "$DEPLOY_TOML" > deploy.toml
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/firebase-key.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/firebase-key.json" >> "$GITHUB_ENV"
+
+      - name: Deploy
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: python deploy.py

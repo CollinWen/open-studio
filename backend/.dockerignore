@@ -1,0 +1,8 @@
+# Kept out of the Fly.io container: secrets, local data, caches, tests.
+.env
+.venv
+data
+tests
+scripts
+**/__pycache__
+.pytest_cache

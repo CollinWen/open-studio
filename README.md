@@ -41,3 +41,24 @@ cd backend && .venv/Scripts/python scripts/seed_sample_entries.py
 ```
 
 Remove them again with `--remove`.
+
+## Deploying
+
+Backend on Fly.io, media in Cloudflare R2, site on Firebase Hosting, domain on Cloudflare.
+Every deploy setting and key lives in one file, `deploy.toml` (copy `deploy.toml.example`;
+never committed). Then:
+
+```bash
+python deploy.py
+```
+
+First-time account setup (R2 bucket, Fly volume, Firebase project, DNS) is in
+[backend/README.md](backend/README.md) and [frontend/README.md](frontend/README.md).
+
+**Automatic deploys:** every push to `main` runs the backend tests and then `deploy.py`
+([.github/workflows/deploy.yml](.github/workflows/deploy.yml)). It needs three GitHub secrets,
+listed at the top of that file. When you change `deploy.toml`, update the `DEPLOY_TOML` secret too.
+
+**Changing the data:** when a field is added to a `models.py`, add a step to
+`backend/app/database_migrations.py`. It runs once on the live database at the next deploy,
+right after a snapshot of the database is taken.

@@ -40,3 +40,20 @@ Requests to `/api` and `/media` are passed through to the backend on port 8000
 | `src/styles/global.css` | The entire visual style |
 
 Config files (`package.json`, `tsconfig.json`, `vite.config.ts`, `index.html`) are standard Vite + React setup.
+
+## Deploy (Firebase Hosting)
+
+`firebase.json` serves the built `dist/` folder and sends every URL to
+`index.html` so links like `/entry/12` work.
+
+```bash
+npm install -g firebase-tools
+firebase login
+```
+Put the Firebase project ID in `deploy.toml` at the repo root, then from the root:
+```bash
+python deploy.py frontend
+```
+It builds with `VITE_API_URL=https://api.<your domain>` and deploys.
+Then in the Firebase console: Hosting → Add custom domain → `yourdomain.com`,
+and add the records it shows in Cloudflare as **DNS only** (grey cloud).

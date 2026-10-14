@@ -12,7 +12,7 @@ What we're building is described in [open-studio-brief.md](../open-studio-brief.
 - **Links are the navigation (Zettelkasten-style).** Every view is a URL: entry pages, tag selection, search, view size and sort (`/?tag=bread&view=rows`). Anything a visitor can see should be reachable by a link, and pages should link to each other (tags, related entries) so you can wander between them.
 - **Controls are words, never icons.** "small · medium · large · rows", "recent · oldest · title". The current choice is underlined.
 - **Media is never altered.** Uploads are stored as the original file. Linked media (YouTube, Google Drive) is shown from where it lives, not copied. Deal with storage limits when they come.
-- **Hosting isn't decided yet** (likely Firebase, maybe AWS). Keep storage behind `backend/app/database.py` and `integrations/media_storage.py` so it can be swapped later.
+- **Hosting:** backend on Fly.io (SQLite on a persistent volume), uploaded media in Cloudflare R2, frontend on Firebase Hosting, domain and DNS on Cloudflare. Every deploy setting lives in `deploy.toml` (not committed); `deploy.py` pushes it out, by hand or from GitHub Actions on every push to `main`. Setup steps are in the backend and frontend READMEs. Keep storage behind `backend/app/database.py` and `integrations/media_storage.py` so it can be swapped later.
 
 ---
 
@@ -48,8 +48,11 @@ React frontend, Python backend, one repo.
 ```
 open-studio/
 ├── .claude/                  Agent guidelines (this file) + local run config
+├── .github/workflows/        deploy.yml: runs the tests and deploy.py on every push to main
 ├── open-studio-brief.md      Product brief: what we're building and why
 ├── README.md                 How to run it; map of the top-level folders
+├── deploy.py                 Ships backend (Fly.io) and frontend (Firebase) using deploy.toml
+├── deploy.toml.example       Every deploy setting and key in one file (copy to deploy.toml)
 │
 ├── backend/                  Python API (FastAPI + SQLite)
 │   ├── README.md
@@ -57,6 +60,7 @@ open-studio/
 │   │   ├── main.py           Starts the app, registers every feature's routes
 │   │   ├── config.py         Every setting read from backend/.env
 │   │   ├── database.py       Opens the database
+│   │   ├── database_migrations.py  Changes to existing tables (new fields), run once each on startup
 │   │   ├── auth/             Owner-token check for write requests
 │   │   ├── features/
 │   │   │   ├── entries/      Entries: storage, visibility, CRUD, enrichment (tags + embedding)
@@ -237,5 +241,6 @@ If a new concept needs a name, add it here.
 3. **Keep the map current.** If you add a folder or change what a folder holds, update this file's structure diagram and that area's README.
 4. **Ask before structural changes** (new top-level folders, new feature folders, new dependencies, changes to the data model in the brief).
 5. **Follow the brief's build phases.** Don't build phase 4 features while working on phase 1 unless asked.
-6. **Tests mirror the code.** Tests for `backend/app/features/tags/tag_suggester.py` live in `backend/tests/features/tags/test_tag_suggester.py`. Test file names say what they test. Tests never call OpenRouter.
-7. **Keep it minimal.** Before adding a feature, page, setting or style, ask whether the site works without it. If it does, leave it out or ask first.
+6. **New fields need a migration.** Adding or renaming a field in a `models.py` also needs a step at the end of `backend/app/database_migrations.py`, or the live database won't have it.
+7. **Tests mirror the code.** Tests for `backend/app/features/tags/tag_suggester.py` live in `backend/tests/features/tags/test_tag_suggester.py`. Test file names say what they test. Tests never call OpenRouter.
+8. **Keep it minimal.** Before adding a feature, page, setting or style, ask whether the site works without it. If it does, leave it out or ask first.

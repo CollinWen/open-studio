@@ -16,3 +16,9 @@ frontend/dist/
 # Personal editor/agent settings and OS files
 .claude/settings.local.json
 .DS_Store
+
+# Firebase deploy cache
+.firebase/
+
+# Deploy settings and keys (see deploy.toml.example)
+deploy.toml

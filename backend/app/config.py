@@ -39,11 +39,28 @@ class Settings:
     tag_model: str = os.environ.get("TAG_MODEL", "z-ai/glm-5.3-flash")
     embedding_model: str = os.environ.get("EMBEDDING_MODEL", "openai/text-embedding-3-small")
 
-    # Local storage: the database file and uploaded images.
+    # Local storage: the database file, and uploaded images when R2 isn't set up.
     data_dir: Path = Path(os.environ.get("DATA_DIR", BACKEND_DIR / "data"))
 
-    # Which website is allowed to call this API from a browser.
+    # Which websites may call this API from a browser. Comma-separated for several
+    # (e.g. your domain and the Firebase default address).
     frontend_origin: str = os.environ.get("FRONTEND_ORIGIN", "http://localhost:5173")
+
+    # Cloudflare R2 (production media storage). Leave empty to store uploads on disk.
+    r2_account_id: str = os.environ.get("R2_ACCOUNT_ID", "")
+    r2_access_key_id: str = os.environ.get("R2_ACCESS_KEY_ID", "")
+    r2_secret_access_key: str = os.environ.get("R2_SECRET_ACCESS_KEY", "")
+    r2_bucket: str = os.environ.get("R2_BUCKET", "")
+    # The bucket's public address, e.g. https://media.yourdomain.com
+    media_public_url: str = os.environ.get("MEDIA_PUBLIC_URL", "")
+
+    @property
+    def frontend_origins(self) -> list[str]:
+        return [origin.strip() for origin in self.frontend_origin.split(",") if origin.strip()]
+
+    @property
+    def r2_enabled(self) -> bool:
+        return bool(self.r2_account_id and self.r2_bucket and self.media_public_url)
 
     @property
     def database_path(self) -> Path:

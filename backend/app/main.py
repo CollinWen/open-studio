@@ -1,6 +1,7 @@
 """
 Entry point for the backend. Creates the app, registers every feature's
-routes under /api, and serves uploaded images under /media.
+routes under /api, and serves uploaded images under /media when they
+are stored on disk (local development; production uses R2).
 
 Run with:  uvicorn app.main:app --reload   (from the backend/ folder)
 """
@@ -22,7 +23,7 @@ app = FastAPI(title="Open Studio")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.frontend_origin],
+    allow_origins=settings.frontend_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
