@@ -20,10 +20,14 @@ import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
+REQUIRED_SECTIONS = ("site", "fly", "firebase", "r2", "secrets")
 
 
 def main() -> None:
     config = tomllib.loads((ROOT / "deploy.toml").read_text())
+    missing = [section for section in REQUIRED_SECTIONS if section not in config]
+    if missing:
+        sys.exit(f"deploy.toml is missing [{'], ['.join(missing)}] (compare with deploy.toml.example).")
     target = sys.argv[1] if len(sys.argv) > 1 else "all"
     if target == "secrets":
         send_fly_secrets(config, stage=False)
