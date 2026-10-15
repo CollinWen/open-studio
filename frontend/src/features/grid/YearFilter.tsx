@@ -1,26 +1,31 @@
 /**
- * YearFilter: the years that have entries, newest first, as a line of words
- * ("all 2026 2025 2024 …"). Picking one highlights that year's entries in
- * every view, and turns the sphere so that year's band faces you. "all"
- * clears it. The current pick is underlined.
+ * YearFilter: the years that have entries, newest first, as a line of words.
+ * Any number can be picked: each picked year turns into a pill, its entries
+ * are highlighted in every view, and the sphere turns to face the picked
+ * bands. Clicking a picked year again takes it out.
  */
 
 import { WordChoice } from "../../components/WordChoice";
 
 interface Props {
   years: string[];
-  activeYear: string | null;
-  onSelect: (year: string | null) => void;
+  pickedYears: string[];
+  onToggle: (year: string) => void;
 }
 
-export function YearFilter({ years, activeYear, onSelect }: Props) {
+export function YearFilter({ years, pickedYears, onToggle }: Props) {
   if (years.length < 2) return null;
 
   return (
     <nav className="word-list">
-      <WordChoice label="all" active={activeYear === null} onPick={() => onSelect(null)} />
       {years.map((year) => (
-        <WordChoice key={year} label={year} active={year === activeYear} onPick={() => onSelect(year)} />
+        <WordChoice
+          key={year}
+          label={year}
+          look="pill"
+          active={pickedYears.includes(year)}
+          onPick={() => onToggle(year)}
+        />
       ))}
     </nav>
   );

@@ -1,21 +1,27 @@
 /**
- * WordChoice: a control that is just a word. Soft ink until picked, then
- * full ink and underlined. Put several inside a `.word-list` to space them
- * evenly ("sphere small medium large rows").
+ * WordChoice: a control that is just a word. Soft ink until picked. Put
+ * several inside a `.word-list` to space them evenly.
  *
- * Used for every pick-one control: views, sorts, years, visibility, tag
- * importance.
+ * How a picked word looks depends on what it is:
+ * - "underline" (default) for modes, where one is always on: views, sorts,
+ *   visibility, tag importance.
+ * - "pill" for filters, which narrow what you see and can be cleared: tags
+ *   and years. The pill (ink background) makes it obvious something is on.
  */
 
 interface Props {
   label: string;
   active: boolean;
   onPick: () => void;
+  look?: "underline" | "pill";
+  /** Overrides the unpicked ink, e.g. key tags in full ink. */
+  className?: string;
 }
 
-export function WordChoice({ label, active, onPick }: Props) {
+export function WordChoice({ label, active, onPick, look = "underline", className = "quiet" }: Props) {
+  const picked = look === "pill" ? "pill" : "is-active";
   return (
-    <button type="button" className={active ? "is-active" : "quiet"} onClick={onPick}>
+    <button type="button" className={active ? picked : className} onClick={onPick}>
       {label}
     </button>
   );

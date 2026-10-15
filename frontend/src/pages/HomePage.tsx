@@ -2,7 +2,8 @@
  * HomePage ( / ): the whole collection, laid out as labeled rows. The intro
  * set large, the tags, the years, the browse controls (search, view, sort),
  * then the entries: on an orb by default, or as a grid or rows. A picked tag
- * or year highlights its entries in whichever view is showing.
+ * or years highlight their entries in whichever view is showing, and every
+ * active filter is listed as a pill beside the browse controls, ready to clear.
  *
  * Every choice lives in the URL (see useBrowseParams), so any view can be
  * shared or linked to. Selecting a tag swaps the intro for that tag's
@@ -16,6 +17,7 @@ import { fetchTags } from "../api/tagsApi";
 import { LabelRow } from "../components/LabelRow";
 import { SiteFooter } from "../components/SiteFooter";
 import { SiteHeader } from "../components/SiteHeader";
+import { ActiveFilters } from "../features/grid/ActiveFilters";
 import { BrowseControls } from "../features/grid/BrowseControls";
 import { EntryGrid } from "../features/grid/EntryGrid";
 import { EntryRows } from "../features/grid/EntryRows";
@@ -30,7 +32,7 @@ import type { Entry, Tag } from "../types/entry";
 const INTRO = "A working collection of things I make and things I'm curious about.";
 
 export function HomePage() {
-  const { tag, year, query, view, sort, defaultSort, setParam } = useBrowseParams();
+  const { tag, pickedYears, query, view, sort, defaultSort, setParam, toggleYear, clearParams } = useBrowseParams();
   const [entries, setEntries] = useState<Entry[] | null>(null);
   const [tags, setTags] = useState<Tag[]>([]);
 
@@ -48,8 +50,12 @@ export function HomePage() {
   // Kept stable between renders so the sphere doesn't rebuild on every hover.
   const shown = useMemo(() => entries && sortEntries(entries, sort), [entries, sort]);
 
-  const years = useMemo(() => [...new Set(entries?.map(yearOf))].sort().reverse(), [entries]);
-  const highlight = useMemo(() => ({ tag, year }), [tag, year]);
+  // Picked years stay listed even when a search leaves no entries from them, so they can be seen and cleared.
+  const years = useMemo(
+    () => [...new Set([...(entries?.map(yearOf) ?? []), ...pickedYears])].sort().reverse(),
+    [entries, pickedYears],
+  );
+  const highlight = useMemo(() => ({ tag, years: pickedYears }), [tag, pickedYears]);
 
   return (
     <>
@@ -62,12 +68,23 @@ export function HomePage() {
           <TagFilter tags={tags} activeTag={tag} onSelect={(name) => setParam("tag", name)} />
         </LabelRow>
         <LabelRow rule="single" label="Years">
-          <YearFilter years={years} activeYear={year} onSelect={(picked) => setParam("year", picked)} />
+          <YearFilter years={years} pickedYears={pickedYears} onToggle={toggleYear} />
         </LabelRow>
-        <LabelRow rule="single" label="View">
+        <LabelRow
+          rule="single"
+          label={
+            <ActiveFilters
+              tag={tag}
+              pickedYears={pickedYears}
+              query={query}
+              onToggleYear={toggleYear}
+              onClear={clearParams}
+            />
+          }
+        >
           <BrowseControls query={query} view={view} sort={sort} defaultSort={defaultSort} onChange={setParam} />
         </LabelRow>
-        <LabelRow rule="double" wide label="Index">
+        <LabelRow wide>
           {shown?.length === 0 && <p className="quiet">{query ? "Nothing matches that." : "Nothing here yet."}</p>}
           {shown && view === "sphere" && shown.length > 0 && <SphereView entries={shown} highlight={highlight} />}
           {shown && view === "rows" && <EntryRows entries={shown} highlight={highlight} />}

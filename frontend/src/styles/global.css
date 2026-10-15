@@ -160,6 +160,27 @@ button:hover {
   text-underline-offset: 0.18em;
 }
 
+/* A picked filter (tag, year, search): an ink pill, the one filled shape on
+   the page, so it is always clear what is narrowing the view. Clicking it
+   again clears it. */
+.pill {
+  margin: 0 -0.4em;
+  padding: 0 0.4em;
+  border-radius: 1em;
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* Two pills side by side keep the usual word gap between their edges. */
+.pill + .pill {
+  margin-left: 0.4em;
+}
+
+.pill:hover {
+  text-decoration: none;
+  background: var(--ink-soft);
+}
+
 ::placeholder {
   color: var(--ink-soft);
 }
@@ -195,9 +216,13 @@ button:hover {
 }
 
 /* Wide rows (the sphere, the grid of pictures) span all twelve columns,
-   under their label. */
+   under a label that may also run the full width (the active filters). */
+.label-row.is-wide .label-row-label,
 .label-row.is-wide .label-row-content {
   grid-column: 1 / -1;
+}
+
+.label-row.is-wide .label-row-content {
   margin-top: var(--line);
 }
 
@@ -286,18 +311,6 @@ button:hover {
 
 /* ---- Home grid ---- */
 
-.tag-filter button {
-  color: var(--ink-soft);
-}
-
-.tag-filter button.is-key {
-  color: var(--ink);
-}
-
-.tag-filter button.is-active {
-  color: var(--ink);
-  text-decoration: underline;
-}
 
 /* Search, view size and sort, on one line that wraps on phones. */
 .browse-controls {

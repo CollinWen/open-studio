@@ -21,7 +21,7 @@ Requests to `/api` and `/media` are passed through to the backend on port 8000
 
 | URL | File | What it shows |
 |---|---|---|
-| `/` | `pages/HomePage.tsx` | The whole collection. `?tag=` highlights a tag and shows its description, `?year=` highlights a year (and turns the sphere to it), `?q=` searches, `?view=small\|medium\|large\|rows` (default: the sphere), `?sort=oldest\|title\|relevance` |
+| `/` | `pages/HomePage.tsx` | The whole collection. `?tag=` highlights a tag and shows its description, `?year=2024,2022` highlights one or more years (and turns the sphere to them), `?q=` searches, `?view=small\|medium\|large\|rows` (default: the sphere), `?sort=oldest\|title\|relevance` |
 | `/entry/:id` | `pages/EntryPage.tsx` | One entry: media, wall label, tags, related entries |
 | `/about` | `pages/AboutPage.tsx` | The welcome text |
 | `/sketch` | `pages/SketchPage.tsx` | Scratch page, not linked: home-page ideas on the real collection. `?sketch=hover\|threads\|kinship`, `?size=`, `?gap=` |
@@ -32,7 +32,7 @@ Requests to `/api` and `/media` are passed through to the backend on port 8000
 | Path | What it does |
 |---|---|
 | `src/pages/` | One file per URL |
-| `src/features/grid/` | Home page browsing: the sphere view (`SphereView`, with `sphereLayout` for where things sit and `sphereMotion` for turning and perspective), grid and rows views, cards, the tag and year lines, search/view/sort controls, `entryHighlight` (which entries fade when a tag or year is picked), and `useBrowseParams` (all of it kept in the URL) |
+| `src/features/grid/` | Home page browsing: the sphere view (`SphereView`, with `sphereLayout` for where things sit and `sphereMotion` for turning and perspective), grid and rows views, cards, the tag and year lines, `ActiveFilters` (pills for every active filter, beside the browse controls), search/view/sort controls, `entryHighlight` (which entries fade when a tag or year is picked), and `useBrowseParams` (all of it kept in the URL) |
 | `src/features/entries/` | Pieces of the entry page (wall label, the full series of pictures and videos, tags, related) |
 | `src/features/sketches/` | The sketch page's experiments: a justified contact sheet (`justifyRows`), threads between related entries (`LinkLines`, `relatedLinks`) |
 | `src/features/studio/` | The owner's form: paste-a-link capture, the media list (cover, captions, uploads), the entry list, and tag notes (description + importance) |

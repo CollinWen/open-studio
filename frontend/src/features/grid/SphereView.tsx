@@ -2,8 +2,8 @@
  * SphereView: the "sphere" view, the home page's default. Every entry's
  * cover picture floats on the surface of one orb, in time order: newest at
  * the top, oldest at the bottom, so each year is a band around it. The orb
- * turns slowly; drag to spin it. Picking a year (the Year row) turns that
- * year's band to face you and fades the rest; picking a tag fades what
+ * turns slowly; drag to spin it. Picking years (the Years row) turns the
+ * middle of their bands to face you and fades the rest; picking a tag fades what
  * doesn't match. Hovering a picture holds it still, enlarges it, dims the
  * rest and shows its title and date; clicking opens the entry. Entries with
  * no picture float as their title.
@@ -95,8 +95,9 @@ export function SphereView({ entries, highlight }: Props) {
       const width = stage.clientWidth;
       const height = stage.clientHeight;
       const baseSize = Math.min(120, Math.max(36, (Math.min(width, height) * 0.5) / Math.sqrt(points.length)));
-      const pickedYear = highlightRef.current.year;
-      const bandHeight = pickedYear === null ? undefined : yearHeights.get(pickedYear);
+      const bandHeights = highlightRef.current.years.flatMap((year) => yearHeights.get(year) ?? []);
+      const bandHeight =
+        bandHeights.length === 0 ? undefined : bandHeights.reduce((sum, h) => sum + h, 0) / bandHeights.length;
       spin.tiltTarget = bandHeight === undefined ? null : tiltFacing(bandHeight);
       stepSpin(spin, hoveredRef.current !== null || drag.active, drag.active, calm);
       spin.lean += (leanTarget - spin.lean) * 0.04;
