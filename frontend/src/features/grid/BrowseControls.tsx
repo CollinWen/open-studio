@@ -1,11 +1,13 @@
 /**
  * BrowseControls: one quiet line above the grid. A search field, then the
- * view sizes (small · medium · large · rows), then the sort orders, all as
- * plain words. The current choice is underlined.
+ * views (sphere · small · medium · large · rows), then the sort orders, all
+ * as plain words. The current choice is underlined. The sphere arranges
+ * entries by year on its own, so sorting is hidden there.
  */
 
 import { useEffect, useState } from "react";
-import { SORTS, VIEWS, type Sort, type View } from "./useBrowseParams";
+import { WordChoice } from "../../components/WordChoice";
+import { DEFAULT_VIEW, SORTS, VIEWS, type Sort, type View } from "./useBrowseParams";
 
 interface Props {
   query: string;
@@ -43,24 +45,28 @@ export function BrowseControls({ query, view, sort, defaultSort, onChange }: Pro
         value={typed}
         onChange={(event) => setTyped(event.target.value)}
       />
-      <span>
+      <span className="word-list">
         {VIEWS.map((option) => (
-          <Choice key={option} label={option} active={option === view} onPick={() => onChange("view", option === "medium" ? null : option)} />
+          <WordChoice
+            key={option}
+            label={option}
+            active={option === view}
+            onPick={() => onChange("view", option === DEFAULT_VIEW ? null : option)}
+          />
         ))}
       </span>
-      <span>
-        {sorts.map((option) => (
-          <Choice key={option} label={option} active={option === sort} onPick={() => onChange("sort", option === defaultSort ? null : option)} />
-        ))}
-      </span>
+      {view !== "sphere" && (
+        <span className="word-list">
+          {sorts.map((option) => (
+            <WordChoice
+              key={option}
+              label={option}
+              active={option === sort}
+              onPick={() => onChange("sort", option === defaultSort ? null : option)}
+            />
+          ))}
+        </span>
+      )}
     </div>
-  );
-}
-
-function Choice({ label, active, onPick }: { label: string; active: boolean; onPick: () => void }) {
-  return (
-    <button type="button" className={active ? "is-active" : "quiet"} onClick={onPick}>
-      {label}
-    </button>
   );
 }

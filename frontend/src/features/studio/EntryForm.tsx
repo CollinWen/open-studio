@@ -11,6 +11,7 @@
 
 import { useState } from "react";
 import { createEntry, updateEntry } from "../../api/entriesApi";
+import { WordChoice } from "../../components/WordChoice";
 import type { CapturedLink, Entry, EntryDraft, Visibility } from "../../types/entry";
 import { LinkCaptureField } from "./LinkCaptureField";
 import { MediaListEditor } from "./MediaListEditor";
@@ -82,24 +83,26 @@ export function EntryForm({ editing, onSaved, onCancel }: Props) {
       />
       <input placeholder="source name" value={draft.source_name} onChange={(e) => set("source_name", e.target.value)} />
       <input placeholder="source url" value={draft.source_url} onChange={(e) => set("source_url", e.target.value)} />
-      <input placeholder="tags, comma separated (blank = suggest)" value={tagText} onChange={(e) => setTagText(e.target.value)} />
+      <input
+        placeholder="tags, comma separated (blank = suggest)"
+        value={tagText}
+        onChange={(e) => setTagText(e.target.value)}
+      />
 
       <MediaListEditor media={draft.media} onChange={(media) => set("media", media)} />
 
-      <p>
+      <p className="word-list">
         {VISIBILITIES.map((visibility) => (
-          <button
+          <WordChoice
             key={visibility}
-            type="button"
-            className={draft.visibility === visibility ? "is-active" : "quiet"}
-            onClick={() => set("visibility", visibility)}
-          >
-            {visibility}
-          </button>
+            label={visibility}
+            active={draft.visibility === visibility}
+            onPick={() => set("visibility", visibility)}
+          />
         ))}
       </p>
 
-      <p>
+      <p className="word-list">
         <button type="submit">save</button>
         <button type="button" className="quiet" onClick={onCancel}>
           cancel

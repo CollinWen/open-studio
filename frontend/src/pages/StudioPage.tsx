@@ -10,6 +10,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { fetchEntries } from "../api/entriesApi";
 import { forgetOwnerToken, readOwnerToken } from "../api/ownerToken";
+import { LabelRow } from "../components/LabelRow";
 import { SiteHeader } from "../components/SiteHeader";
 import { EntryForm } from "../features/studio/EntryForm";
 import { EntryIndex } from "../features/studio/EntryIndex";
@@ -50,8 +51,10 @@ export function StudioPage() {
     return (
       <>
         <SiteHeader />
-        <main className="column">
-          <OwnerTokenForm onSaved={() => setHasToken(true)} />
+        <main>
+          <LabelRow rule="double" label="Studio">
+            <OwnerTokenForm onSaved={() => setHasToken(true)} />
+          </LabelRow>
         </main>
       </>
     );
@@ -70,25 +73,31 @@ export function StudioPage() {
           leave
         </button>
       </SiteHeader>
-      <main className="column">
-        <EntryForm
-          key={editing?.id ?? `new-${formKey}`}
-          editing={editing}
-          onSaved={() => {
-            resetForm();
-            reload();
-          }}
-          onCancel={resetForm}
-        />
-        <EntryIndex
-          entries={entries}
-          onEdit={(entry) => {
-            setEditing(entry);
-            window.scrollTo(0, 0);
-          }}
-          onChanged={reload}
-        />
-        <TagNotesEditor key={entries.length} />
+      <main>
+        <LabelRow rule="double" label={editing ? "Edit" : "Add"}>
+          <EntryForm
+            key={editing?.id ?? `new-${formKey}`}
+            editing={editing}
+            onSaved={() => {
+              resetForm();
+              reload();
+            }}
+            onCancel={resetForm}
+          />
+        </LabelRow>
+        <LabelRow rule="single" label="Entries">
+          <EntryIndex
+            entries={entries}
+            onEdit={(entry) => {
+              setEditing(entry);
+              window.scrollTo(0, 0);
+            }}
+            onChanged={reload}
+          />
+        </LabelRow>
+        <LabelRow rule="single" label="Tags">
+          <TagNotesEditor key={entries.length} />
+        </LabelRow>
       </main>
     </>
   );

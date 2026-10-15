@@ -23,11 +23,11 @@ export function EntryIndex({ entries, onEdit, onChanged }: Props) {
   return (
     <section className="entry-index">
       {entries.map((entry) => (
-        <p key={entry.id}>
-          <Link to={`/entry/${entry.id}`}>{entry.title}</Link>{" "}
+        <p key={entry.id} className="word-list">
+          <Link to={`/entry/${entry.id}`}>{entry.title}</Link>
           <span className="quiet">
             {entry.visibility} · {entry.tags.join(", ") || "no tags"}
-          </span>{" "}
+          </span>
           <button type="button" className="quiet" onClick={() => onEdit(entry)}>
             edit
           </button>

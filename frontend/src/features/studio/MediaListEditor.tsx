@@ -43,7 +43,7 @@ export function MediaListEditor({ media, onChange }: Props) {
       {media.map((item, index) => (
         <div key={`${item.url}-${index}`} className="media-editor-item">
           <img src={item.thumbnail_url || item.url} alt="" />
-          <div>
+          <div className="word-list">
             <span className="quiet">{index === 0 ? "cover" : item.type}</span>
             <input placeholder="caption" value={item.caption} onChange={(e) => setCaption(index, e.target.value)} />
             {index > 0 && (

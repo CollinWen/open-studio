@@ -16,7 +16,7 @@ export function TagFilter({ tags, activeTag, onSelect }: Props) {
   if (tags.length === 0) return null;
 
   return (
-    <nav className="tag-filter">
+    <nav className="tag-filter word-list">
       {tags.map((tag) => {
         const classes = [tag.importance === 1 && "is-key", tag.name === activeTag && "is-active"].filter(Boolean);
         return (

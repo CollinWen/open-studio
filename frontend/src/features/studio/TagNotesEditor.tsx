@@ -6,6 +6,7 @@
 
 import { useEffect, useState } from "react";
 import { fetchTags, saveTagNotes } from "../../api/tagsApi";
+import { WordChoice } from "../../components/WordChoice";
 import type { Tag, TagImportance } from "../../types/entry";
 
 const IMPORTANCE_LABELS: [TagImportance, string][] = [
@@ -25,7 +26,6 @@ export function TagNotesEditor() {
 
   return (
     <section className="tag-notes">
-      <p className="quiet">tags</p>
       {tags.map((tag) => (
         <TagNotesRow key={tag.name} tag={tag} />
       ))}
@@ -50,20 +50,20 @@ function TagNotesRow({ tag }: { tag: Tag }) {
 
   return (
     <div className="tag-notes-row">
-      <p>
-        {tag.name} <span className="quiet">{tag.count}</span>{" "}
+      <p className="word-list">
+        <span>
+          {tag.name} <span className="quiet">{tag.count}</span>
+        </span>
         {IMPORTANCE_LABELS.map(([value, label]) => (
-          <button
+          <WordChoice
             key={label}
-            type="button"
-            className={importance === value ? "is-active" : "quiet"}
-            onClick={() => {
+            label={label}
+            active={importance === value}
+            onPick={() => {
               setImportance(value);
               save({ description, importance: value });
             }}
-          >
-            {label}
-          </button>
+          />
         ))}
         <span className="quiet">{status}</span>
       </p>

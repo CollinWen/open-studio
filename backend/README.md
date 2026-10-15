@@ -14,6 +14,16 @@ cp .env.example .env     # then fill in OWNER_TOKEN and OPENROUTER_API_KEY
 Without an OpenRouter key everything still works, but new entries get no
 suggested tags, and "Related" falls back to matching shared tags.
 
+## Demo data (local only)
+
+Local runs use made-up entries; the real collection lives on Fly. To wipe the
+local database and refill it:
+
+```bash
+.venv/Scripts/python scripts/seed_demo_entries.py             # with embeddings, so Related is by meaning
+.venv/Scripts/python scripts/seed_demo_entries.py --offline   # without OpenRouter
+```
+
 ## Run
 
 ```bash
@@ -45,7 +55,7 @@ API docs appear at http://localhost:8000/docs.
 | `app/features/media/` | Image and video uploads, stored as the original file (on disk locally, in Cloudflare R2 in production) |
 | `app/integrations/` | Thin wrappers around OpenRouter (LLM, embeddings) and file storage |
 | `app/integrations/link_readers/` | One reader per site, chosen in `read_link.py`. YouTube (title, channel, upload date, description; no API key), Google Drive (full-resolution photo, date taken from EXIF; file must be shared "Anyone with the link"), GitHub (repo details), Instagram (caption, author, picture; the picture link expires after a few weeks), X (post text, author, date; no pictures), and any other page (link-preview tags). |
-| `scripts/` | Hand-run tools. `seed_sample_entries.py` adds (or `--remove`s) a dozen made-up entries with generated images. |
+| `scripts/` | Hand-run tools. `seed_demo_entries.py` wipes the **local** data and fills it with ~120 made-up entries (`demo_entries.py`) covering every source type, with generated pictures (`sample_images.py`). Refuses to run when R2 is configured. |
 | `data/` | Created on first run: `studio.db` and uploaded `media/`. Not committed. |
 
 Empty `__init__.py` files only mark folders as Python packages.

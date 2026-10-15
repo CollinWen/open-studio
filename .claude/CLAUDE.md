@@ -6,11 +6,11 @@ What we're building is described in [open-studio-brief.md](../open-studio-brief.
 
 ### Current direction (where we differ from the brief)
 
-- **The home page is a grid** (masonry, newest first), as in the brief. A free-form canvas/map was tried and dropped.
+- **The home page opens on the sphere view**: every entry's picture floats on the surface of one orb in time order, newest at the top and oldest at the bottom, so each year is a band. It turns slowly and can be dragged. A Years row ("all 2026 2025 …", `?year=`) highlights a year in every view and turns the orb so that band faces you. The masonry grid (newest first) and rows are one click away. (A free-form canvas/map and an ink-blot view were tried and dropped.)
 - **The subject → project → session hierarchy is on hold.** Structure comes from LLM tags (filtering) and embeddings ("Related") for now. Don't add subjects, projects, sessions or lenses until the owner asks.
-- **Design: raw and minimal.** One sans-serif face, black text on white. No boxes, borders, cards, shadows, icons or button styling. Controls are plain words. Color comes only from the work itself (images and video). All styling lives in `frontend/src/styles/global.css`. Don't add a CSS framework or component library.
-- **Links are the navigation (Zettelkasten-style).** Every view is a URL: entry pages, tag selection, search, view size and sort (`/?tag=bread&view=rows`). Anything a visitor can see should be reachable by a link, and pages should link to each other (tags, related entries) so you can wander between them.
-- **Controls are words, never icons.** "small · medium · large · rows", "recent · oldest · title". The current choice is underlined.
+- **Design: a Swiss page grid, after Müller-Brockmann's "Grid Systems".** A 12-column grid inside generous margins; every page is a stack of labeled rows (`components/LabelRow.tsx`): a quiet label hangs in columns 1–3, content starts at column 4, wide rows (the sphere, the picture grid) span all 12. One line of body text is the unit for all vertical space, and the column gutter is one line too. Pictures span whole columns (masonry column counts divide 12). Rules run the full width of the screen: a double rule for major breaks (under the header, before the work, before the footer), a single hairline for minor ones; no vertical rules. One typeface, Inter (self-hosted), in few sizes; hierarchy comes from size, ink strength (full, soft) and space, never extra colors. Dark ink on a warm off-white paper. No boxes, cards, shadows, icons or button styling. Controls are plain words: a line of words is always a `.word-list`, and a pick-one word is always `components/WordChoice.tsx`. Labels use the small size, the site name the large one. Color comes only from the work itself. All styling lives in `frontend/src/styles/global.css`, with the tokens at the top; change the look through those tokens, never one-off sizes or spacing in a component. Don't add a CSS framework or component library.
+- **Links are the navigation (Zettelkasten-style).** Every view is a URL: entry pages, tag selection, search, view and sort (`/?tag=bread&view=rows`). Anything a visitor can see should be reachable by a link, and pages should link to each other (tags, related entries) so you can wander between them.
+- **Controls are words, never icons.** "sphere · small · medium · large · rows", "recent · oldest · title". The current choice is underlined.
 - **Media is never altered.** Uploads are stored as the original file. Linked media (YouTube, Google Drive) is shown from where it lives, not copied. Deal with storage limits when they come.
 - **Hosting:** backend on Fly.io (SQLite on a persistent volume), uploaded media in Cloudflare R2, frontend on Firebase Hosting, domain and DNS on Cloudflare. Every deploy setting lives in `deploy.toml` (not committed); `deploy.py` pushes it out, by hand or from GitHub Actions on every push to `main`. Setup steps are in the backend and frontend READMEs. Keep storage behind `backend/app/database.py` and `integrations/media_storage.py` so it can be swapped later.
 
@@ -71,7 +71,7 @@ open-studio/
 │   │   │   └── media/        Image/video upload
 │   │   └── integrations/     OpenRouter (LLM, embeddings), file storage. One file each.
 │   │       └── link_readers/ One reader per site (YouTube, Google Drive, GitHub, Instagram, X) + a general webpage reader
-│   ├── scripts/              One-off tools run by hand (e.g. seed sample entries)
+│   ├── scripts/              One-off tools run by hand (e.g. wipe local data and seed ~120 demo entries)
 │   └── tests/                Mirrors app/ folder-for-folder
 │
 ├── frontend/                 React + TypeScript (Vite dev server)
@@ -79,12 +79,13 @@ open-studio/
 │   └── src/
 │       ├── main.tsx          Mounts the app
 │       ├── App.tsx           Route table: which URL shows which page
-│       ├── pages/            One file per URL (HomePage, EntryPage, AboutPage, StudioPage)
+│       ├── pages/            One file per URL (HomePage, EntryPage, AboutPage, StudioPage, SketchPage)
 │       ├── features/
-│       │   ├── grid/         Home page browsing: grid/rows views, cards, tag line, search/view/sort controls, URL state
+│       │   ├── grid/         Home page browsing: sphere/grid/rows views, cards, tag and year lines, search/view/sort controls, the shared highlight rule, URL state
 │       │   ├── entries/      Pieces of the entry page (wall label, media series, tags, related)
-│       │   └── studio/       Owner-only form, link capture, media list editor, entry list, tag notes
-│       ├── components/       Site-wide pieces with no knowledge of our data (SiteHeader, SiteFooter, CrosshairCursor)
+│       │   ├── studio/       Owner-only form, link capture, media list editor, entry list, tag notes
+│       │   └── sketches/     Scratch: home-page ideas tried on real data at /sketch (contact sheet + threads). Delete when one graduates.
+│       ├── components/       Site-wide pieces with no knowledge of our data (LabelRow, WordChoice, SiteHeader, SiteFooter, CrosshairCursor)
 │       ├── api/              Every call to the backend, one file per area
 │       ├── types/            Shared data shapes, matching the backend schemas
 │       └── styles/           global.css: the entire visual style
@@ -214,7 +215,10 @@ Use these words exactly, in file names, function names, database tables, API rou
 | **Visibility** | `private`, `unlisted` or `public`. |
 | **Related** | Entries found by embedding similarity. |
 | **Embedding** | An entry's meaning as a list of numbers. Computed from title, description, kind, source and tags. |
-| **Grid** | The home page: every public entry as a card, newest first. |
+| **Grid** | Every public entry as a card, newest first. One of the home page's views. |
+| **Sphere** | The home page's default view: entries' pictures floating on one orb, newest at the top, oldest at the bottom. |
+| **Band** | One year's ring of entries around the sphere. |
+| **Highlight** | A picked tag or year: matching entries stand out, the rest fade (`grid/entryHighlight.ts`). |
 | **Studio page** | The owner's hidden admin page at `/studio`. |
 | **Owner token** | The admin password (`OWNER_TOKEN` in `backend/.env`). |
 | **Entry link** | A manual connection between two entries. |

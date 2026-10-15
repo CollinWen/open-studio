@@ -8,6 +8,7 @@ import { CrosshairCursor } from "./components/CrosshairCursor";
 import { AboutPage } from "./pages/AboutPage";
 import { EntryPage } from "./pages/EntryPage";
 import { HomePage } from "./pages/HomePage";
+import { SketchPage } from "./pages/SketchPage";
 import { StudioPage } from "./pages/StudioPage";
 
 export function App() {
@@ -19,6 +20,7 @@ export function App() {
         <Route path="/entry/:id" element={<EntryPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/studio" element={<StudioPage />} />
+        <Route path="/sketch" element={<SketchPage />} />
       </Routes>
     </BrowserRouter>
   );
