@@ -116,4 +116,5 @@ Add the DNS records it prints in Cloudflare, set to **DNS only** (grey cloud).
 
 Later deploys happen on every push to `main` (see the root README), or by hand with
 `python deploy.py backend`, which first snapshots the database volume. Logs: `fly logs`. Fly snapshots the volume daily;
-`fly ssh sftp get /data/studio.db` copies the database to your computer.
+`fly ssh sftp get /data/studio.db` copies the database to your computer (also copy
+`/data/studio.db-wal` if it exists: the database runs in WAL mode, and recent writes can still be in that file).
