@@ -6,7 +6,7 @@ and what it gets back. The embedding is never sent to the browser.
 from datetime import datetime, timezone
 from typing import Annotated, Literal
 
-from pydantic import AfterValidator, BaseModel
+from pydantic import AfterValidator, BaseModel, ConfigDict
 
 Visibility = Literal["private", "unlisted", "public"]
 
@@ -62,6 +62,9 @@ class EntryUpdate(BaseModel):
 
 
 class EntryOut(BaseModel):
+    # Built straight from a stored Entry (routes and the agent server's tools).
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     title: str
     description: str

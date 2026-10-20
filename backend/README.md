@@ -53,6 +53,7 @@ API docs appear at http://localhost:8000/docs.
 | `app/features/related/` | Finds the entries closest in meaning to a given one (shared tags as fallback) |
 | `app/features/search/` | `GET /api/search?q=` — ranks entries by meaning (embeddings) and boosts plain word matches; text-only without an OpenRouter key |
 | `app/features/media/` | Image and video uploads, stored as the original file (on disk locally, in Cloudflare R2 in production) |
+| `app/agent_server/` | The studio as an MCP server at `/mcp`, for agents: read tools (interests, search, recent changes, related) and write tools (add, improve). Same rules as the web routes. How agents should use it: `skills/open-studio/SKILL.md`. |
 | `app/integrations/` | Thin wrappers around OpenRouter (LLM, embeddings) and file storage |
 | `app/integrations/link_readers/` | One reader per site, chosen in `read_link.py`. YouTube (title, channel, upload date, description; no API key), Google Drive (full-resolution photo, date taken from EXIF; file must be shared "Anyone with the link"), GitHub (repo details), Instagram (caption, author, picture; the picture link expires after a few weeks), X (post text, author, date; no pictures), and any other page (link-preview tags). |
 | `scripts/` | Hand-run tools. `seed_demo_entries.py` wipes the **local** data and fills it with ~120 made-up entries (`demo_entries.py`) covering every source type, with generated pictures (`sample_images.py`). Refuses to run when R2 is configured. |
@@ -66,6 +67,20 @@ Empty `__init__.py` files only mark folders as Python packages.
 body like `{"title": "...", "description": "...", "source_url": "..."}`.
 The iOS share extension in `ios/` does this. To reach the backend from a phone on
 the same Wi-Fi while testing, run uvicorn with `--host 0.0.0.0`.
+
+## Agents
+
+Other programs can be given their own token: `AGENT_TOKENS=scout=<token>,archivist=<token>`
+in `.env` (or an `[agents]` section in `deploy.toml`). An agent can read the studio and add
+entries, through the MCP server at `/mcp` or the same HTTP endpoints. Its entries arrive
+**unlisted** and signed (`added_by: agent:scout`); publish the ones you want from the studio
+page. Agents can't publish, delete, or edit your entries, can't add a link that's already
+there, and can make `AGENT_WRITES_PER_HOUR` writes an hour (default 60).
+
+```bash
+claude mcp add --transport http open-studio http://localhost:8000/mcp \
+    --header "Authorization: Bearer <agent token>"
+```
 
 ## Deploy (Fly.io + Cloudflare R2)
 

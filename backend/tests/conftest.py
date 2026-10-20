@@ -5,6 +5,7 @@ Must run before the app is imported, which is why it sets environment variables 
 """
 
 import os
+from collections.abc import Iterator
 import tempfile
 
 os.environ["DATA_DIR"] = tempfile.mkdtemp(prefix="open-studio-test-")
@@ -32,3 +33,11 @@ def fresh_agent_write_limits():
 @pytest.fixture
 def client() -> TestClient:
     return TestClient(app)
+
+
+@pytest.fixture(scope="session")
+def running_client() -> Iterator[TestClient]:
+    """A client with the app's startup run, which the agent server (/mcp) needs.
+    The agent server can only start once per process, hence one shared client."""
+    with TestClient(app) as started:
+        yield started

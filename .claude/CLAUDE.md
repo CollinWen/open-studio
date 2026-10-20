@@ -69,6 +69,7 @@ open-studio/
 │   │   │   ├── related/      Closest entries by meaning (shared tags as fallback)
 │   │   │   ├── search/       Search by meaning (embeddings) + plain word matches
 │   │   │   └── media/        Image/video upload
+│   │   ├── agent_server/     The studio as an MCP server (/mcp) for agents: read tools, write tools
 │   │   └── integrations/     OpenRouter (LLM, embeddings), file storage. One file each.
 │   │       └── link_readers/ One reader per site (YouTube, Google Drive, GitHub, Instagram, X) + a general webpage reader
 │   ├── scripts/              One-off tools run by hand (e.g. wipe local data and seed ~120 demo entries)
@@ -89,6 +90,8 @@ open-studio/
 │       ├── api/              Every call to the backend, one file per area
 │       ├── types/            Shared data shapes, matching the backend schemas
 │       └── styles/           global.css: the entire visual style
+│
+├── skills/open-studio/       SKILL.md: how an agent researches for and adds to a studio over MCP
 │
 └── ios/                      iPhone share-sheet extension + one-screen setup app (Swift)
     ├── README.md             How to build it on a Mac and get it onto a phone
@@ -124,6 +127,7 @@ routes  →  service  →  models / integrations
 
 - Routes never touch the database or outside services directly.
 - A feature reads another feature's data through that feature's **service** (related and tags both go through `entries/service.py`). It may reuse another feature's **schemas** as response shapes, and small pure helpers (search uses `related/similarity.py`). It never queries another feature's tables.
+- `agent_server/` is a second front door beside the routes, for agents (MCP). Its tools are like routes: they call feature services and never decide visibility or write SQL themselves.
 - Integrations know nothing about our features. `llm_client.py` doesn't know what an entry is. Prompts live with the feature that uses them.
 
 ### Frontend: same idea
