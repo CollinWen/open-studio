@@ -13,7 +13,9 @@ from sqlalchemy import Engine, inspect, text
 
 # One SQL statement per step, oldest first.
 # Example: "ALTER TABLE entry ADD COLUMN location VARCHAR NOT NULL DEFAULT ''"
-MIGRATIONS: list[str] = []
+MIGRATIONS: list[str] = [
+    "ALTER TABLE entry ADD COLUMN added_by VARCHAR NOT NULL DEFAULT 'owner'",
+]
 
 
 def database_is_empty(engine: Engine) -> bool:

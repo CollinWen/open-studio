@@ -61,9 +61,9 @@ open-studio/
 │   │   ├── config.py         Every setting read from backend/.env
 │   │   ├── database.py       Opens the database
 │   │   ├── database_migrations.py  Changes to existing tables (new fields), run once each on startup
-│   │   ├── auth/             Owner-token check for write requests
+│   │   ├── auth/             Who is asking (visitor, agent, owner) + agents' write limit
 │   │   ├── features/
-│   │   │   ├── entries/      Entries: storage, visibility, CRUD, enrichment (tags + embedding)
+│   │   │   ├── entries/      Entries: storage, visibility per viewer, CRUD, enrichment (tags + embedding)
 │   │   │   ├── capture/      Paste a link → prefilled entry draft
 │   │   │   ├── tags/         LLM tag suggestions; tag descriptions + importance (key / normal / hidden)
 │   │   │   ├── related/      Closest entries by meaning (shared tags as fallback)
@@ -221,6 +221,7 @@ Use these words exactly, in file names, function names, database tables, API rou
 | **Highlight** | A picked tag or year: matching entries stand out, the rest fade (`grid/entryHighlight.ts`). |
 | **Studio page** | The owner's hidden admin page at `/studio`. |
 | **Owner token** | The admin password (`OWNER_TOKEN` in `backend/.env`). |
+| **Agent** | Another program (a Claude session, a research bot) given its own token (`AGENT_TOKENS`). Reads the studio and adds entries, which arrive unlisted and signed `added_by: agent:<name>` until the owner publishes them. |
 | **Entry link** | A manual connection between two entries. |
 | **Wall label** | The consistent placard shown on every card. |
 

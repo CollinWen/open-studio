@@ -33,6 +33,8 @@ class MediaItem(BaseModel):
 
 
 class EntryCreate(BaseModel):
+    """Agents' entries are always saved unlisted, whatever `visibility` says."""
+
     title: str
     description: str = ""
     kind: str = "note"
@@ -72,3 +74,4 @@ class EntryOut(BaseModel):
     updated_at: datetime
     visibility: Visibility
     tags: list[str]
+    added_by: str

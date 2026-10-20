@@ -46,8 +46,8 @@ API docs appear at http://localhost:8000/docs.
 | `app/config.py` | Every setting read from `.env` |
 | `app/database.py` | Opens the SQLite database |
 | `app/database_migrations.py` | Changes to existing tables. Add a step here whenever a field is added to a `models.py`. |
-| `app/auth/` | Checks the owner token on write requests |
-| `app/features/entries/` | Entries: storage, visibility rules, create/edit/delete, enrichment (tags + embedding). Each entry has a list of media items; the first is the cover. |
+| `app/auth/` | Who is asking: visitor, agent (a token from `AGENT_TOKENS`) or owner; agents' hourly write limit |
+| `app/features/entries/` | Entries: storage, visibility rules (per viewer, in `visibility_rules.py`), create/edit/delete, enrichment (tags + embedding). Each entry has a list of media items; the first is the cover, and `added_by` says whether the owner or which agent added it. |
 | `app/features/capture/` | Paste a link, get a prefilled entry draft back (`POST /api/capture/link`) |
 | `app/features/tags/` | The LLM prompt that suggests tags; tag counts; the owner's tag descriptions and importance (key / normal / hidden) |
 | `app/features/related/` | Finds the entries closest in meaning to a given one (shared tags as fallback) |

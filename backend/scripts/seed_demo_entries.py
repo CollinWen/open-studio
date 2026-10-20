@@ -26,6 +26,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from sqlmodel import Session, SQLModel  # noqa: E402
 
+from app.auth.viewer import Viewer  # noqa: E402
 from app.config import settings  # noqa: E402
 from app.database import create_tables, engine  # noqa: E402
 from app.features.entries import service as entries_service  # noqa: E402
@@ -72,6 +73,7 @@ def seed_demo() -> None:
                         occurred_at=now - timedelta(days=int(rng.random() ** 1.6 * OLDEST_DAYS_AGO)),
                         **describe_source(style, title, rng),
                     ),
+                    Viewer(role="owner"),
                 )
                 print(f"added  {style:<9} {title}")
         for name, description in KEY_TAGS.items():

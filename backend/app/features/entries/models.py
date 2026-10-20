@@ -40,6 +40,9 @@ class Entry(SQLModel, table=True):
     # private: only me. unlisted: anyone with the link. public: in the grid.
     visibility: str = "private"
 
+    # Who added it: "owner", or "agent:<name>" for an agent (see auth/viewer.py).
+    added_by: str = "owner"
+
     # Short, plain labels. Suggested by an LLM, editable afterwards.
     tags: list[str] = Field(default_factory=list, sa_column=Column(JSON))
 

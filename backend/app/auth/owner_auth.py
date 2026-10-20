@@ -3,6 +3,7 @@ Owner auth: decides whether a request comes from the site's owner.
 
 This is a single-owner site. The owner proves who they are by sending the
 OWNER_TOKEN from backend/.env as a Bearer token. Visitors never need to sign in.
+Agents have their own tokens; see auth/viewer.py.
 """
 
 import secrets
@@ -25,7 +26,3 @@ def require_owner(authorization: str | None = Header(default=None)) -> None:
     if not is_owner(authorization):
         raise HTTPException(status_code=401, detail="Owner token required")
 
-
-def viewer_is_owner(authorization: str | None = Header(default=None)) -> bool:
-    """Route helper for read actions that show the owner more (e.g. private entries)."""
-    return is_owner(authorization)

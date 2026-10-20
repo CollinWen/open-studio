@@ -33,6 +33,13 @@ class Settings:
     # Owner access: the password-like token for the admin page and capture API.
     owner_token: str = os.environ.get("OWNER_TOKEN", "")
 
+    # Agents: other programs (a Claude session, a research bot) that may read the
+    # studio and add entries. Comma-separated name=token pairs, e.g.
+    # "scout=long-random-token,archivist=another-token". Empty: no agents.
+    agent_tokens_setting: str = os.environ.get("AGENT_TOKENS", "")
+    # How many entries one agent may add or edit per hour. Each write costs an LLM call.
+    agent_writes_per_hour: int = int(os.environ.get("AGENT_WRITES_PER_HOUR", "60"))
+
     # OpenRouter: one key covers both the tag model and the embedding model.
     openrouter_api_key: str = os.environ.get("OPENROUTER_API_KEY", "")
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
@@ -57,6 +64,12 @@ class Settings:
     @property
     def frontend_origins(self) -> list[str]:
         return [origin.strip() for origin in self.frontend_origin.split(",") if origin.strip()]
+
+    @property
+    def agent_tokens(self) -> dict[str, str]:
+        """Each agent's token mapped to its name."""
+        pairs = (pair.split("=", 1) for pair in self.agent_tokens_setting.split(",") if "=" in pair)
+        return {token.strip(): name.strip() for name, token in pairs if name.strip() and token.strip()}
 
     @property
     def r2_enabled(self) -> bool:

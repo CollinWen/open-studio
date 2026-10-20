@@ -30,6 +30,8 @@ export interface Entry {
   updated_at: string;
   visibility: Visibility;
   tags: string[];
+  /** "owner", or "agent:<name>" for an entry an agent added. */
+  added_by: string;
 }
 
 /** What the admin form sends. Empty tags means "suggest them for me". */

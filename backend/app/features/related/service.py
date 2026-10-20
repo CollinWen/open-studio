@@ -9,6 +9,7 @@ yet) fall back to counting shared tags.
 
 from sqlmodel import Session
 
+from app.auth.viewer import Viewer
 from app.features.entries import service as entries_service
 from app.features.entries.models import Entry
 from app.features.related.similarity import cosine_similarity
@@ -17,11 +18,11 @@ DEFAULT_LIMIT = 6
 
 
 def find_related_entries(
-    db: Session, entry: Entry, include_private: bool = False, limit: int = DEFAULT_LIMIT
+    db: Session, entry: Entry, viewer: Viewer, limit: int = DEFAULT_LIMIT
 ) -> list[Entry]:
     others = [
         other
-        for other in entries_service.list_entries(db, include_private=include_private)
+        for other in entries_service.list_entries(db, viewer)
         if other.id != entry.id
     ]
     if entry.embedding:

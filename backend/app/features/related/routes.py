@@ -7,7 +7,7 @@ Related endpoints:
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
 
-from app.auth.owner_auth import viewer_is_owner
+from app.auth.viewer import Viewer, current_viewer
 from app.database import get_db
 from app.features.entries import service as entries_service
 from app.features.entries.schemas import EntryOut
@@ -17,8 +17,8 @@ router = APIRouter(tags=["related"])
 
 
 @router.get("/entries/{entry_id}/related", response_model=list[EntryOut])
-def related_entries(entry_id: str, db: Session = Depends(get_db), is_owner: bool = Depends(viewer_is_owner)):
-    entry = entries_service.get_entry(db, entry_id, viewer_is_owner=is_owner)
+def related_entries(entry_id: str, db: Session = Depends(get_db), viewer: Viewer = Depends(current_viewer)):
+    entry = entries_service.get_entry(db, entry_id, viewer)
     if entry is None:
         raise HTTPException(status_code=404, detail="Entry not found")
-    return find_related_entries(db, entry, include_private=is_owner)
+    return find_related_entries(db, entry, viewer)
