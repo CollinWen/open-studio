@@ -8,7 +8,8 @@
  * screen doesn't drain and refill. Each entry
  * also gets its place within its own page (arriveOrder), so the views can
  * let a new page rise in one after another without the whole collection
- * waiting on one long stagger. Used by HomePage.
+ * waiting on one long stagger. Switching to another board starts over from
+ * nothing, page by page. Used by BoardPage.
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -20,17 +21,21 @@ const PAGE_SIZE = 60;
 // so a page's whole arrival stays under half a second (--stagger in global.css).
 const MAX_STAGGER_STEPS = 15;
 
-export function useEntryPages(board: string, enabled: boolean) {
+export function useEntryPages(board: string) {
   const [entries, setEntries] = useState<Entry[] | null>(null);
   const [loading, setLoading] = useState(false);
   const arriveOrder = useRef(new Map<string, number>());
   const [run, setRun] = useState(0);
-  const hasShown = useRef(false);
+  // The board already on screen, if any: reloading it is quiet, a different one starts over.
+  const shownBoard = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!enabled) return;
     let stopped = false;
-    const quiet = hasShown.current;
+    const quiet = shownBoard.current === board;
+    if (!quiet) {
+      setEntries(null);
+      arriveOrder.current = new Map();
+    }
     setLoading(true);
 
     async function loadEveryPage() {
@@ -45,7 +50,7 @@ export function useEntryPages(board: string, enabled: boolean) {
         cursor = page.next_cursor;
       } while (cursor);
       setEntries(loaded);
-      hasShown.current = true;
+      shownBoard.current = board;
     }
 
     loadEveryPage()
@@ -54,7 +59,7 @@ export function useEntryPages(board: string, enabled: boolean) {
     return () => {
       stopped = true;
     };
-  }, [board, enabled, run]);
+  }, [board, run]);
 
   const reload = useCallback(() => setRun((count) => count + 1), []);
   const orderOf = useCallback((entry: Entry) => arriveOrder.current.get(entry.id) ?? 0, []);

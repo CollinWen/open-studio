@@ -3,7 +3,7 @@
  * no boxes. Leaving tags blank asks the backend to suggest them.
  *
  * A new entry asks only for the essentials (a link, a title, why it's here,
- * who sees it); kind, date, source, tags and pictures sit behind "more",
+ * which space it goes in, who sees it); kind, date, source, tags and pictures sit behind "more",
  * summed up in one quiet line. Editing shows everything.
  * Pasting a link at the top fills in whatever fields are still empty and adds
  * the link's pictures to the media list (see LinkCaptureField).
@@ -15,12 +15,15 @@
 import { useState } from "react";
 import { createEntry, updateEntry } from "../../api/entriesApi";
 import { WordChoice } from "../../components/WordChoice";
-import type { CapturedLink, Entry, EntryDraft, Visibility } from "../../types/entry";
+import type { Board, CapturedLink, Entry, EntryDraft, Visibility } from "../../types/entry";
 import { LinkCaptureField } from "./LinkCaptureField";
 import { MediaListEditor } from "./MediaListEditor";
 
 interface Props {
   editing: Entry | null;
+  boards: Board[];
+  /** Where a new entry goes unless another space is picked: the board you were looking at. */
+  defaultBoard: string;
   onSaved: () => void;
   onCancel: () => void;
 }
@@ -28,8 +31,8 @@ interface Props {
 const KINDS = ["note", "link", "project", "photo", "video", "book", "artwork", "sketch", "recipe", "post"];
 const VISIBILITIES: Visibility[] = ["private", "unlisted", "public"];
 
-export function EntryForm({ editing, onSaved, onCancel }: Props) {
-  const [draft, setDraft] = useState<EntryDraft>(() => draftFrom(editing));
+export function EntryForm({ editing, boards, defaultBoard, onSaved, onCancel }: Props) {
+  const [draft, setDraft] = useState<EntryDraft>(() => draftFrom(editing, defaultBoard));
   const [tagText, setTagText] = useState(editing?.tags.join(", ") ?? "");
   const [status, setStatus] = useState("");
   const [showMore, setShowMore] = useState(editing !== null);
@@ -110,6 +113,19 @@ export function EntryForm({ editing, onSaved, onCancel }: Props) {
         </>
       )}
 
+      {boards.length > 1 && (
+        <p className="word-list">
+          {boards.map((board) => (
+            <WordChoice
+              key={board.slug}
+              label={board.name.toLowerCase()}
+              active={draft.board === board.slug}
+              onPick={() => set("board", board.slug)}
+            />
+          ))}
+        </p>
+      )}
+
       <p className="word-list">
         {VISIBILITIES.map((visibility) => (
           <WordChoice
@@ -132,7 +148,7 @@ export function EntryForm({ editing, onSaved, onCancel }: Props) {
   );
 }
 
-function draftFrom(entry: Entry | null): EntryDraft {
+function draftFrom(entry: Entry | null, defaultBoard: string): EntryDraft {
   return {
     title: entry?.title ?? "",
     description: entry?.description ?? "",
@@ -143,6 +159,7 @@ function draftFrom(entry: Entry | null): EntryDraft {
     occurred_at: entry?.occurred_at ?? null,
     visibility: entry?.visibility ?? "private",
     tags: entry?.tags ?? [],
+    board: entry?.board ?? defaultBoard,
   };
 }
 

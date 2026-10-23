@@ -57,7 +57,7 @@ def register_read_tools(server: MCPServer) -> None:
 
     @server.tool()
     def find_related(entry_id: str, ctx: Context, limit: int = 6) -> list[EntryOut]:
-        """The entries closest in meaning to this one, on any board: a way to wander and find gaps."""
+        """The entries on the same board closest in meaning to this one: a way to wander and find gaps."""
         with Session(engine) as db:
             entry = _entry_or_error(db, entry_id, ctx)
             related = find_related_entries(db, entry, viewer_for(ctx), limit)

@@ -3,7 +3,7 @@
  * saved, so it can reload what it shows. The entry form opens over any page
  * and doesn't know what that page loaded.
  *
- * EntryFormModal announces; HomePage, EntryPage and StudioPage listen.
+ * EntryFormModal announces; BoardPage, EntryPage and StudioPage listen.
  */
 
 import { useEffect } from "react";

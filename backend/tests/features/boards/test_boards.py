@@ -1,7 +1,8 @@
 """
 Tests for boards: the home board always exists and is listed first, only the
 owner makes boards, entries land on the home board unless told otherwise,
-listings filter by board, and agents only add to boards they're signed on to.
+listings filter by board, agents only add to boards they're signed on to, and
+"Related" never crosses into another board.
 """
 
 import uuid
@@ -69,3 +70,13 @@ def test_agents_cannot_move_entries_off_their_boards(client):
 def test_unknown_board_is_refused(client):
     response = client.post("/api/entries", json={"title": "x", "board": "nowhere"}, headers=OWNER_HEADERS)
     assert response.status_code == 422
+
+
+def test_related_stays_on_the_same_board(client):
+    slug = _new_board(client)
+    body = {"title": "on a board", "board": slug, "visibility": "public", "tags": ["shared-tag"]}
+    entry_id = client.post("/api/entries", json=body, headers=OWNER_HEADERS).json()["id"]
+    home = {"title": "on home", "visibility": "public", "tags": ["shared-tag"]}
+    client.post("/api/entries", json=home, headers=OWNER_HEADERS)
+    related = client.get(f"/api/entries/{entry_id}/related").json()
+    assert all(entry["board"] == slug for entry in related)

@@ -67,7 +67,7 @@ export function EntryPage() {
                 )
               }
             />
-            <EntryTags tags={entry.tags} />
+            <EntryTags tags={entry.tags} board={entry.board} />
             {entry.media.length > 0 && (
               <LabelRow rule="double" label="Media">
                 <MediaSeries media={entry.media} title={entry.title} />

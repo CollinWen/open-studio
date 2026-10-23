@@ -11,8 +11,9 @@
  *   and space, never color or boxes.
  * - Rules run the full width of the screen: a double rule for major breaks,
  *   a single hairline for minor ones (see components/LabelRow.tsx).
- * - Every line of words (tags, views, years, studio controls) is a
- *   `.word-list`; every pick-one word is a WordChoice.
+ * - Every line of words (spaces, tags, views, studio controls) is a
+ *   `.word-list`; every pick-one word is a WordChoice. Tags sit in thin flat
+ *   ovals (filled when picked); picture sizes are three dots (DotChoice).
  * Change the look here, through the tokens below, not in components.
  * The paper is a warm off-white; the work supplies the color.
  */
@@ -53,6 +54,15 @@
   --stagger: 30ms;
   --arrive-distance: 12px;
   --sheet-drop: 24px;
+
+  /* Tag ovals, view dots and the time slider. */
+  --oval-padding: 0.55em;
+  --oval-gap: 0.4em;
+  --dot-small: 6px;
+  --dot-medium: 10px;
+  --dot-large: 15px;
+  --time-bar-height: calc(1.5 * var(--line));
+  --time-handle: 11px;
 }
 
 @media (max-width: 1100px) {
@@ -173,25 +183,74 @@ button:hover {
   text-underline-offset: 0.18em;
 }
 
-/* A picked filter (tag, year, search): an ink pill, the one filled shape on
-   the page, so it is always clear what is narrowing the view. Clicking it
-   again clears it. */
-.pill {
-  margin: 0 -0.4em;
-  padding: 0 0.4em;
+/* A filter you can turn on and off (a tag): the word in a thin flat oval,
+   so it reads as something to pick. Picked, the oval fills with ink: the
+   one filled shape on the page, so it's always clear what is narrowing the
+   view. Clicking it again clears it. */
+.oval {
+  padding: 0 var(--oval-padding);
+  border: 1px solid var(--ink-faint);
   border-radius: 1em;
+  line-height: calc(var(--line) - 2px);
+}
+
+.oval.is-key {
+  border-color: var(--ink-soft);
+}
+
+.oval:hover {
+  text-decoration: none;
+  border-color: var(--ink);
+}
+
+.oval.is-picked {
   background: var(--ink);
+  border-color: var(--ink);
   color: var(--paper);
 }
 
-/* Two pills side by side keep the usual word gap between their edges. */
-.pill + .pill {
-  margin-left: 0.4em;
+/* Ovals sit closer than words, and wrap onto lines a little apart. */
+.word-list.is-ovals {
+  column-gap: var(--oval-gap);
+  row-gap: var(--oval-gap);
 }
 
-.pill:hover {
-  text-decoration: none;
+/* A size picked as a dot (small, medium, large pictures): soft ink until picked. */
+.dot-choice {
+  display: inline-block;
+  border-radius: 50%;
   background: var(--ink-soft);
+  vertical-align: middle;
+}
+
+.dot-choice:hover {
+  background: var(--ink);
+}
+
+.dot-choice.is-picked {
+  background: var(--ink);
+}
+
+.dot-small {
+  width: var(--dot-small);
+  height: var(--dot-small);
+}
+
+.dot-medium {
+  width: var(--dot-medium);
+  height: var(--dot-medium);
+}
+
+.dot-large {
+  width: var(--dot-large);
+  height: var(--dot-large);
+}
+
+.dot-list {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--oval-gap);
+  align-self: center;
 }
 
 ::placeholder {
@@ -322,10 +381,121 @@ button:hover {
   padding-bottom: calc(2 * var(--line));
 }
 
-/* ---- Home grid ---- */
+/* ---- Browse panel: space, tags, time and view in one block (features/grid/BrowsePanel.tsx) ---- */
+
+/* One section: a rule above it, then its lines half a line apart, no rules between. */
+.browse-panel .label-row + .label-row {
+  margin-top: calc(var(--line) / 2);
+}
+
+/* The spaces are the largest words in the panel: where you are comes first. */
+.board-line {
+  font-size: var(--size-large);
+  line-height: var(--line);
+}
+
+.board-line a:hover {
+  color: var(--ink);
+}
+
+/* The time slider: month bars on a hairline, two handles laid over them. */
+.time-filter {
+  max-width: 640px;
+  font-size: var(--size-small);
+  line-height: var(--leading-small);
+}
+
+.time-strip {
+  position: relative;
+  height: var(--time-bar-height);
+  margin: 0 calc(var(--time-handle) / 2);
+  border-bottom: var(--rule-faint);
+}
+
+.time-bars {
+  position: relative;
+  height: 100%;
+}
+
+/* Each bar sits at its month (--at, 0 to 1) and is as tall as the month is full (--fill). */
+.time-bar {
+  position: absolute;
+  bottom: 0;
+  left: calc(var(--at) * 100%);
+  width: 2px;
+  height: max(2px, calc(var(--fill) * 100%));
+  transform: translateX(-50%);
+  background: var(--ink-faint);
+  transition: background var(--motion-quick) var(--ease-enter);
+}
+
+.time-bar.is-in {
+  background: var(--ink);
+}
+
+/* The two range inputs cover the strip; only their handles take the pointer. */
+.time-strip input[type="range"] {
+  position: absolute;
+  inset: auto calc(var(--time-handle) / -2) calc(var(--time-handle) / -2);
+  width: calc(100% + var(--time-handle));
+  height: var(--time-handle);
+  appearance: none;
+  background: none;
+  pointer-events: none;
+}
+
+.time-strip input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: var(--time-handle);
+  height: var(--time-handle);
+  border-radius: 50%;
+  background: var(--ink);
+  cursor: grab;
+  pointer-events: auto;
+}
+
+.time-strip input[type="range"]::-moz-range-thumb {
+  width: var(--time-handle);
+  height: var(--time-handle);
+  border: none;
+  border-radius: 50%;
+  background: var(--ink);
+  cursor: grab;
+  pointer-events: auto;
+}
+
+.time-strip input[type="range"]:focus-visible::-webkit-slider-thumb {
+  outline: 1px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.time-years {
+  position: relative;
+  height: var(--leading-small);
+  margin: calc(var(--line) / 4) calc(var(--time-handle) / 2) calc(var(--line) / 4);
+  color: var(--ink-soft);
+}
+
+.time-years span {
+  position: absolute;
+  left: calc(var(--at) * 100%);
+}
+
+.time-filter p {
+  margin: 0 0 calc(var(--line) / 4);
+  font-size: var(--size-body);
+  line-height: var(--line);
+}
+
+/* "clear ×": takes every pick and the search off at once. */
+.clear-word {
+  color: var(--ink);
+}
+
+/* ---- Board views: sphere, grid, rows ---- */
 
 
-/* Search, view size and sort, on one line that wraps on phones. */
+/* Search, view, sort and clear, on one line that wraps on phones. */
 .browse-controls {
   display: flex;
   flex-wrap: wrap;
@@ -913,67 +1083,5 @@ button:hover {
 
   .loading-word {
     animation: none;
-  }
-}
-
-/* ---- Crosshair cursor (see components/CrosshairCursor.tsx) ---- */
-
-/* With a mouse, hide the normal pointer everywhere except text fields. */
-@media (pointer: fine) {
-  html,
-  a,
-  button,
-  label {
-    cursor: none;
-  }
-
-  input,
-  textarea {
-    cursor: text;
-  }
-}
-
-/* The cursor is white, and "difference" blending inverts whatever is
-   beneath it: black on the white page, a negative over a photo. */
-.crosshair {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 1000;
-  pointer-events: none;
-  mix-blend-mode: difference;
-  opacity: 0;
-}
-
-.crosshair.is-visible {
-  opacity: 1;
-}
-
-.crosshair.is-over-text-field {
-  opacity: 0;
-}
-
-/* A small dot, centered on the mouse position. */
-.crosshair-shape {
-  position: absolute;
-  width: 8px;
-  height: 8px;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  background: #fff;
-  transition:
-    width 0.15s ease,
-    height 0.15s ease;
-}
-
-/* Over something clickable: the dot grows a little, inverting more of what's under it. */
-.crosshair.is-over-clickable .crosshair-shape {
-  width: 16px;
-  height: 16px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .crosshair-shape {
-    transition: none;
   }
 }

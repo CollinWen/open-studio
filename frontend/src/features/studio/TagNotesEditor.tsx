@@ -1,6 +1,6 @@
 /**
  * TagNotesEditor: the owner's list of every tag, to write a description
- * (shown on the home page when the tag is selected) and set its importance:
+ * (shown as a board's intro when the tag is picked) and set its importance:
  * key (listed first, in black), normal, or hidden (left off the tag line).
  */
 

@@ -21,7 +21,7 @@ Requests to `/api` and `/media` are passed through to the backend on port 8000
 
 | URL | File | What it shows |
 |---|---|---|
-| `/` | `pages/HomePage.tsx` | The whole collection. `?tag=` highlights a tag and shows its description, `?year=2024,2022` highlights one or more years (and turns the sphere to them), `?q=` searches, `?view=small\|medium\|large\|rows` (default: the sphere), `?sort=oldest\|title\|relevance` |
+| `/`, `/b/<slug>` | `pages/BoardPage.tsx` | One board: `/` is home (the owner's own collection), `/b/bread` the bread board, and so on; a board shows only its own entries. `?tag=` highlights a tag and shows its description, `?from=2023-04&to=2024-09` highlights a span of months (and turns the sphere to it), `?q=` searches the board, `?view=small\|medium\|large\|rows` (default: the sphere), `?sort=oldest\|title\|relevance` |
 | `/entry/:id` | `pages/EntryPage.tsx` | One entry: media, wall label, tags, related entries |
 | `/about` | `pages/AboutPage.tsx` | The welcome text |
 | `/sketch` | `pages/SketchPage.tsx` | Scratch page, not linked: home-page ideas on the real collection. `?sketch=hover\|threads\|kinship`, `?size=`, `?gap=` |
@@ -33,11 +33,11 @@ Requests to `/api` and `/media` are passed through to the backend on port 8000
 | Path | What it does |
 |---|---|
 | `src/pages/` | One file per URL |
-| `src/features/grid/` | Home page browsing: the sphere view (`SphereView`, with `sphereLayout` for where things sit and `sphereMotion` for turning and perspective), grid and rows views, cards, the tag and year lines, `ActiveFilters` (pills for every active filter, beside the browse controls), search/view/sort controls, `entryHighlight` (which entries fade when a tag or year is picked), `useBrowseParams` (all of it kept in the URL), and `useEntryPages` (loads the collection a page at a time; new cards rise in and the sphere re-spreads as pages arrive) |
+| `src/features/grid/` | Browsing a board. `BrowsePanel` holds every way to move around in one block: `BoardLine` (the spaces), `TagFilter` (tags in ovals), `TimeRangeFilter` (the month slider, with `monthRange` for months), `BrowseControls` (search, sphere / size dots / rows, sort, clear). The views: the sphere (`SphereView`, with `sphereLayout` for where things sit and `sphereMotion` for turning and perspective), the grid and rows, cards. `entryHighlight` (which entries fade when a tag or span of months is picked), `useBrowseParams` (all of it kept in the URL), `boardPath` (a board's address), and `useEntryPages` (loads a board a page at a time; new cards rise in and the sphere re-spreads as pages arrive) |
 | `src/features/entries/` | Pieces of the entry page (wall label, the full series of pictures and videos, tags, related) |
 | `src/features/sketches/` | The sketch page's experiments: a justified contact sheet (`justifyRows`), threads between related entries (`LinkLines`, `relatedLinks`) |
 | `src/features/studio/` | The owner's entry form, shown as a sheet over any page (`EntryFormModal`, opened by `?add` / `?edit=<id>`; `entrySavedEvent` tells the page to reload): paste-a-link capture, the essentials first with the rest behind "more", the media list (cover, captions, uploads); plus the entry list and tag notes (description + importance) |
-| `src/components/` | Site-wide pieces (the labeled page row, the word-as-a-control `WordChoice`, header, footer, crosshair cursor) |
+| `src/components/` | Site-wide pieces (the labeled page row, the word-as-a-control `WordChoice`, the size dot `DotChoice`, header, footer) |
 | `src/api/` | Every call to the backend, and the stored owner token |
 | `src/types/` | Data shapes, matching the backend's `schemas.py` files |
 | `src/styles/global.css` | The entire visual style; tokens (colors, type sizes, line unit, gutter, margins) at the top. The typeface comes from `@fontsource-variable/inter`, loaded in `main.tsx` |

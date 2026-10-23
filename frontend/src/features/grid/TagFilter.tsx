@@ -1,9 +1,9 @@
 /**
- * TagFilter: the tags in use, as two lines of words. Key tags (set in the
- * studio) get the first line, in full ink; every other tag follows on the
- * next line in soft ink. Clicking one picks it: it turns into a pill,
- * entries without it fade, and its description becomes the intro. Clicking
- * it again clears it.
+ * TagFilter: the board's tags, each in a thin flat oval so it reads as
+ * something to pick. Key tags (set in the studio) come first, in full ink;
+ * every other tag follows in soft ink. Clicking one picks it: its oval fills
+ * with ink, entries without it fade, and its description becomes the intro.
+ * Clicking it again clears it.
  */
 
 import { WordChoice } from "../../components/WordChoice";
@@ -20,26 +20,18 @@ export function TagFilter({ tags, activeTag, onSelect }: Props) {
   const keyTags = tags.filter((tag) => tag.importance === 1);
   const otherTags = tags.filter((tag) => tag.importance !== 1);
 
-  const lineOf = (group: Tag[], ink: string) =>
-    group.length > 0 && (
-      <div className="word-list">
-        {group.map((tag) => (
-          <WordChoice
-            key={tag.name}
-            label={tag.name}
-            look="pill"
-            className={ink}
-            active={tag.name === activeTag}
-            onPick={() => onSelect(tag.name === activeTag ? null : tag.name)}
-          />
-        ))}
-      </div>
-    );
-
   return (
-    <nav className="tag-filter">
-      {lineOf(keyTags, "")}
-      {lineOf(otherTags, "quiet")}
-    </nav>
+    <div className="word-list is-ovals">
+      {[...keyTags, ...otherTags].map((tag) => (
+        <WordChoice
+          key={tag.name}
+          label={tag.name}
+          look="oval"
+          className={tag.importance === 1 ? "is-key" : "quiet"}
+          active={tag.name === activeTag}
+          onPick={() => onSelect(tag.name === activeTag ? null : tag.name)}
+        />
+      ))}
+    </div>
   );
 }

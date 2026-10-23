@@ -35,13 +35,13 @@ Then open http://localhost:5173.
 `OWNER_TOKEN` from `backend/.env`. After that, this browser shows an "add" link in the header
 and an "edit" link on every entry.
 
-**Sample entries** (to see the layout before adding real work):
+**Demo entries** (to see the layout before adding real work): this **wipes the local
+database** and fills it with about 160 made-up entries on five boards (home, bread,
+ceramics, graphics, photography):
 
 ```bash
-cd backend && .venv/Scripts/python scripts/seed_sample_entries.py
+cd backend && .venv/Scripts/python scripts/seed_demo_entries.py --offline
 ```
-
-Remove them again with `--remove`.
 
 ## Deploying
 

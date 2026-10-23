@@ -1,14 +1,17 @@
 /**
  * WallLabel: the museum-style placard for an entry, as labeled rows.
  * The title set large, then (for the owner) an Owner row with "edit" right
- * under it where it's easy to find, then Kind, Date and Source each on their
- * own line, then the "why it's here" description.
+ * under it where it's easy to find, then Space (the board it's on, linking
+ * back to it), Kind, Date and Source each on their own line, then the "why
+ * it's here" description.
  *
  * Used by EntryPage. The rows come from components/LabelRow.tsx.
  */
 
 import type { ReactNode } from "react";
+import { Link } from "react-router-dom";
 import { LabelRow } from "../../components/LabelRow";
+import { boardPath } from "../grid/boardPath";
 import type { Entry } from "../../types/entry";
 import { formatDate } from "./formatDate";
 
@@ -23,7 +26,12 @@ export function WallLabel({ entry, ownerActions }: { entry: Entry; ownerActions?
           {ownerActions}
         </LabelRow>
       )}
-      <LabelRow rule="single" label="Kind">
+      <LabelRow rule="single" label="Space">
+        <Link to={boardPath(entry.board)} className="is-underlined">
+          {entry.board}
+        </Link>
+      </LabelRow>
+      <LabelRow label="Kind">
         {entry.kind}
       </LabelRow>
       <LabelRow label="Date">

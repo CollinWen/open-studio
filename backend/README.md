@@ -58,7 +58,7 @@ API docs appear at http://localhost:8000/docs.
 | `app/agent_server/` | The studio as an MCP server at `/mcp`, for agents: board tools (boards, a board's brief), read tools (search, recent changes, related), write tools (add, improve) and chain tools (read a chain, link entries). Same rules as the web routes. How agents should use it: `skills/open-studio/SKILL.md`. |
 | `app/integrations/` | Thin wrappers around OpenRouter (LLM, embeddings) and file storage |
 | `app/integrations/link_readers/` | One reader per site, chosen in `read_link.py`. YouTube (title, channel, upload date, description; no API key), Google Drive (full-resolution photo, date taken from EXIF; file must be shared "Anyone with the link"), GitHub (repo details), Instagram (caption, author, picture; the picture link expires after a few weeks), X (post text, author, date; no pictures), and any other page (link-preview tags). |
-| `scripts/` | Hand-run tools. `seed_demo_entries.py` wipes the **local** data and fills it with ~120 made-up entries (`demo_entries.py`) covering every source type, with generated pictures (`sample_images.py`). Refuses to run when R2 is configured. |
+| `scripts/` | Hand-run tools. `seed_demo_entries.py` wipes the **local** data and fills it with ~160 made-up entries on five boards (home, plus bread, ceramics, graphics and photography from `demo_boards.py`; topics in `demo_entries.py`) covering every source type, with generated pictures (`sample_images.py`). Refuses to run when R2 is configured. |
 | `data/` | Created on first run: `studio.db` and uploaded `media/`. Not committed. |
 
 Empty `__init__.py` files only mark folders as Python packages.

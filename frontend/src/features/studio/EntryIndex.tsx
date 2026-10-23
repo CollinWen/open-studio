@@ -1,6 +1,6 @@
 /**
- * EntryIndex: every entry (including private ones) as a plain list,
- * with "edit" and "delete" beside each. Owner-only.
+ * EntryIndex: every entry (including private ones) as a plain list, with
+ * its space, visibility and tags, and "edit" and "delete" beside each. Owner-only.
  */
 
 import { Link } from "react-router-dom";
@@ -26,7 +26,7 @@ export function EntryIndex({ entries, onEdit, onChanged }: Props) {
         <p key={entry.id} className="word-list">
           <Link to={`/entry/${entry.id}`}>{entry.title}</Link>
           <span className="quiet">
-            {entry.visibility} · {entry.tags.join(", ") || "no tags"}
+            {entry.board} · {entry.visibility} · {entry.tags.join(", ") || "no tags"}
           </span>
           <button type="button" className="quiet" onClick={() => onEdit(entry)}>
             edit

@@ -1,9 +1,10 @@
 """
 Related service: finds the entries closest in meaning to a given entry.
 
-With embeddings, it ranks by embedding similarity and deliberately ignores
-kind, so it can surface connections across topics (a coding project next to
-a cooking experiment). Entries without an embedding (e.g. no OpenRouter key
+Only entries on the same board count: boards are separate spaces. Within a
+board, it ranks by embedding similarity and deliberately ignores kind, so it
+can surface connections across topics (a coding project next to a cooking
+experiment). Entries without an embedding (e.g. no OpenRouter key
 yet) fall back to counting shared tags.
 """
 
@@ -22,7 +23,7 @@ def find_related_entries(
 ) -> list[Entry]:
     others = [
         other
-        for other in entries_service.list_entries(db, viewer)
+        for other in entries_service.list_entries(db, viewer, board=entry.board)
         if other.id != entry.id
     ]
     if entry.embedding:
