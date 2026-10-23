@@ -7,6 +7,8 @@ What we're building is described in [open-studio-brief.md](../open-studio-brief.
 ### Current direction (where we differ from the brief)
 
 - **The home page opens on the sphere view**: every entry's picture floats on the surface of one orb in time order, newest at the top and oldest at the bottom, so each year is a band. It turns slowly and can be dragged. A Years row (`?year=2024,2022`) highlights any number of years in every view and turns the orb so those bands face you. The masonry grid (newest first) and rows are one click away. (A free-form canvas/map and an ink-blot view were tried and dropped.)
+- **Boards are separate spaces.** Every entry is on one board. `home` is the owner's own collection and what the home page shows; other boards are focused efforts ("computational folding") that agents are signed on to. Boards aren't the brief's subjects: they separate whose work and which effort, not topics within the owner's collection.
+- **Entries build on each other.** A "builds on" link (an entry link with a direction and a note) chains entries into lines and trees; `GET /api/entries/{id}/chain` shows the tree around one entry.
 - **The subject → project → session hierarchy is on hold.** Structure comes from LLM tags (filtering) and embeddings ("Related") for now. Don't add subjects, projects, sessions or lenses until the owner asks.
 - **Design: a Swiss page grid, after Müller-Brockmann's "Grid Systems".** A 12-column grid inside generous margins; every page is a stack of labeled rows (`components/LabelRow.tsx`): a quiet label hangs in columns 1–3, content starts at column 4, wide rows (the sphere, the picture grid) span all 12. One line of body text is the unit for all vertical space, and the column gutter is one line too. Pictures span whole columns (masonry column counts divide 12). Rules run the full width of the screen: a double rule for major breaks (under the header, before the footer), a single hairline for minor ones; no vertical rules. One typeface, Inter (self-hosted), in few sizes; hierarchy comes from size, ink strength (full, soft) and space, never extra colors. Dark ink on a warm off-white paper. No boxes, cards, shadows, icons or button styling, with one exception: a picked filter (tag, year, search) is an ink pill, and every active filter is also listed as a pill with × beside the browse controls (search, view, sort sit directly above the work, with no label). Modes (view, sort) stay underlined. Key tags sit on their own first line in full ink; other tags follow in soft ink. Controls are plain words: a line of words is always a `.word-list`, and a pick-one word is always `components/WordChoice.tsx`. Labels use the small size, the site name the large one. Color comes only from the work itself. All styling lives in `frontend/src/styles/global.css`, with the tokens at the top; change the look through those tokens, never one-off sizes or spacing in a component. Don't add a CSS framework or component library.
 - **Links are the navigation (Zettelkasten-style).** Every view is a URL: entry pages, tag selection, search, view and sort (`/?tag=bread&view=rows`). Anything a visitor can see should be reachable by a link, and pages should link to each other (tags, related entries) so you can wander between them.
@@ -63,13 +65,15 @@ open-studio/
 │   │   ├── database_migrations.py  Changes to existing tables (new fields), run once each on startup
 │   │   ├── auth/             Who is asking (visitor, agent, owner) + agents' write limit
 │   │   ├── features/
-│   │   │   ├── entries/      Entries: storage, visibility per viewer, CRUD, enrichment (tags + embedding)
+│   │   │   ├── boards/       Boards: separate spaces, each with a brief and the agents signed on to it
+│   │   │   ├── entries/      Entries: storage, visibility per viewer, CRUD, pages, enrichment (tags + embedding)
+│   │   │   ├── entry_links/  "Builds on" links between entries, and the chain around an entry
 │   │   │   ├── capture/      Paste a link → prefilled entry draft
 │   │   │   ├── tags/         LLM tag suggestions; tag descriptions + importance (key / normal / hidden)
 │   │   │   ├── related/      Closest entries by meaning (shared tags as fallback)
 │   │   │   ├── search/       Search by meaning (embeddings) + plain word matches
 │   │   │   └── media/        Image/video upload
-│   │   ├── agent_server/     The studio as an MCP server (/mcp) for agents: read tools, write tools
+│   │   ├── agent_server/     The studio as an MCP server (/mcp) for agents: board, read, write and chain tools
 │   │   └── integrations/     OpenRouter (LLM, embeddings), file storage. One file each.
 │   │       └── link_readers/ One reader per site (YouTube, Google Drive, GitHub, Instagram, X) + a general webpage reader
 │   ├── scripts/              One-off tools run by hand (e.g. wipe local data and seed ~120 demo entries)
@@ -225,8 +229,10 @@ Use these words exactly, in file names, function names, database tables, API rou
 | **Highlight** | A picked tag or year: matching entries stand out, the rest fade (`grid/entryHighlight.ts`). |
 | **Studio page** | The owner's hidden admin page at `/studio`. |
 | **Owner token** | The admin password (`OWNER_TOKEN` in `backend/.env`). |
-| **Agent** | Another program (a Claude session, a research bot) given its own token (`AGENT_TOKENS`). Reads the studio and adds entries, which arrive unlisted and signed `added_by: agent:<name>` until the owner publishes them. |
-| **Entry link** | A manual connection between two entries. |
+| **Agent** | Another program (a Claude session, a research bot) given its own token (`AGENT_TOKENS`). Reads the studio and adds entries to the boards it is signed on to, which arrive unlisted and signed `added_by: agent:<name>` until the owner publishes them. |
+| **Board** | A separate space in the studio. Every entry is on one board. `home` is the owner's own collection; other boards hold one focused effort, with a description agents read as their brief. |
+| **Entry link** | A "builds on" connection: one entry builds on an earlier one, with a note on how. |
+| **Chain** | The entries an entry builds on and that build on it, a few steps each way: the line of work it belongs to. |
 | **Wall label** | The consistent placard shown on every card. |
 
 If a new concept needs a name, add it here.

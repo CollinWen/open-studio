@@ -1,6 +1,7 @@
 """
 Test setup: points the app at a throwaway data folder, sets a known owner
-token and two agent tokens (scout, archivist), and turns OpenRouter off so tests never make network calls or cost money.
+token, two agent tokens (scout, archivist) and a board they may add to, and
+turns OpenRouter off so tests never make network calls or cost money.
 Must run before the app is imported, which is why it sets environment variables at the top.
 """
 
@@ -25,9 +26,19 @@ SCOUT_HEADERS = {"Authorization": "Bearer test-scout-token"}
 ARCHIVIST_HEADERS = {"Authorization": "Bearer test-archivist-token"}
 
 
+# A board both test agents are signed on to. Agents can't add to the home board.
+AGENT_BOARD = "research"
+
+
 @pytest.fixture(autouse=True)
 def fresh_agent_write_limits():
     forget_agent_writes()
+
+
+@pytest.fixture(scope="session", autouse=True)
+def agent_board():
+    board = {"slug": AGENT_BOARD, "name": "Research", "agents": ["scout", "archivist"]}
+    TestClient(app).post("/api/boards", json=board, headers=OWNER_HEADERS)
 
 
 @pytest.fixture

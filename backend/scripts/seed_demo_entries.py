@@ -29,8 +29,10 @@ from sqlmodel import Session, SQLModel  # noqa: E402
 from app.auth.viewer import Viewer  # noqa: E402
 from app.config import settings  # noqa: E402
 from app.database import create_tables, engine  # noqa: E402
+from app.features.boards import service as boards_service  # noqa: E402
 from app.features.entries import service as entries_service  # noqa: E402
 from app.features.entries.schemas import EntryCreate, MediaItem  # noqa: E402
+from app.features.entry_links import models as _link_models  # noqa: E402,F401  (so the wipe drops links too)
 from app.features.tags import service as tags_service  # noqa: E402
 from app.features.tags.schemas import TagNotes  # noqa: E402
 from scripts import sample_images as draw  # noqa: E402
@@ -84,6 +86,8 @@ def seed_demo() -> None:
 def wipe_local_data() -> None:
     SQLModel.metadata.drop_all(engine)
     create_tables()
+    with Session(engine) as db:
+        boards_service.ensure_home_board(db)
     settings.media_dir.mkdir(parents=True, exist_ok=True)
     for file in settings.media_dir.iterdir():
         if file.is_file():

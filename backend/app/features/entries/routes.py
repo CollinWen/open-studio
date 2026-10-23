@@ -2,9 +2,12 @@
 Entry endpoints:
 
   GET    /api/entries         list entries (owner also sees private/unlisted)
-                              ?updated_since=<date> keeps only entries added or edited after it
+                              ?board=<slug> keeps one board; ?updated_since=<date> keeps
+                              only entries added or edited after it
+  GET    /api/entries/page    the same, a page at a time: ?board=&limit=&cursor=
+                              returns {entries, next_cursor}; pass next_cursor back for more
   GET    /api/entries/{id}    one entry
-  POST   /api/entries         create (owner, or an agent: saved unlisted)
+  POST   /api/entries         create (owner, or an agent on its boards: saved unlisted)
   PATCH  /api/entries/{id}    edit (owner, or an agent on agents' unpublished entries)
   DELETE /api/entries/{id}    delete (owner only)
 
@@ -22,21 +25,40 @@ from app.auth.owner_auth import require_owner
 from app.auth.viewer import Viewer, current_viewer, require_writer
 from app.database import get_db
 from app.features.entries import service
-from app.features.entries.schemas import EntryCreate, EntryOut, EntryUpdate
+from app.features.entries.page_cursor import BadCursorError
+from app.features.entries.schemas import EntryCreate, EntryOut, EntryPage, EntryUpdate
 from app.features.entries.visibility_rules import can_edit
 
 router = APIRouter(prefix="/entries", tags=["entries"])
 
+DEFAULT_PAGE_SIZE = 60
+
 
 @router.get("", response_model=list[EntryOut])
 def list_entries(
+    board: str | None = None,
     updated_since: datetime | None = None,
     db: Session = Depends(get_db),
     viewer: Viewer = Depends(current_viewer),
 ):
     if updated_since is not None and updated_since.tzinfo is None:
         updated_since = updated_since.replace(tzinfo=timezone.utc)
-    return service.list_entries(db, viewer, updated_since=updated_since)
+    return service.list_entries(db, viewer, board=board, updated_since=updated_since)
+
+
+@router.get("/page", response_model=EntryPage)
+def list_entry_page(
+    board: str | None = None,
+    limit: int = DEFAULT_PAGE_SIZE,
+    cursor: str | None = None,
+    db: Session = Depends(get_db),
+    viewer: Viewer = Depends(current_viewer),
+):
+    try:
+        entries, next_cursor = service.list_entry_page(db, viewer, board, limit, cursor)
+    except BadCursorError as error:
+        raise HTTPException(status_code=422, detail=str(error))
+    return EntryPage(entries=entries, next_cursor=next_cursor)
 
 
 @router.get("/{entry_id}", response_model=EntryOut)
@@ -54,6 +76,10 @@ def create_entry(data: EntryCreate, db: Session = Depends(get_db), viewer: Viewe
     except service.DuplicateLinkError as error:
         existing_id = error.existing.id if error.existing else None
         raise HTTPException(status_code=409, detail={"message": str(error), "existing_id": existing_id})
+    except service.UnknownBoardError as error:
+        raise HTTPException(status_code=422, detail=str(error))
+    except service.BoardNotAllowedError as error:
+        raise HTTPException(status_code=403, detail=str(error))
 
 
 @router.patch("/{entry_id}", response_model=EntryOut)
@@ -70,7 +96,9 @@ def update_entry(
         raise HTTPException(status_code=403, detail="Agents can only edit agents' unpublished entries")
     try:
         return service.update_entry(db, entry, changes, viewer)
-    except service.AgentCannotPublishError as error:
+    except service.UnknownBoardError as error:
+        raise HTTPException(status_code=422, detail=str(error))
+    except (service.AgentCannotPublishError, service.BoardNotAllowedError) as error:
         raise HTTPException(status_code=403, detail=str(error))
 
 

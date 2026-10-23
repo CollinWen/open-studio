@@ -43,6 +43,7 @@ class EntryCreate(BaseModel):
     media: list[MediaItem] = []
     occurred_at: UtcDatetime | None = None
     visibility: Visibility = "private"
+    board: str = "home"
     # Leave empty to have tags suggested automatically.
     tags: list[str] = []
 
@@ -59,6 +60,7 @@ class EntryUpdate(BaseModel):
     occurred_at: UtcDatetime | None = None
     visibility: Visibility | None = None
     tags: list[str] | None = None
+    board: str | None = None
 
 
 class EntryOut(BaseModel):
@@ -78,3 +80,11 @@ class EntryOut(BaseModel):
     visibility: Visibility
     tags: list[str]
     added_by: str
+    board: str
+
+
+class EntryPage(BaseModel):
+    """One page of entries, newest first. Pass next_cursor back to get the page after; null at the end."""
+
+    entries: list[EntryOut]
+    next_cursor: str | None

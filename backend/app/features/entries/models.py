@@ -18,6 +18,9 @@ def _now() -> datetime:
 class Entry(SQLModel, table=True):
     id: str = Field(default_factory=lambda: uuid.uuid4().hex, primary_key=True)
 
+    # Which board it's on (see boards/models.py). "home" is the owner's own collection.
+    board: str = Field(default="home", index=True)
+
     # What it is, in my words. `description` is "why it's here", the most important field.
     title: str
     description: str = ""

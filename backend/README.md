@@ -47,13 +47,15 @@ API docs appear at http://localhost:8000/docs.
 | `app/database.py` | Opens the SQLite database |
 | `app/database_migrations.py` | Changes to existing tables. Add a step here whenever a field is added to a `models.py`. |
 | `app/auth/` | Who is asking: visitor, agent (a token from `AGENT_TOKENS`) or owner; agents' hourly write limit |
-| `app/features/entries/` | Entries: storage, visibility rules (per viewer, in `visibility_rules.py`), create/edit/delete, enrichment (tags + embedding). Each entry has a list of media items; the first is the cover, and `added_by` says whether the owner or which agent added it. |
+| `app/features/entries/` | Entries: storage, visibility rules (per viewer, in `visibility_rules.py`), create/edit/delete, enrichment (tags + embedding). Each entry has a list of media items; the first is the cover, `board` says which board it's on, and `added_by` says whether the owner or which agent added it. `GET /api/entries/page` reads a long collection a page at a time (`page_cursor.py`). |
+| `app/features/boards/` | Boards: separate spaces in the studio. `home` is your own collection (what the home page shows, made on startup); each other board has a description agents read as their brief, and the list of agents allowed to add to it |
+| `app/features/entry_links/` | "Builds on" links: an entry builds on an earlier one, with a note. No loops. `GET /api/entries/{id}/chain` returns the tree around an entry |
 | `app/features/capture/` | Paste a link, get a prefilled entry draft back (`POST /api/capture/link`) |
 | `app/features/tags/` | The LLM prompt that suggests tags; tag counts; the owner's tag descriptions and importance (key / normal / hidden) |
 | `app/features/related/` | Finds the entries closest in meaning to a given one (shared tags as fallback) |
 | `app/features/search/` | `GET /api/search?q=` — ranks entries by meaning (embeddings) and boosts plain word matches; text-only without an OpenRouter key |
 | `app/features/media/` | Image and video uploads, stored as the original file (on disk locally, in Cloudflare R2 in production) |
-| `app/agent_server/` | The studio as an MCP server at `/mcp`, for agents: read tools (interests, search, recent changes, related) and write tools (add, improve). Same rules as the web routes. How agents should use it: `skills/open-studio/SKILL.md`. |
+| `app/agent_server/` | The studio as an MCP server at `/mcp`, for agents: board tools (boards, a board's brief), read tools (search, recent changes, related), write tools (add, improve) and chain tools (read a chain, link entries). Same rules as the web routes. How agents should use it: `skills/open-studio/SKILL.md`. |
 | `app/integrations/` | Thin wrappers around OpenRouter (LLM, embeddings) and file storage |
 | `app/integrations/link_readers/` | One reader per site, chosen in `read_link.py`. YouTube (title, channel, upload date, description; no API key), Google Drive (full-resolution photo, date taken from EXIF; file must be shared "Anyone with the link"), GitHub (repo details), Instagram (caption, author, picture; the picture link expires after a few weeks), X (post text, author, date; no pictures), and any other page (link-preview tags). |
 | `scripts/` | Hand-run tools. `seed_demo_entries.py` wipes the **local** data and fills it with ~120 made-up entries (`demo_entries.py`) covering every source type, with generated pictures (`sample_images.py`). Refuses to run when R2 is configured. |
@@ -72,7 +74,17 @@ the same Wi-Fi while testing, run uvicorn with `--host 0.0.0.0`.
 
 Other programs can be given their own token: `AGENT_TOKENS=scout=<token>,archivist=<token>`
 in `.env` (or an `[agents]` section in `deploy.toml`). An agent can read the studio and add
-entries, through the MCP server at `/mcp` or the same HTTP endpoints. Its entries arrive
+entries to the boards it's signed on to, through the MCP server at `/mcp` or the same HTTP
+endpoints. Agents can't add to `home`. Make a board for each effort and list its agents:
+
+```bash
+curl -X POST localhost:8000/api/boards -H "Authorization: Bearer $OWNER_TOKEN" \
+    -H "Content-Type: application/json" \
+    -d '{"slug": "folding", "name": "Computational folding", "agents": ["scout"],
+         "description": "Designers, papers, tools and physical works. Enough at ~80 entries."}'
+```
+
+An agent's entries arrive
 **unlisted** and signed (`added_by: agent:scout`); publish the ones you want from the studio
 page. Agents can't publish, delete, or edit your entries, can't add a link that's already
 there, and can make `AGENT_WRITES_PER_HOUR` writes an hour (default 60).

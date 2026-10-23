@@ -7,11 +7,16 @@ and the hourly write limit holds.
 
 import uuid
 
-from conftest import ARCHIVIST_HEADERS, OWNER_HEADERS, SCOUT_HEADERS
+from conftest import AGENT_BOARD, ARCHIVIST_HEADERS, OWNER_HEADERS, SCOUT_HEADERS
 
 
 def _agent_create(client, headers, **fields) -> dict:
-    body = {"title": "found it", "tags": ["test"], "source_url": f"https://example.com/{uuid.uuid4().hex}"}
+    body = {
+        "title": "found it",
+        "tags": ["test"],
+        "board": AGENT_BOARD,
+        "source_url": f"https://example.com/{uuid.uuid4().hex}",
+    }
     response = client.post("/api/entries", json={**body, **fields}, headers=headers)
     assert response.status_code == 200, response.text
     return response.json()
@@ -36,7 +41,9 @@ def test_agents_see_each_others_entries_but_visitors_do_not(client):
 
 def test_agents_do_not_list_the_owners_unlisted_or_private_entries(client):
     owner_ids = {
-        client.post("/api/entries", json={"title": v, "visibility": v, "tags": ["t"]}, headers=OWNER_HEADERS).json()["id"]
+        client.post(
+            "/api/entries", json={"title": v, "visibility": v, "tags": ["t"]}, headers=OWNER_HEADERS
+        ).json()["id"]
         for v in ("unlisted", "private")
     }
     assert not owner_ids & _listed_ids(client, SCOUT_HEADERS)
@@ -52,22 +59,32 @@ def test_agents_edit_agent_entries_but_cannot_publish(client):
 
 def test_agents_cannot_edit_or_delete_owner_entries(client):
     owner_id = client.post(
-        "/api/entries", json={"title": "mine", "visibility": "public", "tags": ["test"]}, headers=OWNER_HEADERS
+        "/api/entries",
+        json={"title": "mine", "visibility": "public", "tags": ["test"]},
+        headers=OWNER_HEADERS,
     ).json()["id"]
-    assert client.patch(f"/api/entries/{owner_id}", json={"title": "x"}, headers=SCOUT_HEADERS).status_code == 403
+    assert (
+        client.patch(f"/api/entries/{owner_id}", json={"title": "x"}, headers=SCOUT_HEADERS).status_code
+        == 403
+    )
     assert client.delete(f"/api/entries/{owner_id}", headers=SCOUT_HEADERS).status_code == 401
 
 
 def test_once_published_an_agent_entry_belongs_to_the_owner(client):
     entry_id = _agent_create(client, SCOUT_HEADERS)["id"]
     client.patch(f"/api/entries/{entry_id}", json={"visibility": "public"}, headers=OWNER_HEADERS)
-    assert client.patch(f"/api/entries/{entry_id}", json={"title": "x"}, headers=SCOUT_HEADERS).status_code == 403
+    assert (
+        client.patch(f"/api/entries/{entry_id}", json={"title": "x"}, headers=SCOUT_HEADERS).status_code
+        == 403
+    )
 
 
 def test_the_same_link_is_not_added_twice(client):
     first = _agent_create(client, SCOUT_HEADERS)
     again = client.post(
-        "/api/entries", json={"title": "again", "source_url": first["source_url"]}, headers=ARCHIVIST_HEADERS
+        "/api/entries",
+        json={"title": "again", "board": AGENT_BOARD, "source_url": first["source_url"]},
+        headers=ARCHIVIST_HEADERS,
     )
     assert again.status_code == 409
     assert again.json()["detail"]["existing_id"] == first["id"]
@@ -75,8 +92,12 @@ def test_the_same_link_is_not_added_twice(client):
 
 def test_duplicate_of_a_private_entry_does_not_reveal_it(client):
     url = f"https://example.com/{uuid.uuid4().hex}"
-    client.post("/api/entries", json={"title": "secret", "source_url": url, "tags": ["t"]}, headers=OWNER_HEADERS)
-    again = client.post("/api/entries", json={"title": "x", "source_url": url}, headers=SCOUT_HEADERS)
+    client.post(
+        "/api/entries", json={"title": "secret", "source_url": url, "tags": ["t"]}, headers=OWNER_HEADERS
+    )
+    again = client.post(
+        "/api/entries", json={"title": "x", "board": AGENT_BOARD, "source_url": url}, headers=SCOUT_HEADERS
+    )
     assert again.status_code == 409
     assert again.json()["detail"]["existing_id"] is None
 
@@ -84,7 +105,12 @@ def test_duplicate_of_a_private_entry_does_not_reveal_it(client):
 def test_hourly_write_limit(client):
     for _ in range(5):
         _agent_create(client, SCOUT_HEADERS)
-    assert client.post("/api/entries", json={"title": "one too many"}, headers=SCOUT_HEADERS).status_code == 429
+    assert (
+        client.post(
+            "/api/entries", json={"title": "one too many", "board": AGENT_BOARD}, headers=SCOUT_HEADERS
+        ).status_code
+        == 429
+    )
     _agent_create(client, ARCHIVIST_HEADERS)
 
 

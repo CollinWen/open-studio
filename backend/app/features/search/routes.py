@@ -1,7 +1,7 @@
 """
 Search endpoints:
 
-  GET /api/search?q=...    entries matching the query, best match first
+  GET /api/search?q=...    entries matching the query, best match first (&board= for one board)
 """
 
 from fastapi import APIRouter, Depends
@@ -16,5 +16,7 @@ router = APIRouter(prefix="/search", tags=["search"])
 
 
 @router.get("", response_model=list[EntryOut])
-def search(q: str = "", db: Session = Depends(get_db), viewer: Viewer = Depends(current_viewer)):
-    return search_entries(db, q, viewer)
+def search(
+    q: str = "", board: str | None = None, db: Session = Depends(get_db), viewer: Viewer = Depends(current_viewer)
+):
+    return search_entries(db, q, viewer, board=board)

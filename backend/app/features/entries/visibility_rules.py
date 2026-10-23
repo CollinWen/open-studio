@@ -33,6 +33,13 @@ def listing_condition(viewer: Viewer) -> ColumnElement[bool]:
     return Entry.visibility == "public"
 
 
+def can_list(viewer: Viewer, entry: Entry) -> bool:
+    """The same rule as listing_condition, for one entry already loaded (e.g. one step of a chain)."""
+    if viewer.is_owner or entry.visibility == "public":
+        return True
+    return viewer.is_agent and entry.visibility == "unlisted" and entry.added_by != OWNER
+
+
 def can_open(viewer: Viewer, entry: Entry) -> bool:
     """Whether this viewer may open the entry by its id."""
     return viewer.is_owner or entry.visibility != "private"

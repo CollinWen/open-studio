@@ -32,6 +32,8 @@ export interface Entry {
   tags: string[];
   /** "owner", or "agent:<name>" for an entry an agent added. */
   added_by: string;
+  /** Slug of the board it's on; "home" is the owner's own collection. */
+  board: string;
 }
 
 /** What the admin form sends. Empty tags means "suggest them for me". */

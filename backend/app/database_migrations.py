@@ -15,6 +15,8 @@ from sqlalchemy import Engine, inspect, text
 # Example: "ALTER TABLE entry ADD COLUMN location VARCHAR NOT NULL DEFAULT ''"
 MIGRATIONS: list[str] = [
     "ALTER TABLE entry ADD COLUMN added_by VARCHAR NOT NULL DEFAULT 'owner'",
+    "ALTER TABLE entry ADD COLUMN board VARCHAR NOT NULL DEFAULT 'home'",
+    "CREATE INDEX IF NOT EXISTS ix_entry_board ON entry (board)",
 ]
 
 

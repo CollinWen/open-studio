@@ -1,7 +1,7 @@
 """
 Tag endpoints:
 
-  GET /api/tags           every tag in use, with count, description and importance
+  GET /api/tags           every tag in use, with count, description and importance (?board= for one board)
   PUT /api/tags/{name}    set a tag's description and importance (owner only)
 """
 
@@ -18,8 +18,8 @@ router = APIRouter(prefix="/tags", tags=["tags"])
 
 
 @router.get("", response_model=list[TagInfo])
-def list_tags(db: Session = Depends(get_db), viewer: Viewer = Depends(current_viewer)):
-    return service.list_tags(db, viewer)
+def list_tags(board: str | None = None, db: Session = Depends(get_db), viewer: Viewer = Depends(current_viewer)):
+    return service.list_tags(db, viewer, board=board)
 
 
 @router.put("/{name}", response_model=TagNotes, dependencies=[Depends(require_owner)])

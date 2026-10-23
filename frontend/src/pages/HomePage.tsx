@@ -1,5 +1,5 @@
 /**
- * HomePage ( / ): the whole collection, laid out as labeled rows. The intro
+ * HomePage ( / ): the home board (the owner's own collection), laid out as labeled rows. The intro
  * set large, the tags, the years, the browse controls (search, view, sort),
  * then the entries: on an orb by default, or as a grid or rows. A picked tag
  * or years highlight their entries in whichever view is showing, and every
@@ -30,6 +30,8 @@ import { useBrowseParams } from "../features/grid/useBrowseParams";
 import type { Entry, Tag } from "../types/entry";
 
 const INTRO = "A working collection of things I make and things I'm curious about.";
+// The home page shows the owner's own board; other boards are separate spaces.
+const HOME_BOARD = "home";
 
 export function HomePage() {
   const { tag, pickedYears, query, view, sort, defaultSort, setParam, toggleYear, clearParams } = useBrowseParams();
@@ -37,11 +39,11 @@ export function HomePage() {
   const [tags, setTags] = useState<Tag[]>([]);
 
   useEffect(() => {
-    fetchTags().then(setTags).catch(console.error);
+    fetchTags(HOME_BOARD).then(setTags).catch(console.error);
   }, []);
 
   useEffect(() => {
-    const load = query ? searchEntries(query) : fetchEntries();
+    const load = query ? searchEntries(query, HOME_BOARD) : fetchEntries(HOME_BOARD);
     load.then(setEntries).catch(() => setEntries([]));
   }, [query]);
 

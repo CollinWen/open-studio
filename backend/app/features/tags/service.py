@@ -16,10 +16,11 @@ from app.features.tags.models import HIDDEN, NORMAL, Tag
 from app.features.tags.schemas import TagInfo, TagNotes
 
 
-def list_tags(db: Session, viewer: Viewer) -> list[TagInfo]:
+def list_tags(db: Session, viewer: Viewer, board: str | None = None) -> list[TagInfo]:
+    """`board` counts only that board's entries (every board when None)."""
     counts = Counter(
         tag
-        for entry in entries_service.list_entries(db, viewer)
+        for entry in entries_service.list_entries(db, viewer, board=board)
         for tag in entry.tags
     )
     notes = {tag.name: tag for tag in db.exec(select(Tag))}

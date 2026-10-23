@@ -27,18 +27,22 @@ engine = create_engine(
 
 
 @event.listens_for(engine, "connect")
-def _allow_concurrent_access(connection, _record) -> None:
+def _configure_connection(connection, _record) -> None:
     """Let readers carry on during a write (WAL), and let writers queue instead of failing,
-    so many agents can use the studio at once."""
+    so many agents can use the studio at once. Foreign keys on, so deleting an entry
+    also deletes its links."""
     cursor = connection.cursor()
     cursor.execute("PRAGMA journal_mode=WAL")
     cursor.execute(f"PRAGMA busy_timeout={WRITE_WAIT_MILLISECONDS}")
+    cursor.execute("PRAGMA foreign_keys=ON")
     cursor.close()
 
 
 def create_tables() -> None:
     """Create any missing tables, then apply migrations to existing ones."""
+    from app.features.boards import models as board_models  # noqa: F401
     from app.features.entries import models  # noqa: F401
+    from app.features.entry_links import models as link_models  # noqa: F401
     from app.features.tags import models as tag_models  # noqa: F401
 
     fresh_database = database_is_empty(engine)
