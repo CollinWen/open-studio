@@ -7,3 +7,4 @@ truststore
 numpy
 boto3
 pytest
+mcp>=2.3,<3

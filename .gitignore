@@ -12,6 +12,7 @@ backend/data/
 # Frontend
 node_modules/
 frontend/dist/
+frontend/*.tsbuildinfo
 
 # Personal editor/agent settings and OS files
 .claude/settings.local.json

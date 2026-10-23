@@ -2,6 +2,9 @@
  * EntryForm: write a new entry or edit an existing one. Plain text fields,
  * no boxes. Leaving tags blank asks the backend to suggest them.
  *
+ * A new entry asks only for the essentials (a link, a title, why it's here,
+ * which space it goes in, who sees it); kind, date, source, tags and pictures sit behind "more",
+ * summed up in one quiet line. Editing shows everything.
  * Pasting a link at the top fills in whatever fields are still empty and adds
  * the link's pictures to the media list (see LinkCaptureField).
  *
@@ -12,12 +15,15 @@
 import { useState } from "react";
 import { createEntry, updateEntry } from "../../api/entriesApi";
 import { WordChoice } from "../../components/WordChoice";
-import type { CapturedLink, Entry, EntryDraft, Visibility } from "../../types/entry";
+import type { Board, CapturedLink, Entry, EntryDraft, Visibility } from "../../types/entry";
 import { LinkCaptureField } from "./LinkCaptureField";
 import { MediaListEditor } from "./MediaListEditor";
 
 interface Props {
   editing: Entry | null;
+  boards: Board[];
+  /** Where a new entry goes unless another space is picked: the board you were looking at. */
+  defaultBoard: string;
   onSaved: () => void;
   onCancel: () => void;
 }
@@ -25,10 +31,11 @@ interface Props {
 const KINDS = ["note", "link", "project", "photo", "video", "book", "artwork", "sketch", "recipe", "post"];
 const VISIBILITIES: Visibility[] = ["private", "unlisted", "public"];
 
-export function EntryForm({ editing, onSaved, onCancel }: Props) {
-  const [draft, setDraft] = useState<EntryDraft>(() => draftFrom(editing));
+export function EntryForm({ editing, boards, defaultBoard, onSaved, onCancel }: Props) {
+  const [draft, setDraft] = useState<EntryDraft>(() => draftFrom(editing, defaultBoard));
   const [tagText, setTagText] = useState(editing?.tags.join(", ") ?? "");
   const [status, setStatus] = useState("");
+  const [showMore, setShowMore] = useState(editing !== null);
 
   const set = <K extends keyof EntryDraft>(field: K, value: EntryDraft[K]) =>
     setDraft((current) => ({ ...current, [field]: value }));
@@ -61,35 +68,63 @@ export function EntryForm({ editing, onSaved, onCancel }: Props) {
 
   return (
     <form className="entry-form" onSubmit={(event) => (event.preventDefault(), save())}>
-      <p className="quiet">{editing ? "editing" : "new entry"}</p>
-      <LinkCaptureField onCaptured={applyCaptured} />
+      <LinkCaptureField onCaptured={applyCaptured} autoFocus={!editing} />
       <input placeholder="title" value={draft.title} onChange={(e) => set("title", e.target.value)} required />
       <textarea
         placeholder="why it's here"
-        rows={5}
+        rows={4}
         value={draft.description}
         onChange={(e) => set("description", e.target.value)}
       />
-      <input placeholder="kind" list="kinds" value={draft.kind} onChange={(e) => set("kind", e.target.value)} />
-      <datalist id="kinds">
-        {KINDS.map((kind) => (
-          <option key={kind} value={kind} />
-        ))}
-      </datalist>
-      <input
-        type="date"
-        value={draft.occurred_at?.slice(0, 10) ?? ""}
-        onChange={(e) => set("occurred_at", e.target.value || null)}
-      />
-      <input placeholder="source name" value={draft.source_name} onChange={(e) => set("source_name", e.target.value)} />
-      <input placeholder="source url" value={draft.source_url} onChange={(e) => set("source_url", e.target.value)} />
-      <input
-        placeholder="tags, comma separated (blank = suggest)"
-        value={tagText}
-        onChange={(e) => setTagText(e.target.value)}
-      />
 
-      <MediaListEditor media={draft.media} onChange={(media) => set("media", media)} />
+      {!showMore && (
+        <p className="word-list">
+          <button type="button" onClick={() => setShowMore(true)}>
+            more
+          </button>
+          <span className="quiet">{summarize(draft, tagText)}</span>
+        </p>
+      )}
+      {showMore && (
+        <>
+          <input placeholder="kind" list="kinds" value={draft.kind} onChange={(e) => set("kind", e.target.value)} />
+          <datalist id="kinds">
+            {KINDS.map((kind) => (
+              <option key={kind} value={kind} />
+            ))}
+          </datalist>
+          <input
+            type="date"
+            value={draft.occurred_at?.slice(0, 10) ?? ""}
+            onChange={(e) => set("occurred_at", e.target.value || null)}
+          />
+          <input
+            placeholder="source name"
+            value={draft.source_name}
+            onChange={(e) => set("source_name", e.target.value)}
+          />
+          <input placeholder="source url" value={draft.source_url} onChange={(e) => set("source_url", e.target.value)} />
+          <input
+            placeholder="tags, comma separated (blank = suggest)"
+            value={tagText}
+            onChange={(e) => setTagText(e.target.value)}
+          />
+          <MediaListEditor media={draft.media} onChange={(media) => set("media", media)} />
+        </>
+      )}
+
+      {boards.length > 1 && (
+        <p className="word-list">
+          {boards.map((board) => (
+            <WordChoice
+              key={board.slug}
+              label={board.name.toLowerCase()}
+              active={draft.board === board.slug}
+              onPick={() => set("board", board.slug)}
+            />
+          ))}
+        </p>
+      )}
 
       <p className="word-list">
         {VISIBILITIES.map((visibility) => (
@@ -113,7 +148,7 @@ export function EntryForm({ editing, onSaved, onCancel }: Props) {
   );
 }
 
-function draftFrom(entry: Entry | null): EntryDraft {
+function draftFrom(entry: Entry | null, defaultBoard: string): EntryDraft {
   return {
     title: entry?.title ?? "",
     description: entry?.description ?? "",
@@ -124,7 +159,22 @@ function draftFrom(entry: Entry | null): EntryDraft {
     occurred_at: entry?.occurred_at ?? null,
     visibility: entry?.visibility ?? "private",
     tags: entry?.tags ?? [],
+    board: entry?.board ?? defaultBoard,
   };
+}
+
+/** One quiet line saying what's behind "more", so a pasted link's details are visible without opening it. */
+function summarize(draft: EntryDraft, tagText: string): string {
+  const pictures = draft.media.length;
+  return [
+    draft.kind,
+    draft.occurred_at?.slice(0, 10),
+    draft.source_name,
+    pictures > 0 && `${pictures} ${pictures === 1 ? "picture" : "pictures"}`,
+    tagText.trim() ? tagText : "tags suggested on save",
+  ]
+    .filter(Boolean)
+    .join(" · ");
 }
 
 function parseTags(text: string): string[] {

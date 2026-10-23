@@ -2,26 +2,28 @@
  * WordChoice: a control that is just a word. Soft ink until picked. Put
  * several inside a `.word-list` to space them evenly.
  *
- * How a picked word looks depends on what it is:
+ * How it looks depends on what it is:
  * - "underline" (default) for modes, where one is always on: views, sorts,
- *   visibility, tag importance.
- * - "pill" for filters, which narrow what you see and can be cleared: tags
- *   and years. The pill (ink background) makes it obvious something is on.
+ *   visibility, tag importance. The picked one is underlined.
+ * - "oval" for filters you can turn on and off (tags): each sits in a thin
+ *   flat oval, so it reads as something you can pick; picked, the oval
+ *   fills with ink.
  */
 
 interface Props {
   label: string;
   active: boolean;
   onPick: () => void;
-  look?: "underline" | "pill";
+  look?: "underline" | "oval";
   /** Overrides the unpicked ink, e.g. key tags in full ink. */
   className?: string;
 }
 
 export function WordChoice({ label, active, onPick, look = "underline", className = "quiet" }: Props) {
-  const picked = look === "pill" ? "pill" : "is-active";
+  const classes =
+    look === "oval" ? ["oval", active ? "is-picked" : className] : [active ? "is-active" : className];
   return (
-    <button type="button" className={active ? picked : className} onClick={onPick}>
+    <button type="button" className={classes.join(" ")} aria-pressed={active} onClick={onPick}>
       {label}
     </button>
   );

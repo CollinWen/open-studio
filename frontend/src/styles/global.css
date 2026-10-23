@@ -11,8 +11,9 @@
  *   and space, never color or boxes.
  * - Rules run the full width of the screen: a double rule for major breaks,
  *   a single hairline for minor ones (see components/LabelRow.tsx).
- * - Every line of words (tags, views, years, studio controls) is a
- *   `.word-list`; every pick-one word is a WordChoice.
+ * - Every line of words (spaces, tags, views, studio controls) is a
+ *   `.word-list`; every pick-one word is a WordChoice. Tags sit in thin flat
+ *   ovals (filled when picked); picture sizes are three dots (DotChoice).
  * Change the look here, through the tokens below, not in components.
  * The paper is a warm off-white; the work supplies the color.
  */
@@ -40,6 +41,28 @@
   --line: 22px;
   --gutter: 22px;
   --margin: 44px;
+
+  /* Motion: one quiet, controlled personality, no overshoot. Things arrive
+     decelerating and leave accelerating; leaving takes about 70% as long.
+     Three durations; staggers stay under half a second in total. */
+  --ease-enter: cubic-bezier(0.2, 0, 0, 1);
+  --ease-exit: cubic-bezier(0.3, 0, 1, 1);
+  --motion-quick: 200ms;
+  --motion-standard: 350ms;
+  --motion-exit: 250ms;
+  --motion-ambient: 1600ms;
+  --stagger: 30ms;
+  --arrive-distance: 12px;
+  --sheet-drop: 24px;
+
+  /* Tag ovals, view dots and the time slider. */
+  --oval-padding: 0.55em;
+  --oval-gap: 0.4em;
+  --dot-small: 6px;
+  --dot-medium: 10px;
+  --dot-large: 15px;
+  --time-bar-height: calc(1.5 * var(--line));
+  --time-handle: 11px;
 }
 
 @media (max-width: 1100px) {
@@ -160,25 +183,74 @@ button:hover {
   text-underline-offset: 0.18em;
 }
 
-/* A picked filter (tag, year, search): an ink pill, the one filled shape on
-   the page, so it is always clear what is narrowing the view. Clicking it
-   again clears it. */
-.pill {
-  margin: 0 -0.4em;
-  padding: 0 0.4em;
+/* A filter you can turn on and off (a tag): the word in a thin flat oval,
+   so it reads as something to pick. Picked, the oval fills with ink: the
+   one filled shape on the page, so it's always clear what is narrowing the
+   view. Clicking it again clears it. */
+.oval {
+  padding: 0 var(--oval-padding);
+  border: 1px solid var(--ink-faint);
   border-radius: 1em;
+  line-height: calc(var(--line) - 2px);
+}
+
+.oval.is-key {
+  border-color: var(--ink-soft);
+}
+
+.oval:hover {
+  text-decoration: none;
+  border-color: var(--ink);
+}
+
+.oval.is-picked {
   background: var(--ink);
+  border-color: var(--ink);
   color: var(--paper);
 }
 
-/* Two pills side by side keep the usual word gap between their edges. */
-.pill + .pill {
-  margin-left: 0.4em;
+/* Ovals sit closer than words, and wrap onto lines a little apart. */
+.word-list.is-ovals {
+  column-gap: var(--oval-gap);
+  row-gap: var(--oval-gap);
 }
 
-.pill:hover {
-  text-decoration: none;
+/* A size picked as a dot (small, medium, large pictures): soft ink until picked. */
+.dot-choice {
+  display: inline-block;
+  border-radius: 50%;
   background: var(--ink-soft);
+  vertical-align: middle;
+}
+
+.dot-choice:hover {
+  background: var(--ink);
+}
+
+.dot-choice.is-picked {
+  background: var(--ink);
+}
+
+.dot-small {
+  width: var(--dot-small);
+  height: var(--dot-small);
+}
+
+.dot-medium {
+  width: var(--dot-medium);
+  height: var(--dot-medium);
+}
+
+.dot-large {
+  width: var(--dot-large);
+  height: var(--dot-large);
+}
+
+.dot-list {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--oval-gap);
+  align-self: center;
 }
 
 ::placeholder {
@@ -309,10 +381,121 @@ button:hover {
   padding-bottom: calc(2 * var(--line));
 }
 
-/* ---- Home grid ---- */
+/* ---- Browse panel: space, tags, time and view in one block (features/grid/BrowsePanel.tsx) ---- */
+
+/* One section: a rule above it, then its lines half a line apart, no rules between. */
+.browse-panel .label-row + .label-row {
+  margin-top: calc(var(--line) / 2);
+}
+
+/* The spaces are the largest words in the panel: where you are comes first. */
+.board-line {
+  font-size: var(--size-large);
+  line-height: var(--line);
+}
+
+.board-line a:hover {
+  color: var(--ink);
+}
+
+/* The time slider: month bars on a hairline, two handles laid over them. */
+.time-filter {
+  max-width: 640px;
+  font-size: var(--size-small);
+  line-height: var(--leading-small);
+}
+
+.time-strip {
+  position: relative;
+  height: var(--time-bar-height);
+  margin: 0 calc(var(--time-handle) / 2);
+  border-bottom: var(--rule-faint);
+}
+
+.time-bars {
+  position: relative;
+  height: 100%;
+}
+
+/* Each bar sits at its month (--at, 0 to 1) and is as tall as the month is full (--fill). */
+.time-bar {
+  position: absolute;
+  bottom: 0;
+  left: calc(var(--at) * 100%);
+  width: 2px;
+  height: max(2px, calc(var(--fill) * 100%));
+  transform: translateX(-50%);
+  background: var(--ink-faint);
+  transition: background var(--motion-quick) var(--ease-enter);
+}
+
+.time-bar.is-in {
+  background: var(--ink);
+}
+
+/* The two range inputs cover the strip; only their handles take the pointer. */
+.time-strip input[type="range"] {
+  position: absolute;
+  inset: auto calc(var(--time-handle) / -2) calc(var(--time-handle) / -2);
+  width: calc(100% + var(--time-handle));
+  height: var(--time-handle);
+  appearance: none;
+  background: none;
+  pointer-events: none;
+}
+
+.time-strip input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: var(--time-handle);
+  height: var(--time-handle);
+  border-radius: 50%;
+  background: var(--ink);
+  cursor: grab;
+  pointer-events: auto;
+}
+
+.time-strip input[type="range"]::-moz-range-thumb {
+  width: var(--time-handle);
+  height: var(--time-handle);
+  border: none;
+  border-radius: 50%;
+  background: var(--ink);
+  cursor: grab;
+  pointer-events: auto;
+}
+
+.time-strip input[type="range"]:focus-visible::-webkit-slider-thumb {
+  outline: 1px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.time-years {
+  position: relative;
+  height: var(--leading-small);
+  margin: calc(var(--line) / 4) calc(var(--time-handle) / 2) calc(var(--line) / 4);
+  color: var(--ink-soft);
+}
+
+.time-years span {
+  position: absolute;
+  left: calc(var(--at) * 100%);
+}
+
+.time-filter p {
+  margin: 0 0 calc(var(--line) / 4);
+  font-size: var(--size-body);
+  line-height: var(--line);
+}
+
+/* "clear ×": takes every pick and the search off at once. */
+.clear-word {
+  color: var(--ink);
+}
+
+/* ---- Board views: sphere, grid, rows ---- */
 
 
-/* Search, view size and sort, on one line that wraps on phones. */
+/* Search, view, sort and clear, on one line that wraps on phones. */
 .browse-controls {
   display: flex;
   flex-wrap: wrap;
@@ -791,64 +974,114 @@ button:hover {
   margin-bottom: calc(var(--line) / 4);
 }
 
-/* ---- Crosshair cursor (see components/CrosshairCursor.tsx) ---- */
+/* ---- Entry sheet: the add / edit form over the page (features/studio/EntryFormModal.tsx) ---- */
 
-/* With a mouse, hide the normal pointer everywhere except text fields. */
-@media (pointer: fine) {
-  html,
-  a,
-  button,
-  label {
-    cursor: none;
-  }
-
-  input,
-  textarea {
-    cursor: text;
-  }
-}
-
-/* The cursor is white, and "difference" blending inverts whatever is
-   beneath it: black on the white page, a negative over a photo. */
-.crosshair {
+/* A sheet of paper dropped over the top of the page, edge to edge like the
+   rows, closed off by a double rule. No box, no shadow: the page behind
+   fades back toward paper instead. */
+.entry-sheet {
   position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 1000;
-  pointer-events: none;
-  mix-blend-mode: difference;
-  opacity: 0;
+  inset: 0 0 auto 0;
+  width: 100%;
+  max-width: none;
+  max-height: 100vh;
+  margin: 0;
+  padding: var(--line) 0 calc(2 * var(--line));
+  overflow-y: auto;
+  border: none;
+  /* Two 1px lines, 1px apart: the same double rule as .label-row.is-double. */
+  border-bottom: 3px double var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  animation: sheet-drop var(--motion-standard) var(--ease-enter) both;
 }
 
-.crosshair.is-visible {
-  opacity: 1;
+.entry-sheet::backdrop {
+  background: var(--paper);
+  opacity: 0.82;
+  animation: backdrop-fade var(--motion-quick) var(--ease-enter) both;
 }
 
-.crosshair.is-over-text-field {
-  opacity: 0;
+.entry-sheet.is-closing {
+  animation: sheet-lift var(--motion-exit) var(--ease-exit) both;
 }
 
-/* A small dot, centered on the mouse position. */
-.crosshair-shape {
-  position: absolute;
-  width: 8px;
-  height: 8px;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  background: #fff;
-  transition:
-    width 0.15s ease,
-    height 0.15s ease;
+.entry-sheet.is-closing::backdrop {
+  animation: backdrop-fade var(--motion-exit) var(--ease-exit) reverse both;
 }
 
-/* Over something clickable: the dot grows a little, inverting more of what's under it. */
-.crosshair.is-over-clickable .crosshair-shape {
-  width: 16px;
-  height: 16px;
+/* The form's lines follow the sheet down, in reading order. */
+.entry-sheet .entry-form > * {
+  animation: arrive var(--motion-standard) var(--ease-enter) both;
+}
+
+.entry-sheet .entry-form > :nth-child(1) { animation-delay: calc(2 * var(--stagger)); }
+.entry-sheet .entry-form > :nth-child(2) { animation-delay: calc(3 * var(--stagger)); }
+.entry-sheet .entry-form > :nth-child(3) { animation-delay: calc(4 * var(--stagger)); }
+.entry-sheet .entry-form > :nth-child(n + 4) { animation-delay: calc(5 * var(--stagger)); }
+
+@keyframes sheet-drop {
+  from {
+    opacity: 0;
+    transform: translateY(calc(-1 * var(--sheet-drop)));
+  }
+}
+
+@keyframes sheet-lift {
+  to {
+    opacity: 0;
+    transform: translateY(calc(-1 * var(--sheet-drop)));
+  }
+}
+
+@keyframes backdrop-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ---- Arriving and loading ---- */
+
+/* A card or row rising into place as its page of entries arrives. Each new
+   one waits its turn (--arrive-order, set by EntryGrid and EntryRows). */
+.is-arriving {
+  animation: arrive var(--motion-standard) var(--ease-enter) both;
+  animation-delay: calc(var(--arrive-order, 0) * var(--stagger));
+}
+
+@keyframes arrive {
+  from {
+    opacity: 0;
+    transform: translateY(var(--arrive-distance));
+  }
+}
+
+/* "loading" in the header while pages are still coming in: a slow breath. */
+.loading-word {
+  animation: breathe var(--motion-ambient) ease-in-out infinite alternate;
+}
+
+@keyframes breathe {
+  to {
+    opacity: 0.35;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .crosshair-shape {
-    transition: none;
+  .entry-sheet,
+  .entry-sheet.is-closing,
+  .entry-sheet .entry-form > *,
+  .is-arriving {
+    animation-name: backdrop-fade;
+    animation-duration: var(--motion-quick);
+    animation-delay: 0ms;
+  }
+
+  .entry-sheet.is-closing {
+    animation-direction: reverse;
+  }
+
+  .loading-word {
+    animation: none;
   }
 }

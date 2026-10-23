@@ -6,7 +6,7 @@ and what it gets back. The embedding is never sent to the browser.
 from datetime import datetime, timezone
 from typing import Annotated, Literal
 
-from pydantic import AfterValidator, BaseModel
+from pydantic import AfterValidator, BaseModel, ConfigDict
 
 Visibility = Literal["private", "unlisted", "public"]
 
@@ -33,6 +33,8 @@ class MediaItem(BaseModel):
 
 
 class EntryCreate(BaseModel):
+    """Agents' entries are always saved unlisted, whatever `visibility` says."""
+
     title: str
     description: str = ""
     kind: str = "note"
@@ -41,6 +43,7 @@ class EntryCreate(BaseModel):
     media: list[MediaItem] = []
     occurred_at: UtcDatetime | None = None
     visibility: Visibility = "private"
+    board: str = "home"
     # Leave empty to have tags suggested automatically.
     tags: list[str] = []
 
@@ -57,9 +60,13 @@ class EntryUpdate(BaseModel):
     occurred_at: UtcDatetime | None = None
     visibility: Visibility | None = None
     tags: list[str] | None = None
+    board: str | None = None
 
 
 class EntryOut(BaseModel):
+    # Built straight from a stored Entry (routes and the agent server's tools).
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     title: str
     description: str
@@ -72,3 +79,12 @@ class EntryOut(BaseModel):
     updated_at: datetime
     visibility: Visibility
     tags: list[str]
+    added_by: str
+    board: str
+
+
+class EntryPage(BaseModel):
+    """One page of entries, newest first. Pass next_cursor back to get the page after; null at the end."""
+
+    entries: list[EntryOut]
+    next_cursor: str | None

@@ -20,3 +20,9 @@ bucket = "open-studio-media"
 [secrets]
 owner_token = ""                 # your admin password; long and random
 openrouter_api_key = ""
+
+# Optional: agents allowed to read the studio and add entries (they arrive unlisted).
+# One line per agent, name = token. Remove a line to cut that agent off
+# (to cut off every agent, keep the section with one empty token: scout = "").
+# [agents]
+# scout = "long-random-token"

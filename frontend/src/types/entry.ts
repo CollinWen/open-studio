@@ -1,6 +1,6 @@
 /**
  * Data shapes shared across the frontend. These match the backend's
- * schemas.py files (entries, tags); change both together.
+ * schemas.py files (entries, boards, tags); change both together.
  */
 
 export type Visibility = "private" | "unlisted" | "public";
@@ -30,12 +30,30 @@ export interface Entry {
   updated_at: string;
   visibility: Visibility;
   tags: string[];
+  /** "owner", or "agent:<name>" for an entry an agent added. */
+  added_by: string;
+  /** Slug of the board it's on; "home" is the owner's own collection. */
+  board: string;
+}
+
+/** A separate space in the studio. "home" is the owner's own collection; its page is "/", the others' "/b/<slug>". */
+export interface Board {
+  slug: string;
+  name: string;
+  description: string;
+  agents: string[];
+}
+
+/** One page of entries from /api/entries/page. next_cursor is null on the last page. */
+export interface EntryPage {
+  entries: Entry[];
+  next_cursor: string | null;
 }
 
 /** What the admin form sends. Empty tags means "suggest them for me". */
 export type EntryDraft = Pick<
   Entry,
-  "title" | "description" | "kind" | "source_name" | "source_url" | "media" | "visibility" | "tags"
+  "title" | "description" | "kind" | "source_name" | "source_url" | "media" | "visibility" | "tags" | "board"
 > & { occurred_at: string | null };
 
 /** A tag in use. importance: -1 hidden, 0 normal, 1 key (listed first, in black). */

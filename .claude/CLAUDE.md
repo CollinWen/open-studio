@@ -6,11 +6,13 @@ What we're building is described in [open-studio-brief.md](../open-studio-brief.
 
 ### Current direction (where we differ from the brief)
 
-- **The home page opens on the sphere view**: every entry's picture floats on the surface of one orb in time order, newest at the top and oldest at the bottom, so each year is a band. It turns slowly and can be dragged. A Years row (`?year=2024,2022`) highlights any number of years in every view and turns the orb so those bands face you. The masonry grid (newest first) and rows are one click away. (A free-form canvas/map and an ink-blot view were tried and dropped.)
+- **Every board opens on the sphere view**: each entry's picture floats on the surface of one orb in time order, newest at the top and oldest at the bottom, so each year is a band. It turns slowly and can be dragged. A Time slider (`?from=2023-04&to=2024-09`) picks a span of months, highlights it in every view and turns the orb so that band faces you. The masonry grid (newest first) and rows are one click away. (A free-form canvas/map and an ink-blot view were tried and dropped.)
+- **Boards are separate spaces, and never mix.** Every entry is on one board. `home` is the owner's own collection, shown at `/`; every other board (bread, ceramics, graphics, photography in the demo data; or a focused effort agents are signed on to) has its own page at `/b/<slug>` with only its own entries, tags, time, search and Related. Boards aren't the brief's subjects: they separate whose work and which effort, not topics within one collection.
+- **Entries build on each other.** A "builds on" link (an entry link with a direction and a note) chains entries into lines and trees; `GET /api/entries/{id}/chain` shows the tree around one entry.
 - **The subject → project → session hierarchy is on hold.** Structure comes from LLM tags (filtering) and embeddings ("Related") for now. Don't add subjects, projects, sessions or lenses until the owner asks.
-- **Design: a Swiss page grid, after Müller-Brockmann's "Grid Systems".** A 12-column grid inside generous margins; every page is a stack of labeled rows (`components/LabelRow.tsx`): a quiet label hangs in columns 1–3, content starts at column 4, wide rows (the sphere, the picture grid) span all 12. One line of body text is the unit for all vertical space, and the column gutter is one line too. Pictures span whole columns (masonry column counts divide 12). Rules run the full width of the screen: a double rule for major breaks (under the header, before the footer), a single hairline for minor ones; no vertical rules. One typeface, Inter (self-hosted), in few sizes; hierarchy comes from size, ink strength (full, soft) and space, never extra colors. Dark ink on a warm off-white paper. No boxes, cards, shadows, icons or button styling, with one exception: a picked filter (tag, year, search) is an ink pill, and every active filter is also listed as a pill with × beside the browse controls (search, view, sort sit directly above the work, with no label). Modes (view, sort) stay underlined. Key tags sit on their own first line in full ink; other tags follow in soft ink. Controls are plain words: a line of words is always a `.word-list`, and a pick-one word is always `components/WordChoice.tsx`. Labels use the small size, the site name the large one. Color comes only from the work itself. All styling lives in `frontend/src/styles/global.css`, with the tokens at the top; change the look through those tokens, never one-off sizes or spacing in a component. Don't add a CSS framework or component library.
+- **Design: a Swiss page grid, after Müller-Brockmann's "Grid Systems".** A 12-column grid inside generous margins; every page is a stack of labeled rows (`components/LabelRow.tsx`): a quiet label hangs in columns 1–3, content starts at column 4, wide rows (the sphere, the picture grid) span all 12. One line of body text is the unit for all vertical space, and the column gutter is one line too. Pictures span whole columns (masonry column counts divide 12). Rules run the full width of the screen: a double rule for major breaks (under the header, before the footer), a single hairline for minor ones; no vertical rules. One typeface, Inter (self-hosted), in few sizes; hierarchy comes from size, ink strength (full, soft) and space, never extra colors. Dark ink on a warm off-white paper. No boxes, cards, shadows or button styling, with two exceptions that say "this can be picked": tags sit in thin flat ovals (key tags first, with a stronger outline; a picked tag's oval fills with ink), and picture sizes are three dots (`components/DotChoice.tsx`). Everything for moving around a board sits in one browse panel above the work, with no rules between its lines: Space (the boards, as larger words), Tags, Time (the month slider) and View (search · sphere ●●● rows · sort · clear). Modes (space, view, sort) stay underlined. Otherwise controls are plain words: a line of words is always a `.word-list`, and a pick-one word is always `components/WordChoice.tsx`. The normal mouse pointer is used everywhere (a custom cursor was tried and dropped). Labels use the small size, the site name the large one. Color comes only from the work itself. Motion is quiet and controlled, with no overshoot: things arrive decelerating and leave accelerating, using the motion tokens in `global.css` (after LottieFiles' motion-design skill), always with a reduced-motion alternative. The one overlay is the entry form's sheet: paper dropped over the page, closed by a double rule, with the page fading back behind it. All styling lives in `frontend/src/styles/global.css`, with the tokens at the top; change the look through those tokens, never one-off sizes or spacing in a component. Don't add a CSS framework or component library.
 - **Links are the navigation (Zettelkasten-style).** Every view is a URL: entry pages, tag selection, search, view and sort (`/?tag=bread&view=rows`). Anything a visitor can see should be reachable by a link, and pages should link to each other (tags, related entries) so you can wander between them.
-- **Controls are words, never icons.** "sphere · small · medium · large · rows", "recent · oldest · title". The current mode is underlined; a picked filter is a pill.
+- **Controls are words, never icons.** "sphere · ●●● · rows", "recent · oldest · title". The only marks that aren't words are the three size dots and the tag ovals. The current mode is underlined; a picked tag is a filled oval.
 - **Media is never altered.** Uploads are stored as the original file. Linked media (YouTube, Google Drive) is shown from where it lives, not copied. Deal with storage limits when they come.
 - **Hosting:** backend on Fly.io (SQLite on a persistent volume), uploaded media in Cloudflare R2, frontend on Firebase Hosting, domain and DNS on Cloudflare. Every deploy setting lives in `deploy.toml` (not committed); `deploy.py` pushes it out, by hand or from GitHub Actions on every push to `main`. Setup steps are in the backend and frontend READMEs. Keep storage behind `backend/app/database.py` and `integrations/media_storage.py` so it can be swapped later.
 
@@ -61,17 +63,20 @@ open-studio/
 │   │   ├── config.py         Every setting read from backend/.env
 │   │   ├── database.py       Opens the database
 │   │   ├── database_migrations.py  Changes to existing tables (new fields), run once each on startup
-│   │   ├── auth/             Owner-token check for write requests
+│   │   ├── auth/             Who is asking (visitor, agent, owner) + agents' write limit
 │   │   ├── features/
-│   │   │   ├── entries/      Entries: storage, visibility, CRUD, enrichment (tags + embedding)
+│   │   │   ├── boards/       Boards: separate spaces, each with a brief and the agents signed on to it
+│   │   │   ├── entries/      Entries: storage, visibility per viewer, CRUD, pages, enrichment (tags + embedding)
+│   │   │   ├── entry_links/  "Builds on" links between entries, and the chain around an entry
 │   │   │   ├── capture/      Paste a link → prefilled entry draft
 │   │   │   ├── tags/         LLM tag suggestions; tag descriptions + importance (key / normal / hidden)
 │   │   │   ├── related/      Closest entries by meaning (shared tags as fallback)
 │   │   │   ├── search/       Search by meaning (embeddings) + plain word matches
 │   │   │   └── media/        Image/video upload
+│   │   ├── agent_server/     The studio as an MCP server (/mcp) for agents: board, read, write and chain tools
 │   │   └── integrations/     OpenRouter (LLM, embeddings), file storage. One file each.
 │   │       └── link_readers/ One reader per site (YouTube, Google Drive, GitHub, Instagram, X) + a general webpage reader
-│   ├── scripts/              One-off tools run by hand (e.g. wipe local data and seed ~120 demo entries)
+│   ├── scripts/              One-off tools run by hand (e.g. wipe local data and seed ~160 demo entries on five boards)
 │   └── tests/                Mirrors app/ folder-for-folder
 │
 ├── frontend/                 React + TypeScript (Vite dev server)
@@ -79,16 +84,18 @@ open-studio/
 │   └── src/
 │       ├── main.tsx          Mounts the app
 │       ├── App.tsx           Route table: which URL shows which page
-│       ├── pages/            One file per URL (HomePage, EntryPage, AboutPage, StudioPage, SketchPage)
+│       ├── pages/            One file per URL (BoardPage for / and /b/<slug>, EntryPage, AboutPage, StudioPage, SketchPage)
 │       ├── features/
-│       │   ├── grid/         Home page browsing: sphere/grid/rows views, cards, tag and year lines, active-filter pills, search/view/sort controls, the shared highlight rule, URL state
+│       │   ├── grid/         Browsing a board: the browse panel (spaces, tag ovals, time slider, view controls), sphere/grid/rows views, cards, the shared highlight rule, URL state, loading a page at a time
 │       │   ├── entries/      Pieces of the entry page (wall label, media series, tags, related)
-│       │   ├── studio/       Owner-only form, link capture, media list editor, entry list, tag notes
+│       │   ├── studio/       Owner-only entry form (a sheet over any page: ?add, ?edit=<id>), link capture, media list editor, entry list, tag notes
 │       │   └── sketches/     Scratch: home-page ideas tried on real data at /sketch (contact sheet + threads). Delete when one graduates.
-│       ├── components/       Site-wide pieces with no knowledge of our data (LabelRow, WordChoice, SiteHeader, SiteFooter, CrosshairCursor)
+│       ├── components/       Site-wide pieces with no knowledge of our data (LabelRow, WordChoice, DotChoice, SiteHeader, SiteFooter)
 │       ├── api/              Every call to the backend, one file per area
 │       ├── types/            Shared data shapes, matching the backend schemas
 │       └── styles/           global.css: the entire visual style
+│
+├── skills/open-studio/       SKILL.md: how an agent researches for and adds to a studio over MCP
 │
 └── ios/                      iPhone share-sheet extension + one-screen setup app (Swift)
     ├── README.md             How to build it on a Mac and get it onto a phone
@@ -124,6 +131,7 @@ routes  →  service  →  models / integrations
 
 - Routes never touch the database or outside services directly.
 - A feature reads another feature's data through that feature's **service** (related and tags both go through `entries/service.py`). It may reuse another feature's **schemas** as response shapes, and small pure helpers (search uses `related/similarity.py`). It never queries another feature's tables.
+- `agent_server/` is a second front door beside the routes, for agents (MCP). Its tools are like routes: they call feature services and never decide visibility or write SQL themselves.
 - Integrations know nothing about our features. `llm_client.py` doesn't know what an entry is. Prompts live with the feature that uses them.
 
 ### Frontend: same idea
@@ -190,7 +198,7 @@ Rules:
 | Other TS files | `camelCase` | `entriesApi.ts`, `useTagFilters.ts` |
 | Swift files | `PascalCase`, same as the main type inside | `ShareForm.swift`, `StudioApi.swift` |
 | Folders | lowercase, plural for collections | `features/entries/`, `pages/` |
-| Pages | end in `Page` | `HomePage.tsx`, `LensPage.tsx` |
+| Pages | end in `Page` | `BoardPage.tsx`, `LensPage.tsx` |
 | Functions | verb first, says the result | `publish_entry`, `find_related_entries`, `fetchSubjects` |
 
 Choose the longer, clearer name over the short, vague one: `suggest_tags_for_entry` over `process`.
@@ -215,13 +223,17 @@ Use these words exactly, in file names, function names, database tables, API rou
 | **Visibility** | `private`, `unlisted` or `public`. |
 | **Related** | Entries found by embedding similarity. |
 | **Embedding** | An entry's meaning as a list of numbers. Computed from title, description, kind, source and tags. |
-| **Grid** | Every public entry as a card, newest first. One of the home page's views. |
-| **Sphere** | The home page's default view: entries' pictures floating on one orb, newest at the top, oldest at the bottom. |
+| **Grid** | A board's public entries as cards, newest first, in three picture sizes. One of a board's views. |
+| **Sphere** | A board's default view: its entries' pictures floating on one orb, newest at the top, oldest at the bottom. |
 | **Band** | One year's ring of entries around the sphere. |
-| **Highlight** | A picked tag or year: matching entries stand out, the rest fade (`grid/entryHighlight.ts`). |
+| **Highlight** | A picked tag or span of months: matching entries stand out, the rest fade (`grid/entryHighlight.ts`). |
+| **Browse panel** | The one block above a board's work holding every way to move around it: Space, Tags, Time, View (`grid/BrowsePanel.tsx`). |
 | **Studio page** | The owner's hidden admin page at `/studio`. |
 | **Owner token** | The admin password (`OWNER_TOKEN` in `backend/.env`). |
-| **Entry link** | A manual connection between two entries. |
+| **Agent** | Another program (a Claude session, a research bot) given its own token (`AGENT_TOKENS`). Reads the studio and adds entries to the boards it is signed on to, which arrive unlisted and signed `added_by: agent:<name>` until the owner publishes them. |
+| **Board** | A separate space in the studio. Every entry is on one board. `home` is the owner's own collection; other boards hold one focused effort, with a description agents read as their brief. |
+| **Entry link** | A "builds on" connection: one entry builds on an earlier one, with a note on how. |
+| **Chain** | The entries an entry builds on and that build on it, a few steps each way: the line of work it belongs to. |
 | **Wall label** | The consistent placard shown on every card. |
 
 If a new concept needs a name, add it here.

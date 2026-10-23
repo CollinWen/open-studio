@@ -1,28 +1,24 @@
 /**
- * entryHighlight: the one rule every home-page view uses to decide which
- * entries stand out. Picking a tag or some years highlights the entries
- * that match (the tag, and any one of the years); the rest fade (not hide), so crossovers stay visible.
+ * entryHighlight: the one rule every board view uses to decide which
+ * entries stand out. Picking a tag or a span of months highlights the
+ * entries that match both; the rest fade (not hide), so crossovers stay visible.
  *
  * Used by SphereView, EntryGrid and EntryRows. The picks themselves live in
  * the URL (useBrowseParams).
  */
 
 import type { Entry } from "../../types/entry";
+import { isInRange, monthOf, type MonthRange } from "./monthRange";
 
 export interface Highlight {
   tag: string | null;
-  /** Empty when no year is picked. */
-  years: string[];
-}
-
-/** The year an entry belongs to, as written in the URL and the Years row ("2024"). */
-export function yearOf(entry: Entry): string {
-  return entry.occurred_at.slice(0, 4);
+  /** Null when no span of months is picked. */
+  range: MonthRange | null;
 }
 
 /** True when the entry should fade: something is picked and this entry doesn't match it. */
 export function isFaded(entry: Entry, highlight: Highlight): boolean {
   if (highlight.tag !== null && !entry.tags.includes(highlight.tag)) return true;
-  if (highlight.years.length > 0 && !highlight.years.includes(yearOf(entry))) return true;
+  if (highlight.range !== null && !isInRange(monthOf(entry), highlight.range)) return true;
   return false;
 }

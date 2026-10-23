@@ -3,22 +3,24 @@ Tag service: every tag in use, how many visible entries have it, and the
 owner's description and importance for it.
 
 Ordered key tags first, then by how often they're used. Hidden tags are
-left out for visitors (the owner still sees them, to un-hide them).
+left out for visitors and agents (the owner still sees them, to un-hide them).
 """
 
 from collections import Counter
 
 from sqlmodel import Session, select
 
+from app.auth.viewer import Viewer
 from app.features.entries import service as entries_service
 from app.features.tags.models import HIDDEN, NORMAL, Tag
 from app.features.tags.schemas import TagInfo, TagNotes
 
 
-def list_tags(db: Session, include_private: bool = False) -> list[TagInfo]:
+def list_tags(db: Session, viewer: Viewer, board: str | None = None) -> list[TagInfo]:
+    """`board` counts only that board's entries (every board when None)."""
     counts = Counter(
         tag
-        for entry in entries_service.list_entries(db, include_private=include_private)
+        for entry in entries_service.list_entries(db, viewer, board=board)
         for tag in entry.tags
     )
     notes = {tag.name: tag for tag in db.exec(select(Tag))}
@@ -32,7 +34,7 @@ def list_tags(db: Session, include_private: bool = False) -> list[TagInfo]:
         )
         for name, count in counts.items()
     ]
-    if not include_private:
+    if not viewer.is_owner:
         tags = [tag for tag in tags if tag.importance != HIDDEN]
     return sorted(tags, key=lambda tag: (-tag.importance, -tag.count, tag.name))
 

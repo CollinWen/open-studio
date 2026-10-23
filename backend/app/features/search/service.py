@@ -14,6 +14,7 @@ import logging
 
 from sqlmodel import Session
 
+from app.auth.viewer import Viewer
 from app.features.entries import service as entries_service
 from app.features.entries.models import Entry
 from app.features.related.similarity import cosine_similarity
@@ -29,11 +30,12 @@ MIN_SIMILARITY = 0.25
 TEXT_MATCH_BOOST = 1.0
 
 
-def search_entries(db: Session, query: str, include_private: bool = False) -> list[Entry]:
+def search_entries(db: Session, query: str, viewer: Viewer, board: str | None = None) -> list[Entry]:
+    """`board` searches one board (every board when None)."""
     query = query.strip()
     if not query:
         return []
-    entries = entries_service.list_entries(db, include_private=include_private)
+    entries = entries_service.list_entries(db, viewer, board=board)
     query_vector = _embed_query(query) if any(entry.embedding for entry in entries) else None
 
     scored: list[tuple[float, Entry]] = []

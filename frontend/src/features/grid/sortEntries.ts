@@ -1,5 +1,5 @@
 /**
- * sortEntries: puts entries in the chosen order for the home page.
+ * sortEntries: puts a board's entries in the chosen order.
  * "relevance" keeps the order the search returned (best match first).
  */
 

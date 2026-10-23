@@ -1,7 +1,9 @@
 """
 Seed demo entries: wipes the LOCAL database and media folder, then fills
-them with about 130 made-up entries (from demo_entries.py) so the site can be
-tried with a full collection. Pictures are generated gradients and patterns.
+them with about 160 made-up entries so the site can be tried with a full
+collection: four boards (bread, ceramics, graphics, photography; from
+demo_boards.py) and the home board, each with its own topics (demo_entries.py).
+Pictures are generated gradients and patterns.
 
   .venv/Scripts/python scripts/seed_demo_entries.py             wipe and refill
   .venv/Scripts/python scripts/seed_demo_entries.py --offline   same, without OpenRouter
@@ -26,25 +28,32 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from sqlmodel import Session, SQLModel  # noqa: E402
 
+from app.auth.viewer import Viewer  # noqa: E402
 from app.config import settings  # noqa: E402
 from app.database import create_tables, engine  # noqa: E402
+from app.features.boards import service as boards_service  # noqa: E402
+from app.features.boards.schemas import BoardCreate  # noqa: E402
 from app.features.entries import service as entries_service  # noqa: E402
 from app.features.entries.schemas import EntryCreate, MediaItem  # noqa: E402
+from app.features.entry_links import models as _link_models  # noqa: E402,F401  (so the wipe drops links too)
 from app.features.tags import service as tags_service  # noqa: E402
 from app.features.tags.schemas import TagNotes  # noqa: E402
 from scripts import sample_images as draw  # noqa: E402
+from scripts.demo_boards import BOARDS, EXTRA_TOPICS  # noqa: E402
 from scripts.demo_entries import NOTE_PARAGRAPHS, SOURCE_NAMES, TOPICS, YOUTUBE_IDS  # noqa: E402
 
 # Generated pictures are small; gradients scale up smoothly in the browser.
 LONG_SIDE = 420
 SHAPES = [(4, 3), (3, 4), (1, 1), (16, 9), (2, 3), (2, 1), (5, 4)]
 OLDEST_DAYS_AGO = 2600  # about seven years
-KEY_TAGS = {
+# Each topic's first tag is a key tag on its board; these four also get a description.
+TAG_DESCRIPTIONS = {
     "bread": "Loaves, starters and the long wait in between.",
     "graphics": "Pictures made with math: renderers, shaders, noise.",
     "ceramics": "Clay, glaze and kilns. Slow work for fast weeks.",
     "photography": "Mostly film, mostly walks.",
 }
+ALL_TOPICS = TOPICS + EXTRA_TOPICS
 
 
 def seed_demo() -> None:
@@ -56,8 +65,13 @@ def seed_demo() -> None:
     rng = random.Random(7)
     now = datetime.now(timezone.utc)
     picture_count = 0
+    board_of_topic = {topic: slug for slug, board in BOARDS.items() for topic in board["topics"]}
     with Session(engine) as db:
-        for topic in TOPICS:
+        for slug, board in BOARDS.items():
+            boards_service.create_board(
+                db, BoardCreate(slug=slug, name=board["name"], description=board["description"])
+            )
+        for topic in ALL_TOPICS:
             for title, kind, style in topic["items"]:
                 media, picture_count = make_media(style, topic["colors"], picture_count, rng)
                 entries_service.create_entry(
@@ -69,19 +83,26 @@ def seed_demo() -> None:
                         media=media,
                         tags=topic["tags"] + rng.sample(topic["extra_tags"], rng.randint(0, 2)),
                         visibility=rng.choices(["public", "unlisted", "private"], [18, 1, 1])[0],
+                        board=board_of_topic.get(topic["tags"][0], "home"),
                         occurred_at=now - timedelta(days=int(rng.random() ** 1.6 * OLDEST_DAYS_AGO)),
                         **describe_source(style, title, rng),
                     ),
+                    Viewer(role="owner"),
                 )
                 print(f"added  {style:<9} {title}")
-        for name, description in KEY_TAGS.items():
-            tags_service.save_tag_notes(db, name, TagNotes(description=description, importance=1))
-    print(f"Done: {sum(len(topic['items']) for topic in TOPICS)} entries, {picture_count} pictures.")
+        for topic in ALL_TOPICS:
+            name = topic["tags"][0]
+            notes = TagNotes(description=TAG_DESCRIPTIONS.get(name, ""), importance=1)
+            tags_service.save_tag_notes(db, name, notes)
+    entry_count = sum(len(topic["items"]) for topic in ALL_TOPICS)
+    print(f"Done: {entry_count} entries on {len(BOARDS) + 1} boards, {picture_count} pictures.")
 
 
 def wipe_local_data() -> None:
     SQLModel.metadata.drop_all(engine)
     create_tables()
+    with Session(engine) as db:
+        boards_service.ensure_home_board(db)
     settings.media_dir.mkdir(parents=True, exist_ok=True)
     for file in settings.media_dir.iterdir():
         if file.is_file():

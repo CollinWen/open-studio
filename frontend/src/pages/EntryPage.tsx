@@ -2,10 +2,11 @@
  * EntryPage ( /entry/:id ): one entry on its own, as labeled rows: the wall
  * label (title, kind, date, source, notes), tags, every picture, then
  * related entries.
- * The owner also sees an "edit" link that opens it in the studio page.
+ * The owner also sees an Owner row under the title: "edit" opens the entry
+ * form over this page (?edit=<id>), and the page reloads after a save.
  */
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { fetchEntry, fetchRelatedEntries } from "../api/entriesApi";
 import { readOwnerToken } from "../api/ownerToken";
@@ -16,6 +17,7 @@ import { EntryTags } from "../features/entries/EntryTags";
 import { MediaSeries } from "../features/entries/MediaSeries";
 import { RelatedEntries } from "../features/entries/RelatedEntries";
 import { WallLabel } from "../features/entries/WallLabel";
+import { useOnEntrySaved } from "../features/studio/entrySavedEvent";
 import type { Entry } from "../types/entry";
 
 export function EntryPage() {
@@ -24,8 +26,7 @@ export function EntryPage() {
   const [related, setRelated] = useState<Entry[]>([]);
   const [missing, setMissing] = useState(false);
 
-  useEffect(() => {
-    setEntry(null);
+  const load = useCallback(() => {
     setMissing(false);
     fetchEntry(id)
       .then(setEntry)
@@ -35,9 +36,15 @@ export function EntryPage() {
       .catch(() => setRelated([]));
   }, [id]);
 
+  useEffect(() => {
+    setEntry(null);
+    load();
+  }, [load]);
+  useOnEntrySaved(load);
+
   return (
     <>
-      <SiteHeader>{entry && readOwnerToken() && <Link to={`/studio?edit=${entry.id}`}>edit</Link>}</SiteHeader>
+      <SiteHeader />
       <main>
         {missing && (
           <LabelRow rule="double" label="Entry">
@@ -46,8 +53,21 @@ export function EntryPage() {
         )}
         {entry && (
           <>
-            <WallLabel entry={entry} />
-            <EntryTags tags={entry.tags} />
+            <WallLabel
+              entry={entry}
+              ownerActions={
+                readOwnerToken() && (
+                  <p className="word-list">
+                    <Link to={`?edit=${entry.id}`}>edit</Link>
+                    <span className="quiet">
+                      {entry.visibility}
+                      {entry.added_by !== "owner" && ` · added by ${entry.added_by.replace("agent:", "")}`}
+                    </span>
+                  </p>
+                )
+              }
+            />
+            <EntryTags tags={entry.tags} board={entry.board} />
             {entry.media.length > 0 && (
               <LabelRow rule="double" label="Media">
                 <MediaSeries media={entry.media} title={entry.title} />

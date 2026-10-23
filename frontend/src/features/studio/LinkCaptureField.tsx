@@ -10,7 +10,13 @@ import { useState } from "react";
 import { captureLink } from "../../api/captureApi";
 import type { CapturedLink } from "../../types/entry";
 
-export function LinkCaptureField({ onCaptured }: { onCaptured: (captured: CapturedLink) => void }) {
+interface Props {
+  onCaptured: (captured: CapturedLink) => void;
+  /** Put the cursor here straight away (a new entry usually starts from a link). */
+  autoFocus?: boolean;
+}
+
+export function LinkCaptureField({ onCaptured, autoFocus = false }: Props) {
   const [url, setUrl] = useState("");
   const [status, setStatus] = useState("");
 
@@ -29,6 +35,7 @@ export function LinkCaptureField({ onCaptured }: { onCaptured: (captured: Captur
   return (
     <div>
       <input
+        autoFocus={autoFocus}
         placeholder="paste a link, then enter (youtube, google drive, github, any page)"
         value={url}
         onChange={(event) => setUrl(event.target.value)}

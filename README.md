@@ -13,6 +13,7 @@ images and text.
 |---|---|
 | `backend/` | Python API: stores entries, asks an LLM for tags, computes embeddings for "Related". See [backend/README.md](backend/README.md). |
 | `frontend/` | React site: the home grid, entry pages, and the owner's `/studio` page. See [frontend/README.md](frontend/README.md). |
+| `skills/` | How an agent (a Claude session, a research bot) reads and adds to the studio through its MCP server. See [skills/open-studio/SKILL.md](skills/open-studio/SKILL.md). |
 | `ios/` | iPhone share-sheet extension: add links and photos from any app. See [ios/README.md](ios/README.md). |
 | `.claude/` | Guidelines for agents working on this repo, plus local run settings. |
 
@@ -34,13 +35,13 @@ Then open http://localhost:5173.
 `OWNER_TOKEN` from `backend/.env`. After that, this browser shows an "add" link in the header
 and an "edit" link on every entry.
 
-**Sample entries** (to see the layout before adding real work):
+**Demo entries** (to see the layout before adding real work): this **wipes the local
+database** and fills it with about 160 made-up entries on five boards (home, bread,
+ceramics, graphics, photography):
 
 ```bash
-cd backend && .venv/Scripts/python scripts/seed_sample_entries.py
+cd backend && .venv/Scripts/python scripts/seed_demo_entries.py --offline
 ```
-
-Remove them again with `--remove`.
 
 ## Deploying
 

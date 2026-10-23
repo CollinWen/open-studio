@@ -1,14 +1,15 @@
 /**
- * SphereView: the "sphere" view, the home page's default. Every entry's
+ * SphereView: the "sphere" view, a board's default. Every entry's
  * cover picture floats on the surface of one orb, in time order: newest at
  * the top, oldest at the bottom, so each year is a band around it. The orb
- * turns slowly; drag to spin it. Picking years (the Years row) turns the
- * middle of their bands to face you and fades the rest; picking a tag fades what
+ * turns slowly; drag to spin it. Picking a span of months (the Time slider)
+ * turns its band to face you and fades the rest; picking a tag fades what
  * doesn't match. Hovering a picture holds it still, enlarges it, dims the
  * rest and shows its title and date; clicking opens the entry. Entries with
- * no picture float as their title.
+ * no picture float as their title. While more entries load, the orb
+ * re-spreads gently and each new picture emerges in its place.
  *
- * Used by HomePage. Where things sit: sphereLayout.ts. Turning and
+ * Used by BoardPage. Where things sit: sphereLayout.ts. Turning and
  * perspective: sphereMotion.ts. Every item is a plain link, so this works
  * in any browser and with a keyboard.
  */
@@ -19,8 +20,8 @@ import type { Entry } from "../../types/entry";
 import { formatDate } from "../entries/formatDate";
 import { EntryCover } from "./EntryCover";
 import { isFaded, type Highlight } from "./entryHighlight";
-import { layOutSphere } from "./sphereLayout";
-import { createSpin, projectPoint, stepSpin, tiltFacing } from "./sphereMotion";
+import { bandHeight, layOutSphere } from "./sphereLayout";
+import { createSpin, projectPoint, settleToward, stepSpin, tiltFacing, type SettlingPoint } from "./sphereMotion";
 
 interface Props {
   entries: Entry[];
@@ -44,7 +45,9 @@ export function SphereView({ entries, highlight }: Props) {
   const labelRef = useRef<HTMLDivElement>(null);
   const highlightRef = useRef(highlight);
   const spinRef = useRef(createSpin());
-  const { points, yearHeights } = useMemo(() => layOutSphere(entries), [entries]);
+  // Where each picture is drawn, by entry id. Kept across loads so pictures glide instead of jumping.
+  const placedRef = useRef(new Map<string, SettlingPoint>());
+  const points = useMemo(() => layOutSphere(entries), [entries]);
   const [hovered, setHovered] = useState<number | null>(null);
   const hoveredRef = useRef<number | null>(null);
 
@@ -95,24 +98,27 @@ export function SphereView({ entries, highlight }: Props) {
       const width = stage.clientWidth;
       const height = stage.clientHeight;
       const baseSize = Math.min(120, Math.max(36, (Math.min(width, height) * 0.5) / Math.sqrt(points.length)));
-      const bandHeights = highlightRef.current.years.flatMap((year) => yearHeights.get(year) ?? []);
-      const bandHeight =
-        bandHeights.length === 0 ? undefined : bandHeights.reduce((sum, h) => sum + h, 0) / bandHeights.length;
-      spin.tiltTarget = bandHeight === undefined ? null : tiltFacing(bandHeight);
+      const { range } = highlightRef.current;
+      const band = range ? bandHeight(points, range) : undefined;
+      spin.tiltTarget = band === undefined ? null : tiltFacing(band);
       stepSpin(spin, hoveredRef.current !== null || drag.active, drag.active, calm);
       spin.lean += (leanTarget - spin.lean) * 0.04;
 
       points.forEach((point, i) => {
         const item = itemRefs.current[i];
         if (!item) return;
-        const screen = projectPoint(point, spin, width, height);
+        const placed = placedRef.current.get(point.entry.id) ?? { ...point, appear: 0 };
+        placedRef.current.set(point.entry.id, settleToward(placed, point, calm));
+        const screen = projectPoint(placed, spin, width, height);
         const isHovered = hoveredRef.current === i;
         growth[i] += ((isHovered ? HOVER_GROWTH : 1) - growth[i]) * 0.18;
         const faded = isFaded(point.entry, highlightRef.current);
-        item.style.width = `${baseSize * screen.scale * growth[i]}px`;
+        const emerging = 0.6 + 0.4 * placed.appear;
+        item.style.width = `${baseSize * screen.scale * growth[i] * emerging}px`;
         item.style.transform = `translate3d(${screen.x}px, ${screen.y}px, 0) translate(-50%, -50%)`;
         const dimmed = hoveredRef.current !== null && !isHovered ? SPOTLIGHT_DIM : 1;
-        item.style.opacity = String(faded ? FADED_OPACITY : isHovered ? 1 : (0.3 + 0.7 * screen.nearness) * dimmed);
+        const shown = faded ? FADED_OPACITY : isHovered ? 1 : (0.3 + 0.7 * screen.nearness) * dimmed;
+        item.style.opacity = String(shown * placed.appear);
         item.style.zIndex = String(isHovered ? 10000 : Math.round(screen.nearness * 1000));
       });
       frame = requestAnimationFrame(tick);
@@ -126,7 +132,7 @@ export function SphereView({ entries, highlight }: Props) {
       window.removeEventListener("pointerup", onUp);
       stage.removeEventListener("click", onClick, true);
     };
-  }, [points, yearHeights]);
+  }, [points]);
 
   const hoveredEntry = hovered === null ? null : points[hovered].entry;
 

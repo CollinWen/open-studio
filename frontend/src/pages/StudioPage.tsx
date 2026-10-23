@@ -1,31 +1,29 @@
 /**
  * StudioPage ( /studio ): the owner's back room.
- * Asks for the owner token once, then shows the entry form and a list of
- * every entry to edit or delete, then every tag to describe and rank.
+ * Asks for the owner token once, then lists every entry to edit or delete,
+ * then every tag to describe and rank. Adding and editing happen in the
+ * entry form that opens over the page (?add, ?edit=<id>; see
+ * features/studio/EntryFormModal.tsx), so this page only has to list.
  * Linked as "owner" in the footer.
- * /studio?edit=<id> opens that entry in the form (the "edit" link on entry pages).
  */
 
 import { useCallback, useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { fetchEntries } from "../api/entriesApi";
 import { forgetOwnerToken, readOwnerToken } from "../api/ownerToken";
 import { LabelRow } from "../components/LabelRow";
 import { SiteHeader } from "../components/SiteHeader";
-import { EntryForm } from "../features/studio/EntryForm";
 import { EntryIndex } from "../features/studio/EntryIndex";
 import { OwnerTokenForm } from "../features/studio/OwnerTokenForm";
 import { TagNotesEditor } from "../features/studio/TagNotesEditor";
+import { useOnEntrySaved } from "../features/studio/entrySavedEvent";
+import { useEntryFormParam } from "../features/studio/useEntryFormParam";
 import type { Entry } from "../types/entry";
 
 export function StudioPage() {
   const [hasToken, setHasToken] = useState(Boolean(readOwnerToken()));
   const [entries, setEntries] = useState<Entry[]>([]);
-  const [editing, setEditing] = useState<Entry | null>(null);
-  // Changing this key resets the form to blank after a save or cancel.
-  const [formKey, setFormKey] = useState(0);
-  const [searchParams, setSearchParams] = useSearchParams();
-  const editId = searchParams.get("edit");
+  const { openEntryEdit } = useEntryFormParam();
 
   const reload = useCallback(() => {
     fetchEntries().then(setEntries).catch(console.error);
@@ -34,18 +32,7 @@ export function StudioPage() {
   useEffect(() => {
     if (hasToken) reload();
   }, [hasToken, reload]);
-
-  // Arriving from an entry's "edit" link: open that entry once the list has loaded.
-  useEffect(() => {
-    const match = entries.find((entry) => entry.id === editId);
-    if (match) setEditing(match);
-  }, [entries, editId]);
-
-  const resetForm = () => {
-    setEditing(null);
-    setSearchParams({});
-    setFormKey((key) => key + 1);
-  };
+  useOnEntrySaved(reload);
 
   if (!hasToken) {
     return (
@@ -74,26 +61,17 @@ export function StudioPage() {
         </button>
       </SiteHeader>
       <main>
-        <LabelRow rule="double" label={editing ? "Edit" : "Add"}>
-          <EntryForm
-            key={editing?.id ?? `new-${formKey}`}
-            editing={editing}
-            onSaved={() => {
-              resetForm();
-              reload();
-            }}
-            onCancel={resetForm}
-          />
+        <LabelRow rule="double" label="Studio">
+          <p className="word-list">
+            <Link to="?add">add an entry</Link>
+            <span className="quiet">
+              {entries.length} entries · {entries.filter((entry) => entry.visibility !== "public").length} not
+              public yet
+            </span>
+          </p>
         </LabelRow>
         <LabelRow rule="single" label="Entries">
-          <EntryIndex
-            entries={entries}
-            onEdit={(entry) => {
-              setEditing(entry);
-              window.scrollTo(0, 0);
-            }}
-            onChanged={reload}
-          />
+          <EntryIndex entries={entries} onEdit={(entry) => openEntryEdit(entry.id)} onChanged={reload} />
         </LabelRow>
         <LabelRow rule="single" label="Tags">
           <TagNotesEditor key={entries.length} />
