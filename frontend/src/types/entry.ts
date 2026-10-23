@@ -36,6 +36,12 @@ export interface Entry {
   board: string;
 }
 
+/** One page of entries from /api/entries/page. next_cursor is null on the last page. */
+export interface EntryPage {
+  entries: Entry[];
+  next_cursor: string | null;
+}
+
 /** What the admin form sends. Empty tags means "suggest them for me". */
 export type EntryDraft = Pick<
   Entry,

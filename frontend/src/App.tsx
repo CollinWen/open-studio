@@ -1,10 +1,11 @@
 /**
  * App: the route table (which URL shows which page), plus the site-wide
- * crosshair cursor.
+ * crosshair cursor and the owner's entry form, which opens over any page.
  */
 
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { CrosshairCursor } from "./components/CrosshairCursor";
+import { EntryFormModal } from "./features/studio/EntryFormModal";
 import { AboutPage } from "./pages/AboutPage";
 import { EntryPage } from "./pages/EntryPage";
 import { HomePage } from "./pages/HomePage";
@@ -22,6 +23,7 @@ export function App() {
         <Route path="/studio" element={<StudioPage />} />
         <Route path="/sketch" element={<SketchPage />} />
       </Routes>
+      <EntryFormModal />
     </BrowserRouter>
   );
 }

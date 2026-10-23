@@ -1,21 +1,28 @@
 /**
  * WallLabel: the museum-style placard for an entry, as labeled rows.
- * The title set large, then Kind, Date and Source each on their own line,
- * then the "why it's here" description.
+ * The title set large, then (for the owner) an Owner row with "edit" right
+ * under it where it's easy to find, then Kind, Date and Source each on their
+ * own line, then the "why it's here" description.
  *
  * Used by EntryPage. The rows come from components/LabelRow.tsx.
  */
 
+import type { ReactNode } from "react";
 import { LabelRow } from "../../components/LabelRow";
 import type { Entry } from "../../types/entry";
 import { formatDate } from "./formatDate";
 
-export function WallLabel({ entry }: { entry: Entry }) {
+export function WallLabel({ entry, ownerActions }: { entry: Entry; ownerActions?: ReactNode }) {
   return (
     <>
       <LabelRow rule="double" label="Entry" className="intro-row">
         <h1 className="display">{entry.title}</h1>
       </LabelRow>
+      {ownerActions && (
+        <LabelRow rule="single" label="Owner">
+          {ownerActions}
+        </LabelRow>
+      )}
       <LabelRow rule="single" label="Kind">
         {entry.kind}
       </LabelRow>

@@ -40,6 +40,19 @@
   --line: 22px;
   --gutter: 22px;
   --margin: 44px;
+
+  /* Motion: one quiet, controlled personality, no overshoot. Things arrive
+     decelerating and leave accelerating; leaving takes about 70% as long.
+     Three durations; staggers stay under half a second in total. */
+  --ease-enter: cubic-bezier(0.2, 0, 0, 1);
+  --ease-exit: cubic-bezier(0.3, 0, 1, 1);
+  --motion-quick: 200ms;
+  --motion-standard: 350ms;
+  --motion-exit: 250ms;
+  --motion-ambient: 1600ms;
+  --stagger: 30ms;
+  --arrive-distance: 12px;
+  --sheet-drop: 24px;
 }
 
 @media (max-width: 1100px) {
@@ -789,6 +802,118 @@ button:hover {
 
 .entry-index p {
   margin-bottom: calc(var(--line) / 4);
+}
+
+/* ---- Entry sheet: the add / edit form over the page (features/studio/EntryFormModal.tsx) ---- */
+
+/* A sheet of paper dropped over the top of the page, edge to edge like the
+   rows, closed off by a double rule. No box, no shadow: the page behind
+   fades back toward paper instead. */
+.entry-sheet {
+  position: fixed;
+  inset: 0 0 auto 0;
+  width: 100%;
+  max-width: none;
+  max-height: 100vh;
+  margin: 0;
+  padding: var(--line) 0 calc(2 * var(--line));
+  overflow-y: auto;
+  border: none;
+  /* Two 1px lines, 1px apart: the same double rule as .label-row.is-double. */
+  border-bottom: 3px double var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  animation: sheet-drop var(--motion-standard) var(--ease-enter) both;
+}
+
+.entry-sheet::backdrop {
+  background: var(--paper);
+  opacity: 0.82;
+  animation: backdrop-fade var(--motion-quick) var(--ease-enter) both;
+}
+
+.entry-sheet.is-closing {
+  animation: sheet-lift var(--motion-exit) var(--ease-exit) both;
+}
+
+.entry-sheet.is-closing::backdrop {
+  animation: backdrop-fade var(--motion-exit) var(--ease-exit) reverse both;
+}
+
+/* The form's lines follow the sheet down, in reading order. */
+.entry-sheet .entry-form > * {
+  animation: arrive var(--motion-standard) var(--ease-enter) both;
+}
+
+.entry-sheet .entry-form > :nth-child(1) { animation-delay: calc(2 * var(--stagger)); }
+.entry-sheet .entry-form > :nth-child(2) { animation-delay: calc(3 * var(--stagger)); }
+.entry-sheet .entry-form > :nth-child(3) { animation-delay: calc(4 * var(--stagger)); }
+.entry-sheet .entry-form > :nth-child(n + 4) { animation-delay: calc(5 * var(--stagger)); }
+
+@keyframes sheet-drop {
+  from {
+    opacity: 0;
+    transform: translateY(calc(-1 * var(--sheet-drop)));
+  }
+}
+
+@keyframes sheet-lift {
+  to {
+    opacity: 0;
+    transform: translateY(calc(-1 * var(--sheet-drop)));
+  }
+}
+
+@keyframes backdrop-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ---- Arriving and loading ---- */
+
+/* A card or row rising into place as its page of entries arrives. Each new
+   one waits its turn (--arrive-order, set by EntryGrid and EntryRows). */
+.is-arriving {
+  animation: arrive var(--motion-standard) var(--ease-enter) both;
+  animation-delay: calc(var(--arrive-order, 0) * var(--stagger));
+}
+
+@keyframes arrive {
+  from {
+    opacity: 0;
+    transform: translateY(var(--arrive-distance));
+  }
+}
+
+/* "loading" in the header while pages are still coming in: a slow breath. */
+.loading-word {
+  animation: breathe var(--motion-ambient) ease-in-out infinite alternate;
+}
+
+@keyframes breathe {
+  to {
+    opacity: 0.35;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entry-sheet,
+  .entry-sheet.is-closing,
+  .entry-sheet .entry-form > *,
+  .is-arriving {
+    animation-name: backdrop-fade;
+    animation-duration: var(--motion-quick);
+    animation-delay: 0ms;
+  }
+
+  .entry-sheet.is-closing {
+    animation-direction: reverse;
+  }
+
+  .loading-word {
+    animation: none;
+  }
 }
 
 /* ---- Crosshair cursor (see components/CrosshairCursor.tsx) ---- */

@@ -5,13 +5,17 @@
  * or years highlight their entries in whichever view is showing, and every
  * active filter is listed as a pill beside the browse controls, ready to clear.
  *
+ * Entries load a page at a time (useEntryPages): the first pictures show at
+ * once and the rest rise in behind them, with "loading" breathing in the
+ * header until the last page is in. After the owner saves an entry the
+ * page reloads quietly.
+ *
  * Every choice lives in the URL (see useBrowseParams), so any view can be
  * shared or linked to. Selecting a tag swaps the intro for that tag's
  * description.
  */
 
 import { useEffect, useMemo, useState } from "react";
-import { fetchEntries } from "../api/entriesApi";
 import { searchEntries } from "../api/searchApi";
 import { fetchTags } from "../api/tagsApi";
 import { LabelRow } from "../components/LabelRow";
@@ -27,6 +31,8 @@ import { TagFilter } from "../features/grid/TagFilter";
 import { YearFilter } from "../features/grid/YearFilter";
 import { yearOf } from "../features/grid/entryHighlight";
 import { useBrowseParams } from "../features/grid/useBrowseParams";
+import { useEntryPages } from "../features/grid/useEntryPages";
+import { useOnEntrySaved } from "../features/studio/entrySavedEvent";
 import type { Entry, Tag } from "../types/entry";
 
 const INTRO = "A working collection of things I make and things I'm curious about.";
@@ -35,17 +41,21 @@ const HOME_BOARD = "home";
 
 export function HomePage() {
   const { tag, pickedYears, query, view, sort, defaultSort, setParam, toggleYear, clearParams } = useBrowseParams();
-  const [entries, setEntries] = useState<Entry[] | null>(null);
+  const collection = useEntryPages(HOME_BOARD, !query);
+  const [found, setFound] = useState<Entry[] | null>(null);
   const [tags, setTags] = useState<Tag[]>([]);
+  const entries = query ? found : collection.entries;
+
+  // Once every page is in, so the counts match what's shown (and again after a save).
+  useEffect(() => {
+    if (!collection.loading) fetchTags(HOME_BOARD).then(setTags).catch(console.error);
+  }, [collection.loading]);
 
   useEffect(() => {
-    fetchTags(HOME_BOARD).then(setTags).catch(console.error);
-  }, []);
-
-  useEffect(() => {
-    const load = query ? searchEntries(query, HOME_BOARD) : fetchEntries(HOME_BOARD);
-    load.then(setEntries).catch(() => setEntries([]));
+    setFound(null);
+    if (query) searchEntries(query, HOME_BOARD).then(setFound).catch(() => setFound([]));
   }, [query]);
+  useOnEntrySaved(collection.reload);
 
   const activeTag = tags.find((candidate) => candidate.name === tag);
   const intro = tag ? activeTag?.description || `Everything tagged “${tag}”.` : INTRO;
@@ -61,7 +71,10 @@ export function HomePage() {
 
   return (
     <>
-      <SiteHeader>{entries && `${entries.length} ${entries.length === 1 ? "entry" : "entries"}`}</SiteHeader>
+      <SiteHeader>
+        {entries && `${entries.length} ${entries.length === 1 ? "entry" : "entries"}`}
+        {!query && collection.loading && <span className="loading-word">loading</span>}
+      </SiteHeader>
       <main>
         <LabelRow rule="double" label={tag ? "Tag" : "Open Studio"} className="intro-row">
           <p className="display">{intro}</p>
@@ -89,9 +102,11 @@ export function HomePage() {
         <LabelRow wide>
           {shown?.length === 0 && <p className="quiet">{query ? "Nothing matches that." : "Nothing here yet."}</p>}
           {shown && view === "sphere" && shown.length > 0 && <SphereView entries={shown} highlight={highlight} />}
-          {shown && view === "rows" && <EntryRows entries={shown} highlight={highlight} />}
+          {shown && view === "rows" && (
+            <EntryRows entries={shown} highlight={highlight} arriveOrder={collection.orderOf} />
+          )}
           {shown && view !== "rows" && view !== "sphere" && (
-            <EntryGrid entries={shown} highlight={highlight} size={view} />
+            <EntryGrid entries={shown} highlight={highlight} size={view} arriveOrder={collection.orderOf} />
           )}
         </LabelRow>
       </main>

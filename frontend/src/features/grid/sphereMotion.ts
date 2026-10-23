@@ -3,7 +3,9 @@
  * the screen. The sphere drifts slowly on its own, spins when dragged (and
  * keeps spinning a little after you let go), and tilts gently toward the
  * mouse. When a year is picked it eases its tilt so that year's band faces
- * you. Nearer points are drawn larger and in front of farther ones.
+ * you. Nearer points are drawn larger and in front of farther ones. While
+ * entries are still loading, pictures glide to their new places and new
+ * ones emerge (settleToward).
  *
  * Used by SphereView, once per frame. Positions come from sphereLayout.ts.
  */
@@ -82,4 +84,36 @@ export function projectPoint(
     scale,
     nearness: (z2 + 1) / 2,
   };
+}
+
+// Share of the remaining distance a settling picture covers each frame: quick at first, gentle at the end.
+const SETTLE_RATE = 0.08;
+const APPEAR_RATE = 0.06;
+
+/** Where a picture is drawn while it eases toward its place, and how far it has emerged (0 to 1). */
+export interface SettlingPoint {
+  x: number;
+  y: number;
+  z: number;
+  appear: number;
+}
+
+/**
+ * One frame of a picture easing toward its place on the orb. As more entries
+ * load, the spiral spreads over more points and every place shifts a little;
+ * pictures glide there along the surface (not through the middle) instead of
+ * jumping, slowing as they land. New ones emerge where they belong.
+ */
+export function settleToward(current: SettlingPoint, target: { x: number; y: number; z: number }, calm: boolean) {
+  if (calm) return Object.assign(current, target, { appear: 1 });
+  const x = current.x + (target.x - current.x) * SETTLE_RATE;
+  const y = current.y + (target.y - current.y) * SETTLE_RATE;
+  const z = current.z + (target.z - current.z) * SETTLE_RATE;
+  const length = Math.hypot(x, y, z) || 1;
+  return Object.assign(current, {
+    x: x / length,
+    y: y / length,
+    z: z / length,
+    appear: current.appear + (1 - current.appear) * APPEAR_RATE,
+  });
 }
