@@ -4,7 +4,8 @@
  * address and shows only its own entries, tags and time, so spaces never mix.
  *
  * Laid out as labeled rows: the intro set large (the board's description,
- * or a picked tag's), then the browse panel (spaces, tags, time, view: every
+ * or a picked tag's) in a block of fixed height, so a longer or shorter
+ * intro never moves what's below it; then the browse panel (spaces, tags, time, view: every
  * way to move around, in one block), then the entries on an orb by default,
  * or as a grid or rows. A picked tag or span of months highlights its
  * entries in whichever view is showing.
@@ -76,7 +77,7 @@ export function BoardPage() {
         {!query && collection.loading && <span className="loading-word">loading</span>}
       </SiteHeader>
       <main>
-        <LabelRow rule="double" label={tag ? "Tag" : board === HOME_BOARD ? "Open Studio" : current?.name} className="intro-row">
+        <LabelRow rule="double" label={tag ? "Tag" : undefined} className="intro-row board-intro">
           <p className="display">{intro}</p>
         </LabelRow>
         <BrowsePanel
