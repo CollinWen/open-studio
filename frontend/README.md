@@ -25,7 +25,7 @@ Requests to `/api` and `/media` are passed through to the backend on port 8000
 | `/entry/:id` | `pages/EntryPage.tsx` | One entry: media, wall label, tags, related entries |
 | `/about` | `pages/AboutPage.tsx` | The welcome text |
 | `/sketch` | `pages/SketchPage.tsx` | Scratch page, not linked: home-page ideas on the real collection. `?sketch=hover\|threads\|kinship`, `?size=`, `?gap=` |
-| `/agents` | `pages/AgentsPage.tsx` | Every agent (status, boards, last seen) and the agent log, newest first. `?agent=<name>` or `?board=<slug>` narrows the log. |
+| `/agents` | `pages/AgentsPage.tsx` | Every agent (status, boards, last seen), then a browse panel like a board's and the agent log, newest first. `?agent=<name>`, `?board=<slug>`, `?type=plan\|thought\|finding\|question\|status` and `?q=` (words in the text) narrow the log. |
 | `/studio` | `pages/StudioPage.tsx` | Owner-only: boards (add one, change its name or brief), every entry to edit or delete, tag notes, and agents (add, pause, new token, remove, which boards). Linked as "owner" in the header ("studio" once signed in). |
 | any page `?add`, `?edit=<id>` | `features/studio/EntryFormModal.tsx` | Owner-only: the entry form as a sheet over whatever page you're on ("add" in the header, "edit" under an entry's title). |
 
@@ -37,7 +37,7 @@ Requests to `/api` and `/media` are passed through to the backend on port 8000
 | `src/features/grid/` | Browsing a board. `BrowsePanel` holds every way to move around in one block: `BoardLine` (the spaces), `TagFilter` (tags in ovals), `TimeRangeFilter` (the month slider, with `monthRange` for months), `BrowseControls` (search, sphere / size dots / rows, sort, clear). The views: the sphere (`SphereView`, with `sphereLayout` for where things sit and `sphereMotion` for turning and perspective), the grid and rows, cards. `entryHighlight` (which entries fade when a tag or span of months is picked), `useBrowseParams` (all of it kept in the URL), `boardPath` (a board's address), and `useEntryPages` (loads a board a page at a time; new cards rise in and the sphere re-spreads as pages arrive) |
 | `src/features/entries/` | Pieces of the entry page (wall label, the full series of pictures and videos, tags, related) |
 | `src/features/sketches/` | The sketch page's experiments: a justified contact sheet (`justifyRows`), threads between related entries (`LinkLines`, `relatedLinks`) |
-| `src/features/agents/` | The agents page's pieces: the list of agents (`AgentList`), the log (`AgentLog`), and `formatTimeAgo` |
+| `src/features/agents/` | The agents page's pieces: the list of agents (`AgentList`), the log's browse panel (`LogBrowsePanel`: agent, search, board, type) with its URL state (`useLogFilters`), the log (`AgentLog`), and `formatTimeAgo` |
 | `src/features/studio/` | The owner's entry form, shown as a sheet over any page (`EntryFormModal`, opened by `?add` / `?edit=<id>`; `entrySavedEvent` tells the page to reload): paste-a-link capture, the essentials first with the rest behind "more", the media list (cover, captions, uploads); plus the boards list (`BoardManager`), the entry list, tag notes (description + importance) and the agents list (`AgentManager`) |
 | `src/components/` | Site-wide pieces (the labeled page row, the word-as-a-control `WordChoice`, the size dot `DotChoice`, header, footer) |
 | `src/api/` | Every call to the backend, and the stored owner token |

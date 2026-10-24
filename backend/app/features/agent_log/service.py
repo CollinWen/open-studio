@@ -1,6 +1,7 @@
 """
 Agent log service: an agent writing a line about its work (or its status),
-and anyone reading the log, newest first, for one agent, one board or all.
+and anyone reading the log, newest first: everything, or narrowed by agent,
+board, type of line and words in the text.
 
 An agent writes only about boards it's signed on to, and only within its
 hourly log limit. Setting a status changes the agent's status line
@@ -64,15 +65,22 @@ def list_lines(
     viewer: Viewer,
     agent: str | None = None,
     board: str | None = None,
+    line_type: str | None = None,
+    words: str | None = None,
     before: datetime | None = None,
     limit: int = PAGE_SIZE,
 ) -> list[LogLineOut]:
-    """Newest first. Pass the oldest line's created_at as `before` for the next page."""
+    """Newest first. `words` matches anywhere in the text, ignoring case.
+    Pass the oldest line's created_at as `before` for the next page."""
     query = select(AgentLogLine).order_by(AgentLogLine.created_at.desc()).limit(min(limit, PAGE_SIZE))
     if agent:
         query = query.where(AgentLogLine.agent == agent)
     if board:
         query = query.where(AgentLogLine.board == board)
+    if line_type:
+        query = query.where(AgentLogLine.type == line_type)
+    if words and words.strip():
+        query = query.where(AgentLogLine.text.ilike(f"%{words.strip()}%"))
     if before:
         query = query.where(AgentLogLine.created_at < before)
     return [_describe(db, viewer, line) for line in db.exec(query)]

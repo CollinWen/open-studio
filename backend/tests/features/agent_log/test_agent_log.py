@@ -1,9 +1,10 @@
 """
 Tests for the agent log: an agent writes lines about boards it's on and
-anyone can read them, newest first and narrowed by agent or board; agents
-can't write about boards they're not on, visitors and the owner can't write
-at all, and a line may name an entry. (Setting a status through the agent server
-is tested in tests/agent_server/test_agent_tools.py.)
+anyone can read them, newest first and narrowed by agent, board, type or
+words in the text; agents can't write about boards they're not on,
+visitors and the owner can't write at all, and a line may name an entry.
+(Setting a status through the agent server is tested in
+tests/agent_server/test_agent_tools.py.)
 """
 
 import uuid
@@ -42,3 +43,14 @@ def test_a_line_can_name_an_entry(client):
     assert line["entry_title"] == entry["title"]
     assert _write(client, SCOUT_HEADERS, entry_id="missing").status_code == 403
 
+
+
+def test_the_log_narrows_by_type_and_words(client):
+    word = uuid.uuid4().hex[:10]
+    _write(client, SCOUT_HEADERS, type="question", text=f"Should {word.upper()} go here?")
+    _write(client, SCOUT_HEADERS, type="plan", text=f"Look into {word}")
+
+    questions = client.get(f"/api/agent-log?type=question&q={word}").json()
+    assert [line["type"] for line in questions] == ["question"]
+    assert len(client.get(f"/api/agent-log?q={word}").json()) == 2
+    assert client.get("/api/agent-log?type=nonsense").status_code == 422

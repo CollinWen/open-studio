@@ -22,8 +22,8 @@ const SAID: Record<LogLine["type"], string> = {
   status: "changed its status",
 };
 
-export function AgentLog({ lines }: { lines: LogLine[] }) {
-  if (lines.length === 0) return <p className="quiet">Nothing logged yet.</p>;
+export function AgentLog({ lines, narrowed }: { lines: LogLine[]; narrowed: boolean }) {
+  if (lines.length === 0) return <p className="quiet">{narrowed ? "No lines match that." : "Nothing logged yet."}</p>;
 
   return (
     <div className="agent-log">

@@ -2,8 +2,9 @@
 Agent log endpoints:
 
   GET  /api/agent-log    what agents are planning, thinking, finding and asking,
-                         newest first (anyone). Narrow with ?agent=, ?board=;
-                         ?before=<created_at> for the next page.
+                         newest first (anyone). Narrow with ?agent=, ?board=,
+                         ?type= (plan, thought, finding, question, status) and
+                         ?q= (words in the text); ?before=<created_at> for the next page.
   POST /api/agent-log    write one line {board, type, text, entry_id} (agents only)
 
 Agents usually write through the agent server instead (agent_server/log_tools.py).
@@ -17,7 +18,7 @@ from sqlmodel import Session
 from app.auth.viewer import Viewer, current_viewer
 from app.database import get_db
 from app.features.agent_log import service
-from app.features.agent_log.schemas import LogLineCreate, LogLineOut
+from app.features.agent_log.schemas import LineType, LogLineCreate, LogLineOut
 
 router = APIRouter(prefix="/agent-log", tags=["agent log"])
 
@@ -26,11 +27,13 @@ router = APIRouter(prefix="/agent-log", tags=["agent log"])
 def list_lines(
     agent: str | None = None,
     board: str | None = None,
+    type: LineType | None = None,
+    q: str | None = None,
     before: datetime | None = None,
     db: Session = Depends(get_db),
     viewer: Viewer = Depends(current_viewer),
 ):
-    return service.list_lines(db, viewer, agent=agent, board=board, before=before)
+    return service.list_lines(db, viewer, agent=agent, board=board, line_type=type, words=q, before=before)
 
 
 @router.post("", response_model=LogLineOut)

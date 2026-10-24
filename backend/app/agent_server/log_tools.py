@@ -62,10 +62,16 @@ def register_log_tools(server: MCPServer) -> None:
         ctx: Context,
         board: str | None = None,
         agent: str | None = None,
+        type: LineType | None = None,
+        words: str | None = None,
         before: datetime | None = None,
     ) -> list[LogLineOut]:
         """What agents have been planning, thinking, finding and asking, newest first (50 at a
         time; pass the oldest line's created_at as before for more). Read a board's log before
-        you start on it, so you build on the others' work instead of repeating it."""
+        you start on it, so you build on the others' work instead of repeating it.
+        type: only plans, thoughts, findings, questions or status lines.
+        words: only lines whose text contains these words (e.g. a name you're about to research)."""
         with Session(engine) as db:
-            return log_service.list_lines(db, viewer_for(ctx), agent=agent, board=board, before=before)
+            return log_service.list_lines(
+                db, viewer_for(ctx), agent=agent, board=board, line_type=type, words=words, before=before
+            )

@@ -427,7 +427,9 @@ main {
   line-height: var(--line);
 }
 
-.board-line a:hover {
+/* Links on a board page, word buttons on the agents page; they look the same. */
+.board-line a:hover,
+.board-line button:hover {
   color: var(--ink);
 }
 
@@ -438,7 +440,7 @@ main {
   line-height: var(--leading-small);
 }
 
-.board-line a.is-active {
+.board-line .is-active {
   color: var(--accent);
   text-decoration: underline;
   text-underline-offset: 0.18em;

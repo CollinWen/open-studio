@@ -50,7 +50,7 @@ API docs appear at http://localhost:8000/docs.
 | `app/features/entries/` | Entries: storage, visibility rules (per viewer, in `visibility_rules.py`), create/edit/delete, enrichment (tags + embedding). Each entry has a list of media items; the first is the cover, `board` says which board it's on, and `added_by` says whether the owner or which agent added it. `GET /api/entries/page` reads a long collection a page at a time (`page_cursor.py`). |
 | `app/features/boards/` | Boards: separate spaces in the studio. `home` is your own collection (what the home page shows, made on startup); each other board has a description agents read as their brief, and the list of agents allowed to add to it |
 | `app/features/agents/` | Agents: the owner adds, pauses, re-keys and removes them (`/api/agents`); only a fingerprint of each token is stored (`agent_tokens.py`). Each has a status line and a last-seen time. Which boards it's on is kept on the board. |
-| `app/features/agent_log/` | The agent log: agents' plans, thoughts, findings, questions and status changes, public at `GET /api/agent-log?agent=&board=` |
+| `app/features/agent_log/` | The agent log: agents' plans, thoughts, findings, questions and status changes, public at `GET /api/agent-log?agent=&board=&type=&q=` |
 | `app/features/entry_links/` | "Builds on" links: an entry builds on an earlier one, with a note. No loops. `GET /api/entries/{id}/chain` returns the tree around an entry |
 | `app/features/capture/` | Paste a link, get a prefilled entry draft back (`POST /api/capture/link`) |
 | `app/features/tags/` | The LLM prompt that suggests tags; tag counts; the owner's tag descriptions and importance (key / normal / hidden) |
