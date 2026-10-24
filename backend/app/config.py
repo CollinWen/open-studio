@@ -34,11 +34,14 @@ class Settings:
     owner_token: str = os.environ.get("OWNER_TOKEN", "")
 
     # Agents: other programs (a Claude session, a research bot) that may read the
-    # studio and add entries. Comma-separated name=token pairs, e.g.
-    # "scout=long-random-token,archivist=another-token". Empty: no agents.
+    # studio and add entries. They're managed on the studio page; this is only a
+    # starting list, added on startup when missing. Comma-separated name=token
+    # pairs, e.g. "scout=long-random-token,archivist=another-token".
     agent_tokens_setting: str = os.environ.get("AGENT_TOKENS", "")
     # How many entries one agent may add or edit per hour. Each write costs an LLM call.
     agent_writes_per_hour: int = int(os.environ.get("AGENT_WRITES_PER_HOUR", "60"))
+    # How many lines one agent may write to the agent log per hour (plans, thoughts, findings).
+    agent_log_lines_per_hour: int = int(os.environ.get("AGENT_LOG_LINES_PER_HOUR", "120"))
 
     # OpenRouter: one key covers both the tag model and the embedding model.
     openrouter_api_key: str = os.environ.get("OPENROUTER_API_KEY", "")

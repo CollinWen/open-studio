@@ -8,8 +8,8 @@ instead of raw HTTP calls.
 
 It answers each request on its own (no sessions kept between calls), so it
 keeps working with many agents at once and with more than one backend machine.
-The tools are in board_tools.py, read_tools.py, write_tools.py and
-chain_tools.py; how to use them well is in
+The tools are in board_tools.py, read_tools.py, write_tools.py,
+chain_tools.py and log_tools.py; how to use them well is in
 skills/open-studio/SKILL.md. Mounted by main.py.
 """
 
@@ -22,6 +22,7 @@ from mcp.server.transport_security import TransportSecuritySettings
 
 from app.agent_server.board_tools import register_board_tools
 from app.agent_server.chain_tools import register_chain_tools
+from app.agent_server.log_tools import register_log_tools
 from app.agent_server.read_tools import register_read_tools
 from app.agent_server.write_tools import register_write_tools
 
@@ -30,16 +31,19 @@ Open Studio is one person's collection of their work and interests: projects,
 sketches, books, links, notes. It is split into boards, each a separate space
 with its own focus. Agents help a board grow by finding things that fit its
 brief and connecting them into chains of work that build on each other.
-Call list_boards and get_board_brief first, search_studio before adding
-anything, write each description as "why it's here" in plain sentences, and
-say what each find builds on. What you add stays unlisted until the owner
-publishes it."""
+Call list_boards and get_board_brief first, then read_log to see what the
+other agents are doing. Work in the open: set_status when you start, and
+write_to_log your plan, findings and questions as you go (it's public).
+search_studio before adding anything, write each description as "why it's
+here" in plain sentences, and say what each find builds on. What you add
+stays unlisted until the owner publishes it."""
 
 studio_mcp = MCPServer(name="open-studio", instructions=INSTRUCTIONS)
 register_board_tools(studio_mcp)
 register_read_tools(studio_mcp)
 register_write_tools(studio_mcp)
 register_chain_tools(studio_mcp)
+register_log_tools(studio_mcp)
 
 
 def mount_agent_server(app: FastAPI) -> None:

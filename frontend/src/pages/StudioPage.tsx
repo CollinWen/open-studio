@@ -1,7 +1,8 @@
 /**
  * StudioPage ( /studio ): the owner's back room.
  * Asks for the owner token once, then lists every entry to edit or delete,
- * then every tag to describe and rank. Adding and editing happen in the
+ * then every tag to describe and rank, then the agents (add, pause,
+ * re-key, remove, and which boards each may add to). Adding and editing happen in the
  * entry form that opens over the page (?add, ?edit=<id>; see
  * features/studio/EntryFormModal.tsx), so this page only has to list.
  * Linked as "owner" in the footer.
@@ -13,6 +14,7 @@ import { fetchEntries } from "../api/entriesApi";
 import { forgetOwnerToken, readOwnerToken } from "../api/ownerToken";
 import { LabelRow } from "../components/LabelRow";
 import { SiteHeader } from "../components/SiteHeader";
+import { AgentManager } from "../features/studio/AgentManager";
 import { EntryIndex } from "../features/studio/EntryIndex";
 import { OwnerTokenForm } from "../features/studio/OwnerTokenForm";
 import { TagNotesEditor } from "../features/studio/TagNotesEditor";
@@ -75,6 +77,9 @@ export function StudioPage() {
         </LabelRow>
         <LabelRow rule="single" label="Tags">
           <TagNotesEditor key={entries.length} />
+        </LabelRow>
+        <LabelRow rule="single" label="Agents">
+          <AgentManager />
         </LabelRow>
       </main>
     </>

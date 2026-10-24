@@ -2,22 +2,25 @@
 Viewer: who is making a request (a visitor, an agent or the owner) and what
 name their writes are recorded under.
 
-Agents are other programs the owner has given a token to (AGENT_TOKENS in
-backend/.env): a Claude session, a research bot. They can read the studio and
-add entries, which arrive unlisted for the owner to publish.
+Agents are other programs the owner has let in from the studio page (or
+AGENT_TOKENS in backend/.env, added on startup): a Claude session, a research
+bot. Their tokens are checked against the agents table (agents/agent_tokens.py);
+a paused agent counts as a visitor. They can read the studio and add entries,
+which arrive unlisted for the owner to publish.
 Used by every route that reads or writes entries, and by agent_server/.
 What each kind of viewer may see or edit lives in entries/visibility_rules.py.
 """
 
-import secrets
 from dataclasses import dataclass
 from typing import Literal
 
 from fastapi import Depends, Header, HTTPException
+from sqlmodel import Session
 
 from app.auth.agent_write_limit import record_agent_write
 from app.auth.owner_auth import is_owner
-from app.config import settings
+from app.database import engine
+from app.features.agents.agent_tokens import find_active_agent
 
 OWNER = "owner"
 
@@ -42,14 +45,15 @@ class Viewer:
 
 
 def identify_viewer(authorization: str | None) -> Viewer:
-    """Owner token, then agent tokens; anything else is a visitor."""
+    """Owner token, then an active agent's token; anything else is a visitor."""
     if is_owner(authorization):
         return Viewer(role="owner")
     supplied = (authorization or "").removeprefix("Bearer ").strip()
     if supplied:
-        for token, name in settings.agent_tokens.items():
-            if secrets.compare_digest(supplied, token):
-                return Viewer(role="agent", agent_name=name)
+        with Session(engine) as db:
+            agent = find_active_agent(db, supplied)
+            if agent is not None:
+                return Viewer(role="agent", agent_name=agent.name)
     return Viewer(role="visitor")
 
 

@@ -25,7 +25,7 @@ class Board(SQLModel, table=True):
     # so say what to look for and when it's enough.
     description: str = ""
 
-    # Names of the agents (from AGENT_TOKENS) allowed to add entries here.
+    # Names of the agents (agents/models.py) allowed to add entries and log lines here.
     # Any agent may read every board.
     agents: list[str] = Field(default_factory=list, sa_column=Column(JSON))
 

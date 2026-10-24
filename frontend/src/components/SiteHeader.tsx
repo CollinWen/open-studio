@@ -1,6 +1,6 @@
 /**
  * SiteHeader: the top row of every page. My name sits in the label column;
- * the words of navigation start the content column. Anything passed as
+ * the words of navigation (index, agents, about) start the content column. Anything passed as
  * children sits on the far right (an entry count, "loading").
  *
  * When this browser holds the owner token, "add" joins the navigation
@@ -27,6 +27,7 @@ export function SiteHeader({ children }: { children?: ReactNode }) {
           <NavLink to="/" end>
             index
           </NavLink>
+          <NavLink to="/agents">agents</NavLink>
           <NavLink to="/about">about</NavLink>
           {isOwner && <Link to={{ search: withAdd.toString() }}>add</Link>}
         </nav>

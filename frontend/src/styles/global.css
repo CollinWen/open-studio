@@ -974,6 +974,111 @@ button:hover {
   margin-bottom: calc(var(--line) / 4);
 }
 
+/* ---- Agents page and the studio's agent list (pages/AgentsPage.tsx, features/agents/) ---- */
+
+/* A ledger on the page's content columns: name, status, boards, last seen. */
+.ledger-row {
+  display: grid;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+  column-gap: var(--gutter);
+  align-items: baseline;
+  padding: calc(var(--line) / 4) 0;
+  border-top: var(--rule-faint);
+}
+
+.ledger-row:first-child {
+  border-top: none;
+}
+
+.ledger-row > :nth-child(1) {
+  grid-column: span 2;
+}
+
+.ledger-row > :nth-child(2) {
+  grid-column: span 3;
+}
+
+.ledger-row > :nth-child(3),
+.ledger-row > :nth-child(4) {
+  grid-column: span 2;
+}
+
+.ledger-row.is-faded {
+  color: var(--ink-soft);
+}
+
+/* The log: when, in the margin of each line; then who · what · where, the text, the entry. */
+.agent-log-line {
+  display: grid;
+  grid-template-columns: 8em minmax(0, 1fr);
+  column-gap: var(--gutter);
+  align-items: baseline;
+  padding: calc(var(--line) / 2) 0;
+  border-top: var(--rule-faint);
+}
+
+.agent-log-line:first-child {
+  border-top: none;
+}
+
+.agent-log-meta {
+  margin: 0;
+  font-size: var(--size-small);
+  line-height: var(--leading-small);
+  color: var(--ink-soft);
+}
+
+.agent-log-text {
+  max-width: 34em;
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+/* Findings and questions (questions are for the owner) are set in full ink, so they're found. */
+.agent-log-line.is-question .agent-log-text,
+.agent-log-line.is-finding .agent-log-text,
+.agent-log-line.is-question .agent-log-meta {
+  color: var(--ink);
+}
+
+@media (max-width: 720px) {
+  .ledger-row > :nth-child(n) {
+    grid-column: 1 / -1;
+  }
+
+  .agent-log-line {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.agent-manager-add {
+  margin-bottom: var(--line);
+}
+
+.agent-manager-add input {
+  border-bottom: var(--rule-faint);
+}
+
+.agent-manager-row {
+  margin-bottom: var(--line);
+}
+
+.agent-manager-row p {
+  margin-bottom: calc(var(--line) / 4);
+}
+
+.agent-token-notice {
+  margin-bottom: var(--line);
+}
+
+.agent-token-notice pre {
+  margin: 0 0 calc(var(--line) / 2);
+  font-size: var(--size-small);
+  line-height: var(--leading-small);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
 /* ---- Entry sheet: the add / edit form over the page (features/studio/EntryFormModal.tsx) ---- */
 
 /* A sheet of paper dropped over the top of the page, edge to edge like the
