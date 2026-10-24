@@ -2,8 +2,8 @@
  * WallLabel: the museum-style placard for an entry, as labeled rows.
  * The title set large, then (for the owner) an Owner row with "edit" right
  * under it where it's easy to find, then Space (the board it's on, linking
- * back to it), Kind, Date and Source each on their own line, then the "why
- * it's here" description.
+ * back to it), Kind, Date, Source and, when an agent added it, Added by,
+ * each on their own line, then the "why it's here" description.
  *
  * Used by EntryPage. The rows come from components/LabelRow.tsx.
  */
@@ -46,6 +46,11 @@ export function WallLabel({ entry, ownerActions }: { entry: Entry; ownerActions?
           ) : (
             entry.source_name
           )}
+        </LabelRow>
+      )}
+      {entry.added_by !== "owner" && (
+        <LabelRow label="Added by">
+          {entry.added_by.replace("agent:", "")} <span className="quiet">(agent)</span>
         </LabelRow>
       )}
       {entry.description && (
