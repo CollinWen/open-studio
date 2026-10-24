@@ -8,7 +8,9 @@
  * - One line of body text (--line) is the unit for everything vertical, and
  *   the gutter between columns is one line wide too.
  * - One typeface (Inter), few sizes. Hierarchy comes from size, ink strength
- *   and space, never color or boxes.
+ *   and space, never boxes. The only color that isn't the work's is one
+ *   accent (--accent) and one shaded paper (--paper-shade), kept for the
+ *   controls, so moving around reads apart from the work itself.
  * - Rules run the full width of the screen: a double rule for major breaks,
  *   a single hairline for minor ones (see components/LabelRow.tsx).
  * - Every line of words (spaces, tags, views, studio controls) is a
@@ -25,6 +27,11 @@
   --ink-faint: rgba(20, 20, 20, 0.18);
   --rule: 1px solid var(--ink);
   --rule-faint: 1px solid var(--ink-faint);
+
+  /* The controls' two small accents: a Swiss red for where you are, and a
+     slightly shaded paper under the view and filter lines. */
+  --accent: #c43a22;
+  --paper-shade: #ebe8e1;
 
   --font: "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
 
@@ -325,6 +332,19 @@ button:hover {
   padding-bottom: calc(3 * var(--line));
 }
 
+/* A board's intro is always three display lines tall, however long the
+   text, so the browse panel never moves; longer text is cut at the third line. */
+.board-intro .label-row-content {
+  height: calc(3 * var(--leading-display));
+}
+
+.board-intro .display {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+
 /* On phones the label sits on its own line above the content. */
 @media (max-width: 720px) {
   .label-row-label,
@@ -383,12 +403,12 @@ button:hover {
 
 /* ---- Browse panel: space, tags, time and view in one block (features/grid/BrowsePanel.tsx) ---- */
 
-/* One section: a rule above it, then its lines half a line apart, no rules between. */
-.browse-panel .label-row + .label-row {
-  margin-top: calc(var(--line) / 2);
+/* The spaces are the largest words in the panel: where you are comes first,
+   on the paper itself, with the current one in the accent. */
+.space-row {
+  padding-bottom: calc(var(--line) / 2);
 }
 
-/* The spaces are the largest words in the panel: where you are comes first. */
 .board-line {
   font-size: var(--size-large);
   line-height: var(--line);
@@ -396,6 +416,29 @@ button:hover {
 
 .board-line a:hover {
   color: var(--ink);
+}
+
+.board-line a.is-active {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  text-decoration-thickness: 1px;
+}
+
+/* The controls sit on a shaded band edge to edge, under a hairline, so they
+   read as tools and not as part of the work. Lines half a line apart. */
+.browse-controls-band {
+  background: var(--paper-shade);
+  border-top: var(--rule-faint);
+  padding: calc(var(--line) / 2) 0;
+}
+
+.browse-controls-band .label-row + .label-row {
+  margin-top: calc(var(--line) / 2);
+}
+
+.browse-controls-band .is-active {
+  text-decoration-color: var(--accent);
 }
 
 /* The time slider: month bars on a hairline, two handles laid over them. */
