@@ -3,6 +3,7 @@
  *
  *   Space   which board you're in (larger words, the current one in accent).
  *           Spaces are where you are, not a filter, so they stand on their own.
+ *           Under them, the agents signed on to this board, if any.
  *
  *   Then, on a lightly shaded band (the controls, not the work):
  *   View    search, sphere / three picture sizes / rows, sort, clear
@@ -43,6 +44,7 @@ const OPEN_KEY = "browse-filters-open";
 export function BrowsePanel({ boards, board, tags, entries, browse }: Props) {
   const months = useMemo(() => countMonths(entries), [entries]);
   const [open, setOpen] = useState(readOpen);
+  const agents = boards.find((candidate) => candidate.slug === board)?.agents ?? [];
 
   const toggle = () => {
     setOpen(!open);
@@ -57,6 +59,7 @@ export function BrowsePanel({ boards, board, tags, entries, browse }: Props) {
     <section className="browse-panel">
       <LabelRow rule="single" label="Space" className="space-row">
         <BoardLine boards={boards} current={board} view={browse.view} />
+        {agents.length > 0 && <p className="quiet board-agents">with {agents.join(", ")}</p>}
       </LabelRow>
       <div className="browse-controls-band">
         <LabelRow label="View">

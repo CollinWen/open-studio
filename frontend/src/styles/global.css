@@ -418,6 +418,13 @@ button:hover {
   color: var(--ink);
 }
 
+/* Who works on this board besides the owner: the agents signed on to it. */
+.board-agents {
+  margin: calc(var(--line) / 4) 0 0;
+  font-size: var(--size-small);
+  line-height: var(--leading-small);
+}
+
 .board-line a.is-active {
   color: var(--accent);
   text-decoration: underline;

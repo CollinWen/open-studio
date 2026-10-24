@@ -59,10 +59,7 @@ export function EntryPage() {
                 readOwnerToken() && (
                   <p className="word-list">
                     <Link to={`?edit=${entry.id}`}>edit</Link>
-                    <span className="quiet">
-                      {entry.visibility}
-                      {entry.added_by !== "owner" && ` · added by ${entry.added_by.replace("agent:", "")}`}
-                    </span>
+                    <span className="quiet">{entry.visibility}</span>
                   </p>
                 )
               }
