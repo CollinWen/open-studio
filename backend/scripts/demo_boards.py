@@ -1,7 +1,7 @@
 """
 Demo boards: the made-up spaces for local runs, and more made-up entries for
 each of them. Four boards (bread, ceramics, graphics, photography), each
-gathering a few of demo_entries.py's topics plus the extra topics here;
+gathering a few of demo_entries.py's topics plus two extra topics here;
 every topic not claimed by a board stays on home.
 
 Only used by seed_demo_entries.py. Nothing here is real.
@@ -12,26 +12,26 @@ BOARDS = {
     "bread": {
         "name": "Bread",
         "description": "Loaves, starters, ferments and the long wait in between.",
-        "topics": ["bread", "korean food", "flatbread"],
+        "topics": ["bread", "korean food", "flatbread", "pastry"],
     },
     "ceramics": {
         "name": "Ceramics",
         "description": "Clay, glaze, kilns and other slow work with the hands.",
-        "topics": ["ceramics", "woodworking", "glaze"],
+        "topics": ["ceramics", "woodworking", "glaze", "handbuilding"],
     },
     "graphics": {
         "name": "Graphics",
         "description": "Pictures made with math and pictures made with type.",
-        "topics": ["graphics", "typography", "generative art"],
+        "topics": ["graphics", "typography", "generative art", "posters"],
     },
     "photography": {
         "name": "Photography",
         "description": "Mostly film, mostly walks, and the cities they happen in.",
-        "topics": ["photography", "architecture", "night"],
+        "topics": ["photography", "architecture", "night", "landscape"],
     },
 }
 
-# More entries, one topic per board, in the same shape as demo_entries.TOPICS.
+# More entries, two topics per board, in the same shape as demo_entries.TOPICS.
 EXTRA_TOPICS = [
     {
         "tags": ["flatbread", "baking"],
@@ -127,6 +127,102 @@ EXTRA_TOPICS = [
             "Leiter made the rain look like painting.",
             "Pushed two stops; grainier than I meant, and I like it.",
             "Nobody looks up at night.",
+        ],
+    },
+    {
+        "tags": ["pastry", "lamination"],
+        "extra_tags": ["butter", "croissant", "kitchen"],
+        "colors": [(232, 190, 120), (170, 100, 45), (250, 240, 220), (110, 70, 35)],
+        "items": [
+            ("Croissants, attempt three", "recipe", "series"),
+            ("Butter block, cold enough this time", "photo", "upload"),
+            ("Lamination, in cross-section", "photo", "instagram"),
+            ("The Art of French Pastry", "book", "book"),
+            ("Folding schedule", "note", "note"),
+            ("Kouign-amann at the corner bakery", "photo", "drive"),
+            ("Locking in the butter, slowly", "video", "youtube"),
+            ("Thread: why my layers merged", "post", "x"),
+            ("Temperature is the whole recipe", "link", "web"),
+            ("Pain au chocolat for the neighbors", "recipe", "upload"),
+        ],
+        "why": [
+            "Eighty-one layers if nothing melts. Something always melts.",
+            "The honeycomb finally showed up in the crumb.",
+            "Pastry is bread with a deadline.",
+            "Kept for the fold timings, which I always forget.",
+            "Too much butter leaked, but the shape held.",
+        ],
+    },
+    {
+        "tags": ["handbuilding", "clay"],
+        "extra_tags": ["slab", "coil", "studio"],
+        "colors": [(190, 140, 110), (110, 85, 70), (235, 225, 210), (150, 155, 130)],
+        "items": [
+            ("Slab mugs, a set of four", "artwork", "series"),
+            ("Coil pot, taller than planned", "artwork", "upload"),
+            ("Pinch bowls before breakfast", "photo", "instagram"),
+            ("Hand-Building Techniques", "book", "book"),
+            ("Notes on drying slowly", "note", "note"),
+            ("Studio shelf, mid-week", "photo", "drive"),
+            ("Scoring and slipping, done right", "video", "youtube"),
+            ("Thread: handbuilt versus thrown", "post", "x"),
+            ("Templates for slab work", "link", "web"),
+            ("Planter with carved feet", "artwork", "upload"),
+        ],
+        "why": [
+            "No wheel, just hands and time.",
+            "Wrapped in plastic for a week so it wouldn't crack. It still cracked.",
+            "Wobbly on purpose, mostly.",
+            "Every coil is a line you can see later.",
+            "The first one I'd give away.",
+        ],
+    },
+    {
+        "tags": ["posters", "print"],
+        "extra_tags": ["risograph", "grid", "layout"],
+        "colors": [(230, 70, 50), (30, 60, 140), (245, 240, 228), (250, 200, 40)],
+        "items": [
+            ("Concert poster, two colors", "artwork", "upload"),
+            ("Risograph misregistration, on purpose", "artwork", "series"),
+            ("The Graphic Artist and His Design Problems", "book", "book"),
+            ("Museum für Gestaltung poster collection", "link", "web"),
+            ("Pulling a screen print", "video", "youtube"),
+            ("Poster wall in Zurich", "photo", "drive"),
+            ("Twelve-column grid, explained", "note", "note"),
+            ("Thread: is the grid a cage", "post", "x"),
+            ("Type-only poster, one weekend", "artwork", "instagram"),
+            ("Layout generator for posters", "project", "github"),
+        ],
+        "why": [
+            "Two inks, one afternoon, a hundred copies.",
+            "The grid made the decisions so I didn't have to.",
+            "Müller-Brockmann would hate the colors and like the margins.",
+            "Misregistered by two millimeters and better for it.",
+            "Saved for the way the type sits on the edge.",
+        ],
+    },
+    {
+        "tags": ["landscape", "large format"],
+        "extra_tags": ["hiking", "weather", "4x5"],
+        "colors": [(80, 110, 90), (170, 190, 200), (235, 230, 215), (60, 70, 85)],
+        "items": [
+            ("Ridge line at first light", "photo", "upload"),
+            ("4x5 sheets from the coast", "photo", "series"),
+            ("Fog over the valley", "photo", "drive"),
+            ("The Camera, the Negative, the Print", "book", "book"),
+            ("Setting up a field camera", "video", "youtube"),
+            ("Waiting for the light", "note", "note"),
+            ("Tidepool, long exposure", "photo", "instagram"),
+            ("Thread: carrying too much gear", "post", "x"),
+            ("Zone system, simply", "link", "web"),
+            ("Storm coming in over the lake", "photo", "upload"),
+        ],
+        "why": [
+            "One sheet, one chance, a two-hour walk to get there.",
+            "The fog lifted for about four minutes.",
+            "Large format makes you decide before you shoot.",
+            "Developed in a tank at home; the sky held.",
+            "The weather did all the work.",
         ],
     },
 ]

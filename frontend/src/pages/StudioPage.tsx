@@ -1,11 +1,12 @@
 /**
  * StudioPage ( /studio ): the owner's back room.
- * Asks for the owner token once, then lists every entry to edit or delete,
- * then every tag to describe and rank, then the agents (add, pause,
- * re-key, remove, and which boards each may add to). Adding and editing happen in the
+ * Asks for the owner token once, then lists the boards (add one, change its
+ * name or brief), every entry to edit or delete, every tag to describe and
+ * rank, then the agents (add, pause, re-key, remove, and which boards each
+ * may add to). Adding and editing happen in the
  * entry form that opens over the page (?add, ?edit=<id>; see
  * features/studio/EntryFormModal.tsx), so this page only has to list.
- * Linked as "owner" in the footer.
+ * Linked as "owner" (or "studio", once signed in) in the header.
  */
 
 import { useCallback, useEffect, useState } from "react";
@@ -15,6 +16,7 @@ import { forgetOwnerToken, readOwnerToken } from "../api/ownerToken";
 import { LabelRow } from "../components/LabelRow";
 import { SiteHeader } from "../components/SiteHeader";
 import { AgentManager } from "../features/studio/AgentManager";
+import { BoardManager } from "../features/studio/BoardManager";
 import { EntryIndex } from "../features/studio/EntryIndex";
 import { OwnerTokenForm } from "../features/studio/OwnerTokenForm";
 import { TagNotesEditor } from "../features/studio/TagNotesEditor";
@@ -25,6 +27,8 @@ import type { Entry } from "../types/entry";
 export function StudioPage() {
   const [hasToken, setHasToken] = useState(Boolean(readOwnerToken()));
   const [entries, setEntries] = useState<Entry[]>([]);
+  // Bumped when a board is added, so the agents list shows it as a board to sign agents on to.
+  const [boardsAdded, setBoardsAdded] = useState(0);
   const { openEntryEdit } = useEntryFormParam();
 
   const reload = useCallback(() => {
@@ -72,6 +76,9 @@ export function StudioPage() {
             </span>
           </p>
         </LabelRow>
+        <LabelRow rule="single" label="Boards">
+          <BoardManager onAdded={() => setBoardsAdded((count) => count + 1)} />
+        </LabelRow>
         <LabelRow rule="single" label="Entries">
           <EntryIndex entries={entries} onEdit={(entry) => openEntryEdit(entry.id)} onChanged={reload} />
         </LabelRow>
@@ -79,7 +86,7 @@ export function StudioPage() {
           <TagNotesEditor key={entries.length} />
         </LabelRow>
         <LabelRow rule="single" label="Agents">
-          <AgentManager />
+          <AgentManager key={boardsAdded} />
         </LabelRow>
       </main>
     </>

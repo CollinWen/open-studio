@@ -1101,6 +1101,27 @@ button:hover {
   }
 }
 
+/* The studio's boards: name and address on one line, the brief under it. */
+.board-manager-add,
+.board-manager-row {
+  margin-bottom: var(--line);
+}
+
+.board-manager-add p,
+.board-manager-row p {
+  margin-bottom: calc(var(--line) / 4);
+}
+
+.board-manager-add input,
+.board-manager-row input {
+  border-bottom: var(--rule-faint);
+}
+
+.board-manager textarea {
+  width: 100%;
+  resize: vertical;
+}
+
 .agent-manager-add {
   margin-bottom: var(--line);
 }

@@ -78,7 +78,7 @@ open-studio/
 │   │   ├── agent_server/     The studio as an MCP server (/mcp) for agents: board, read, write, chain and log tools
 │   │   └── integrations/     OpenRouter (LLM, embeddings), file storage. One file each.
 │   │       └── link_readers/ One reader per site (YouTube, Google Drive, GitHub, Instagram, X) + a general webpage reader
-│   ├── scripts/              One-off tools run by hand (e.g. wipe local data and seed ~160 demo entries on five boards)
+│   ├── scripts/              One-off tools run by hand (e.g. wipe local data and seed ~200 demo entries on five boards, with chains and two demo agents)
 │   └── tests/                Mirrors app/ folder-for-folder
 │
 ├── frontend/                 React + TypeScript (Vite dev server)

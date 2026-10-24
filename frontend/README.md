@@ -26,7 +26,7 @@ Requests to `/api` and `/media` are passed through to the backend on port 8000
 | `/about` | `pages/AboutPage.tsx` | The welcome text |
 | `/sketch` | `pages/SketchPage.tsx` | Scratch page, not linked: home-page ideas on the real collection. `?sketch=hover\|threads\|kinship`, `?size=`, `?gap=` |
 | `/agents` | `pages/AgentsPage.tsx` | Every agent (status, boards, last seen) and the agent log, newest first. `?agent=<name>` or `?board=<slug>` narrows the log. |
-| `/studio` | `pages/StudioPage.tsx` | Owner-only: every entry to edit or delete, tag notes, and agents (add, pause, new token, remove, which boards). Linked as "owner" in the footer. |
+| `/studio` | `pages/StudioPage.tsx` | Owner-only: boards (add one, change its name or brief), every entry to edit or delete, tag notes, and agents (add, pause, new token, remove, which boards). Linked as "owner" in the header ("studio" once signed in). |
 | any page `?add`, `?edit=<id>` | `features/studio/EntryFormModal.tsx` | Owner-only: the entry form as a sheet over whatever page you're on ("add" in the header, "edit" under an entry's title). |
 
 ## Layout
@@ -38,7 +38,7 @@ Requests to `/api` and `/media` are passed through to the backend on port 8000
 | `src/features/entries/` | Pieces of the entry page (wall label, the full series of pictures and videos, tags, related) |
 | `src/features/sketches/` | The sketch page's experiments: a justified contact sheet (`justifyRows`), threads between related entries (`LinkLines`, `relatedLinks`) |
 | `src/features/agents/` | The agents page's pieces: the list of agents (`AgentList`), the log (`AgentLog`), and `formatTimeAgo` |
-| `src/features/studio/` | The owner's entry form, shown as a sheet over any page (`EntryFormModal`, opened by `?add` / `?edit=<id>`; `entrySavedEvent` tells the page to reload): paste-a-link capture, the essentials first with the rest behind "more", the media list (cover, captions, uploads); plus the entry list, tag notes (description + importance) and the agents list (`AgentManager`) |
+| `src/features/studio/` | The owner's entry form, shown as a sheet over any page (`EntryFormModal`, opened by `?add` / `?edit=<id>`; `entrySavedEvent` tells the page to reload): paste-a-link capture, the essentials first with the rest behind "more", the media list (cover, captions, uploads); plus the boards list (`BoardManager`), the entry list, tag notes (description + importance) and the agents list (`AgentManager`) |
 | `src/components/` | Site-wide pieces (the labeled page row, the word-as-a-control `WordChoice`, the size dot `DotChoice`, header, footer) |
 | `src/api/` | Every call to the backend, and the stored owner token |
 | `src/types/` | Data shapes, matching the backend's `schemas.py` files |

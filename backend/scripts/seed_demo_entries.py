@@ -1,9 +1,13 @@
 """
 Seed demo entries: wipes the LOCAL database and media folder, then fills
-them with about 160 made-up entries so the site can be tried with a full
+them with about 200 made-up entries so the site can be tried with a full
 collection: four boards (bread, ceramics, graphics, photography; from
 demo_boards.py) and the home board, each with its own topics (demo_entries.py).
-Pictures are generated gradients and patterns.
+Pictures are generated gradients and patterns. Within each topic, some
+entries build on the one before ("builds on" chains). Two demo agents
+(demo_agents.py) are signed on to the boards, with a status, a log of what
+they planned, found and asked, and a few unlisted finds to publish; their
+tokens are printed at the end, so a Claude session can be connected as one.
 
   .venv/Scripts/python scripts/seed_demo_entries.py             wipe and refill
   .venv/Scripts/python scripts/seed_demo_entries.py --offline   same, without OpenRouter
@@ -31,14 +35,21 @@ from sqlmodel import Session, SQLModel  # noqa: E402
 from app.auth.viewer import Viewer  # noqa: E402
 from app.config import settings  # noqa: E402
 from app.database import create_tables, engine  # noqa: E402
+from app.features.agent_log import service as log_service  # noqa: E402
+from app.features.agent_log.models import AgentLogLine  # noqa: E402
+from app.features.agent_log.schemas import LogLineCreate  # noqa: E402
+from app.features.agents import service as agents_service  # noqa: E402
+from app.features.agents.schemas import AgentCreate  # noqa: E402
 from app.features.boards import service as boards_service  # noqa: E402
 from app.features.boards.schemas import BoardCreate  # noqa: E402
 from app.features.entries import service as entries_service  # noqa: E402
 from app.features.entries.schemas import EntryCreate, MediaItem  # noqa: E402
 from app.features.entry_links import models as _link_models  # noqa: E402,F401  (so the wipe drops links too)
+from app.features.entry_links import service as links_service  # noqa: E402
 from app.features.tags import service as tags_service  # noqa: E402
 from app.features.tags.schemas import TagNotes  # noqa: E402
 from scripts import sample_images as draw  # noqa: E402
+from scripts.demo_agents import AGENTS, FINDS, LOG  # noqa: E402
 from scripts.demo_boards import BOARDS, EXTRA_TOPICS  # noqa: E402
 from scripts.demo_entries import NOTE_PARAGRAPHS, SOURCE_NAMES, TOPICS, YOUTUBE_IDS  # noqa: E402
 
@@ -54,6 +65,16 @@ TAG_DESCRIPTIONS = {
     "photography": "Mostly film, mostly walks.",
 }
 ALL_TOPICS = TOPICS + EXTRA_TOPICS
+# How often an entry builds on the one before it in its topic, and what the link says.
+CHAIN_CHANCE = 0.45
+CHAIN_NOTES = [
+    "tried again with what this taught me",
+    "picks up where this left off",
+    "same question, a better answer",
+    "the next step after this",
+    "fixes what went wrong here",
+]
+OWNER = Viewer(role="owner")
 
 
 def seed_demo() -> None:
@@ -71,10 +92,12 @@ def seed_demo() -> None:
             boards_service.create_board(
                 db, BoardCreate(slug=slug, name=board["name"], description=board["description"])
             )
+        made: list[list] = []
         for topic in ALL_TOPICS:
+            made.append([])
             for title, kind, style in topic["items"]:
                 media, picture_count = make_media(style, topic["colors"], picture_count, rng)
-                entries_service.create_entry(
+                entry = entries_service.create_entry(
                     db,
                     EntryCreate(
                         title=title,
@@ -87,15 +110,61 @@ def seed_demo() -> None:
                         occurred_at=now - timedelta(days=int(rng.random() ** 1.6 * OLDEST_DAYS_AGO)),
                         **describe_source(style, title, rng),
                     ),
-                    Viewer(role="owner"),
+                    OWNER,
                 )
+                made[-1].append(entry)
                 print(f"added  {style:<9} {title}")
         for topic in ALL_TOPICS:
             name = topic["tags"][0]
             notes = TagNotes(description=TAG_DESCRIPTIONS.get(name, ""), importance=1)
             tags_service.save_tag_notes(db, name, notes)
-    entry_count = sum(len(topic["items"]) for topic in ALL_TOPICS)
-    print(f"Done: {entry_count} entries on {len(BOARDS) + 1} boards, {picture_count} pictures.")
+        link_count = link_chains(db, made, rng)
+        by_title = {entry.title: entry for topic_entries in made for entry in topic_entries}
+        tokens = add_demo_agents(db, by_title, now)
+    entry_count = sum(len(topic["items"]) for topic in ALL_TOPICS) + len(FINDS)
+    print(f"Done: {entry_count} entries on {len(BOARDS) + 1} boards, {link_count} builds-on links, "
+          f"{picture_count} pictures, {len(AGENTS)} agents.")
+    for name, token in tokens.items():
+        print(f"  agent {name}: {token}")
+
+
+def link_chains(db: Session, made: list[list], rng: random.Random) -> int:
+    """Within each topic, oldest first, some entries build on the one before."""
+    count = 0
+    for topic_entries in made:
+        ordered = sorted(topic_entries, key=lambda entry: entry.occurred_at)
+        for earlier, later in zip(ordered, ordered[1:]):
+            if rng.random() < CHAIN_CHANCE:
+                links_service.add_builds_on(db, OWNER, later, earlier, rng.choice(CHAIN_NOTES))
+                count += 1
+    return count
+
+
+def add_demo_agents(db: Session, by_title: dict, now: datetime) -> dict[str, str]:
+    """The demo agents, their unlisted finds and their log, spread back in time. Returns their tokens."""
+    tokens = {}
+    for name, agent in AGENTS.items():
+        made, tokens[name] = agents_service.create_agent(
+            db, AgentCreate(name=name, description=agent["description"], boards=agent["boards"])
+        )
+        made.status = agent["status"]
+        made.last_seen_at = now - timedelta(hours=agent["seen_hours_ago"])
+        db.add(made)
+        db.commit()
+    for name, board, title, kind, why, tags, builds_on, note in FINDS:
+        viewer = Viewer(role="agent", agent_name=name)
+        data = EntryCreate(title=title, kind=kind, description=why, tags=tags, board=board, occurred_at=now)
+        find = entries_service.create_entry(db, data, viewer)
+        links_service.add_builds_on(db, viewer, find, by_title[builds_on], note)
+        by_title[title] = find
+    for name, hours_ago, board, line_type, text, about in LOG:
+        line = LogLineCreate(board=board, type=line_type, text=text, entry_id=by_title[about].id if about else None)
+        written = log_service.add_line(db, Viewer(role="agent", agent_name=name), line)
+        stored = db.get(AgentLogLine, written.id)
+        stored.created_at = now - timedelta(hours=hours_ago)
+        db.add(stored)
+    db.commit()
+    return tokens
 
 
 def wipe_local_data() -> None:

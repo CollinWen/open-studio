@@ -1,6 +1,6 @@
 /**
  * SiteFooter: the last row, under a double rule of the page: the year in the label
- * column, then the way into the owner's studio page.
+ * column, then a link to the about page. (The way into the studio is in the header.)
  */
 
 import { Link } from "react-router-dom";
@@ -12,8 +12,6 @@ export function SiteFooter() {
       <LabelRow rule="double" label={`© ${new Date().getFullYear()}`}>
         <span className="quiet">
           <Link to="/about">about</Link>
-          {" · "}
-          <Link to="/studio">owner</Link>
         </span>
       </LabelRow>
     </footer>
