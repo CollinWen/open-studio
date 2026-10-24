@@ -1,52 +1,53 @@
 /**
- * AgentList: every agent as one line of a ledger, under a line of column
- * names: its name (a link that narrows the log below to it), what it says
- * it's doing now (with what it's for underneath), the boards it's signed
- * on to, and when it last called the studio. A paused agent says so.
+ * AgentList: every agent as one line of a Ledger: its name (a link to its
+ * lines in the log), what it says it's doing now (with what it's for
+ * underneath), the boards it's signed on to, and when it last called the
+ * studio. A paused agent says so and fades.
  *
- * Used by AgentsPage. Looks: .ledger-row in global.css.
+ * Used by AgentsPage ("who"). The owner's version, with controls, is
+ * studio/AgentManager.tsx.
  */
 
 import { Link } from "react-router-dom";
+import { Ledger } from "../../components/Ledger";
+import { LedgerRow } from "../../components/LedgerRow";
 import type { Agent } from "../../types/agent";
 import { boardPath } from "../grid/boardPath";
 import { formatTimeAgo } from "./formatTimeAgo";
 
-interface Props {
-  agents: Agent[];
-  picked: string | null;
-}
+const COLUMNS = [
+  { label: "agent", span: 3 },
+  { label: "doing now", span: 5 },
+  { label: "boards it works on", span: 2 },
+  { label: "last seen", span: 2 },
+];
 
-export function AgentList({ agents, picked }: Props) {
+export function AgentList({ agents }: { agents: Agent[] }) {
   if (agents.length === 0) return <p className="quiet">No agents yet.</p>;
 
   return (
-    <div className="agent-ledger">
-      <div className="ledger-row is-heading">
-        <span>agent</span>
-        <span>doing now</span>
-        <span>boards it works on</span>
-        <span>last seen</span>
-      </div>
+    <Ledger columns={COLUMNS}>
       {agents.map((agent) => (
-        <div key={agent.name} className={["ledger-row", !agent.active && "is-faded"].filter(Boolean).join(" ")}>
-          <Link to={`?agent=${agent.name}`} className={agent.name === picked ? "is-active" : undefined}>
-            {agent.name}
-          </Link>
-          <span>
-            {agent.active ? agent.status || <span className="quiet">no status yet</span> : "paused"}
-            {agent.description && <span className="quiet ledger-note">{agent.description}</span>}
-          </span>
-          <span className="word-list quiet">
-            {agent.boards.map((slug) => (
-              <Link key={slug} to={boardPath(slug)}>
-                {slug}
-              </Link>
-            ))}
-          </span>
-          <span className="quiet">{agent.last_seen_at ? formatTimeAgo(agent.last_seen_at) : "never seen"}</span>
-        </div>
+        <LedgerRow
+          key={agent.name}
+          className={agent.active ? undefined : "is-faded"}
+          cells={[
+            <Link to={`/agents?agent=${agent.name}`}>{agent.name}</Link>,
+            <>
+              {agent.active ? agent.status || <span className="quiet">no status yet</span> : "paused"}
+              {agent.description && <span className="quiet ledger-note">{agent.description}</span>}
+            </>,
+            <span className="word-list quiet">
+              {agent.boards.map((slug) => (
+                <Link key={slug} to={boardPath(slug)}>
+                  {slug}
+                </Link>
+              ))}
+            </span>,
+            <span className="quiet">{agent.last_seen_at ? formatTimeAgo(agent.last_seen_at) : "never seen"}</span>,
+          ]}
+        />
       ))}
-    </div>
+    </Ledger>
   );
 }

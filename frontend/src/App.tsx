@@ -21,7 +21,9 @@ export function App() {
         <Route path="/entry/:id" element={<EntryPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/agents" element={<AgentsPage />} />
+        <Route path="/agents/:section" element={<AgentsPage />} />
         <Route path="/studio" element={<StudioPage />} />
+        <Route path="/studio/:section" element={<StudioPage />} />
         <Route path="/sketch" element={<SketchPage />} />
       </Routes>
       <EntryFormModal />

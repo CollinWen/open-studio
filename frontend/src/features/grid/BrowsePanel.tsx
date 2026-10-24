@@ -1,36 +1,34 @@
 /**
- * BrowsePanel: every way to move around a board, in two parts above the work.
+ * BrowsePanel: every way to move around a board, above the work, in the
+ * shape every page shares (components/SectionLine + ControlBand):
  *
- *   Space   which board you're in (larger words, the current one in accent).
- *           Spaces are where you are, not a filter, so they stand on their own.
- *           Under them, the agents signed on to this board, if any, each
- *           linked to its agent log, and a link to this board's log.
- *
- *   Then, on a lightly shaded band (the controls, not the work):
- *   View    search, sphere / three picture sizes / rows, sort, clear
- *   Filter  "show tags & time" opens the two lines below; while they're
- *           closed, whatever you picked is still shown here (FilterSummary)
+ *   Space   the boards, as larger words; the one you're in is in accent.
+ *           Each is its own page, so spaces never mix. Switching keeps the
+ *           view and drops what you'd picked. Under them, the agents signed
+ *           on to this board, each linked to its log.
+ *   View    search, sphere / three picture sizes / rows, sort, clear; then
+ *           a caret that opens
  *   Tags    the board's tags, each in an oval; pick one to highlight it
  *   Time    a slider over the months that have entries
  *
- * Whether tags & time are open is remembered in this browser only (it's how
- * you like the page, not what you're looking at, so it stays out of the URL).
- *
- * Used by BoardPage, which loads the boards, tags and entries it shows.
- * Every pick lives in the URL (useBrowseParams).
+ * While tags and time are closed, a picked tag or span still shows beside
+ * the caret (PickedFilters). Used by BoardPage, which loads the boards, tags
+ * and entries it shows. Every pick lives in the URL (useBrowseParams).
  */
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
+import { ControlBand } from "../../components/ControlBand";
 import { LabelRow } from "../../components/LabelRow";
+import { SectionLine } from "../../components/SectionLine";
 import type { Board, Entry, Tag } from "../../types/entry";
-import { BoardLine } from "./BoardLine";
+import { boardPath } from "./boardPath";
 import { BrowseControls } from "./BrowseControls";
-import { FilterSummary } from "./FilterSummary";
 import { countMonths } from "./monthRange";
+import { PickedFilters } from "./PickedFilters";
 import { TagFilter } from "./TagFilter";
 import { TimeRangeFilter } from "./TimeRangeFilter";
-import type { useBrowseParams } from "./useBrowseParams";
+import { DEFAULT_VIEW, type useBrowseParams } from "./useBrowseParams";
 
 interface Props {
   boards: Board[];
@@ -41,28 +39,21 @@ interface Props {
   browse: ReturnType<typeof useBrowseParams>;
 }
 
-const OPEN_KEY = "browse-filters-open";
-
 export function BrowsePanel({ boards, board, tags, entries, browse }: Props) {
   const months = useMemo(() => countMonths(entries), [entries]);
-  const [open, setOpen] = useState(readOpen);
   const agents = boards.find((candidate) => candidate.slug === board)?.agents ?? [];
-
-  const toggle = () => {
-    setOpen(!open);
-    try {
-      localStorage.setItem(OPEN_KEY, String(!open));
-    } catch {
-      // Storage can be blocked; the panel still works, it just won't remember.
-    }
-  };
+  const keepView = browse.view === DEFAULT_VIEW ? "" : `?view=${browse.view}`;
+  const sections = boards.map((candidate) => ({
+    key: candidate.slug,
+    label: candidate.name.toLowerCase(),
+    to: `${boardPath(candidate.slug)}${keepView}`,
+  }));
 
   return (
     <section className="browse-panel">
-      <LabelRow rule="single" label="Space" className="space-row">
-        <BoardLine boards={boards} current={board} view={browse.view} />
+      <SectionLine label="Space" sections={sections} current={board}>
         {agents.length > 0 && (
-          <p className="word-list quiet board-agents">
+          <p className="word-list quiet section-note">
             <span>with</span>
             {agents.map((name) => (
               <Link key={name} to={`/agents?agent=${name}`}>
@@ -72,9 +63,11 @@ export function BrowsePanel({ boards, board, tags, entries, browse }: Props) {
             <Link to={`/agents?board=${board}`}>their log</Link>
           </p>
         )}
-      </LabelRow>
-      <div className="browse-controls-band">
-        <LabelRow label="View">
+      </SectionLine>
+      <ControlBand
+        label="View"
+        rememberAs="board-filters-open"
+        controls={
           <BrowseControls
             query={browse.query}
             view={browse.view}
@@ -84,18 +77,16 @@ export function BrowsePanel({ boards, board, tags, entries, browse }: Props) {
             onChange={browse.setParam}
             onClear={browse.clearFilters}
           />
-        </LabelRow>
-        <LabelRow label="Filter">
-          <FilterSummary
-            open={open}
-            onToggle={toggle}
+        }
+        picked={
+          <PickedFilters
             tag={browse.tag}
             range={browse.range}
             onClearTag={() => browse.setParam("tag", null)}
             onClearRange={() => browse.setRange(null)}
           />
-        </LabelRow>
-        {open && (
+        }
+        more={
           <>
             <LabelRow label="Tags">
               <TagFilter tags={tags} activeTag={browse.tag} onSelect={(name) => browse.setParam("tag", name)} />
@@ -104,16 +95,8 @@ export function BrowsePanel({ boards, board, tags, entries, browse }: Props) {
               <TimeRangeFilter months={months} range={browse.range} onChange={browse.setRange} />
             </LabelRow>
           </>
-        )}
-      </div>
+        }
+      />
     </section>
   );
-}
-
-function readOpen(): boolean {
-  try {
-    return localStorage.getItem(OPEN_KEY) === "true";
-  } catch {
-    return false;
-  }
 }

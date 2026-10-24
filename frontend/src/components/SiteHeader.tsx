@@ -5,14 +5,15 @@
  * signed in it reads "studio". Anything passed as
  * children sits on the far right (an entry count, "loading").
  *
- * When this browser holds the owner token, "add" joins the navigation
- * words. It adds `?add` to the current address, which opens the entry form
+ * When this browser holds the owner token, a plus (add an entry) joins the
+ * navigation words. It adds `?add` to the current address, which opens the entry form
  * over whatever page you're on (see features/studio/EntryFormModal.tsx).
  */
 
 import type { ReactNode } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { readOwnerToken } from "../api/ownerToken";
+import { Icon } from "./Icon";
 import { LabelRow } from "./LabelRow";
 
 export function SiteHeader({ children }: { children?: ReactNode }) {
@@ -32,7 +33,11 @@ export function SiteHeader({ children }: { children?: ReactNode }) {
           <NavLink to="/agents">agents</NavLink>
           <NavLink to="/about">about</NavLink>
           <NavLink to="/studio">{isOwner ? "studio" : "owner"}</NavLink>
-          {isOwner && <Link to={{ search: withAdd.toString() }}>add</Link>}
+          {isOwner && (
+            <Link to={{ search: withAdd.toString() }} className="icon-button" aria-label="add an entry">
+              <Icon name="plus" />
+            </Link>
+          )}
         </nav>
         <span className="site-header-extra">{children}</span>
       </LabelRow>

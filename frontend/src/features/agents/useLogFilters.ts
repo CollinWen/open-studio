@@ -3,7 +3,7 @@
  * URL so any view of it is a link: ?agent=, ?board=, ?type= (plan, thought,
  * finding, question, status) and ?q= (words in the text).
  *
- * Used by AgentsPage and LogBrowsePanel.
+ * Used by AgentsPage and AgentLogBand.
  */
 
 import { useSearchParams } from "react-router-dom";
@@ -18,7 +18,7 @@ export function useLogFilters() {
   const agent = params.get("agent") ?? "";
   const board = params.get("board") ?? "";
   const typeParam = params.get("type") as LogLineType | null;
-  const type = typeParam && LINE_TYPES.includes(typeParam) ? typeParam : "";
+  const type: LogLineType | "" = typeParam && LINE_TYPES.includes(typeParam) ? typeParam : "";
   const query = params.get("q") ?? "";
 
   /** Set one filter (empty removes it). Typing replaces history instead of adding to it. */

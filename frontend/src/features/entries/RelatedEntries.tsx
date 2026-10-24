@@ -13,10 +13,10 @@ export function RelatedEntries({ entries }: { entries: Entry[] }) {
 
   return (
     <LabelRow rule="single" label="Related">
-      <div className="ledger">
+      <div className="related-list">
         {entries.map((entry) => (
-          <Link key={entry.id} to={`/entry/${entry.id}`} className="ledger-line">
-            <span className="ledger-title">{entry.title}</span>
+          <Link key={entry.id} to={`/entry/${entry.id}`} className="related-line">
+            <span className="related-title">{entry.title}</span>
             <span className="quiet">{entry.kind}</span>
           </Link>
         ))}

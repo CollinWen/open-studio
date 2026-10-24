@@ -13,9 +13,11 @@
  *   controls, so moving around reads apart from the work itself.
  * - Rules run the full width of the screen: a double rule for major breaks,
  *   a single hairline for minor ones (see components/LabelRow.tsx).
- * - Every line of words (spaces, tags, views, studio controls) is a
- *   `.word-list`; every pick-one word is a WordChoice. Tags sit in thin flat
- *   ovals (filled when picked); picture sizes are three dots (DotChoice).
+ * - Every page has one shape: a section line, a shaded control band (a
+ *   caret opens more), then a ledger (components/SectionLine, ControlBand,
+ *   Ledger). Every line of words is a `.word-list`; every pick-one word is a
+ *   WordChoice. Tags sit in thin flat ovals (filled when picked); picture
+ *   sizes are three dots (DotChoice); the few icons are thin strokes (Icon).
  * Change the look here, through the tokens below, not in components.
  * The paper is a warm off-white; the work supplies the color.
  */
@@ -414,53 +416,135 @@ main {
   padding-bottom: calc(2 * var(--line));
 }
 
-/* ---- Browse panel: space, tags, time and view in one block (features/grid/BrowsePanel.tsx) ---- */
+/* ---- The shape every page shares: SectionLine, ControlBand, Icon (components/) ---- */
 
-/* The spaces are the largest words in the panel: where you are comes first,
-   on the paper itself, with the current one in the accent. */
-.space-row {
+/* The section line: what you're looking at, as the largest words among the
+   controls, on the paper itself, with the current one in the accent. */
+.section-row {
   padding-bottom: calc(var(--line) / 2);
 }
 
-.board-line {
+.section-line {
   font-size: var(--size-large);
   line-height: var(--line);
 }
 
-/* Links on a board page, word buttons on the agents page; they look the same. */
-.board-line a:hover,
-.board-line button:hover {
+.section-line a:hover {
   color: var(--ink);
 }
 
-/* Who works on this board besides the owner: the agents signed on to it. */
-.board-agents {
-  margin: calc(var(--line) / 4) 0 0;
-  font-size: var(--size-small);
-  line-height: var(--leading-small);
-}
-
-.board-line .is-active {
+.section-line .is-active {
   color: var(--accent);
   text-decoration: underline;
   text-underline-offset: 0.18em;
   text-decoration-thickness: 1px;
 }
 
+.section-count {
+  font-size: var(--size-small);
+}
+
+/* A small line under the section words (a board's agents). */
+.section-note {
+  margin: calc(var(--line) / 4) 0 0;
+  font-size: var(--size-small);
+  line-height: var(--leading-small);
+}
+
 /* The controls sit on a shaded band edge to edge, under a hairline, so they
    read as tools and not as part of the work. Lines half a line apart. */
-.browse-controls-band {
+.control-band {
   background: var(--paper-shade);
   border-top: var(--rule-faint);
   padding: calc(var(--line) / 2) 0;
 }
 
-.browse-controls-band .label-row + .label-row {
+.control-band .label-row + .label-row {
   margin-top: calc(var(--line) / 2);
 }
 
-.browse-controls-band .is-active {
+.control-band .is-active {
   text-decoration-color: var(--accent);
+}
+
+/* The band's first line: its controls, then the caret, then what's picked. */
+.control-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: calc(2 * var(--gutter));
+  row-gap: calc(var(--line) / 4);
+}
+
+/* Text fields in a band are underlines, like the search. */
+.control-band input:not([type="range"]) {
+  width: 200px;
+  max-width: 100%;
+  border-bottom: var(--rule-faint);
+}
+
+.control-band input.is-long {
+  width: 320px;
+}
+
+.control-band input:focus {
+  border-bottom: var(--rule);
+}
+
+/* Icons: thin strokes in the ink color, the weight of a rule, a little
+   taller than a lowercase letter. */
+.icon {
+  display: inline-block;
+  width: 0.95em;
+  height: 0.95em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.25px;
+  stroke-linecap: square;
+  vector-effect: non-scaling-stroke;
+  vertical-align: -0.1em;
+}
+
+/* A button or link that is only an icon: soft ink until hovered. */
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  color: var(--ink-soft);
+}
+
+.icon-button:hover {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.icon-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* The caret turns a quarter to point down when the band is open. */
+.caret-toggle {
+  display: inline-flex;
+  align-items: center;
+  color: var(--ink-soft);
+}
+
+.caret-toggle:hover {
+  color: var(--ink);
+}
+
+.caret-toggle .icon {
+  transition: transform var(--motion-quick) var(--ease-enter);
+}
+
+.caret-toggle[aria-expanded="true"] .icon {
+  transform: rotate(90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caret-toggle .icon {
+    transition: none;
+  }
 }
 
 /* The time slider: month bars on a hairline, two handles laid over them. */
@@ -559,7 +643,6 @@ main {
 
 /* ---- Board views: sphere, grid, rows ---- */
 
-
 /* Search, view, sort and clear, on one line that wraps on phones. */
 .browse-controls {
   display: flex;
@@ -580,66 +663,6 @@ main {
 
 .search-field::-webkit-search-cancel-button {
   display: none;
-}
-
-/* Rows view: a ledger on the page grid. The date hangs in the label
-   columns (1–3), the title takes 4–8, kind 9–10, tags 11–12. */
-.entry-row {
-  display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  column-gap: var(--gutter);
-  align-items: baseline;
-  padding: calc(var(--line) / 4) 0;
-  border-top: var(--rule-faint);
-  transition: opacity 0.3s;
-}
-
-.entry-row > :nth-child(1) {
-  grid-column: 1 / span 3;
-}
-
-.entry-row > :nth-child(2) {
-  grid-column: 4 / span 5;
-}
-
-.entry-row > :nth-child(3) {
-  grid-column: 9 / span 2;
-}
-
-.entry-row > :nth-child(4) {
-  grid-column: 11 / span 2;
-}
-
-.entry-row:first-child {
-  border-top: none;
-}
-
-.entry-row:hover {
-  text-decoration: none;
-}
-
-.entry-row:hover .entry-row-title {
-  text-decoration: underline;
-}
-
-.entry-row.is-faded {
-  opacity: 0.15;
-}
-
-/* On phones, rows show just date and title. */
-@media (max-width: 720px) {
-  .entry-row {
-    grid-template-columns: 90px minmax(0, 1fr);
-  }
-
-  .entry-row > :nth-child(1),
-  .entry-row > :nth-child(2) {
-    grid-column: auto;
-  }
-
-  .entry-row > span:nth-child(n + 3) {
-    display: none;
-  }
 }
 
 /* Masonry: entries flow down columns that land exactly on the page grid
@@ -949,12 +972,12 @@ main {
   color: var(--ink-soft);
 }
 
-/* A ruled list of links: title on the left, detail on the right. */
-.ledger {
+/* The entry page's Related: a ruled list of titles, kind on the right. */
+.related-list {
   max-width: 720px;
 }
 
-.ledger-line {
+.related-line {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
@@ -963,16 +986,16 @@ main {
   border-top: var(--rule-faint);
 }
 
-.ledger-line:first-child {
+.related-line:first-child {
   border-top: none;
   padding-top: 0;
 }
 
-.ledger-line:hover {
+.related-line:hover {
   text-decoration: none;
 }
 
-.ledger-line:hover .ledger-title {
+.related-line:hover .related-title {
   text-decoration: underline;
 }
 
@@ -1022,26 +1045,10 @@ main {
   flex: 1;
 }
 
-.tag-notes-row {
-  margin-bottom: var(--line);
-}
+/* ---- Ledger: every list of things on the page grid (components/Ledger.tsx) ---- */
 
-.tag-notes-row p {
-  margin-bottom: 0;
-}
-
-.tag-notes-row textarea {
-  width: 100%;
-  resize: vertical;
-}
-
-.entry-index p {
-  margin-bottom: calc(var(--line) / 4);
-}
-
-/* ---- Agents page and the studio's agent list (pages/AgentsPage.tsx, features/agents/) ---- */
-
-/* A ledger across the whole page grid: name, status, boards, last seen. */
+/* Each row is the 12-column grid; each cell spans --span columns (the first
+   usually 3, so it hangs where labels do). Rows are ruled by hairlines. */
 .ledger-row {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
@@ -1049,140 +1056,93 @@ main {
   align-items: baseline;
   padding: calc(var(--line) / 4) 0;
   border-top: var(--rule-faint);
+  transition: opacity 0.3s;
 }
 
-.ledger-row:first-child {
-  border-top: none;
+.ledger-cell {
+  grid-column: span var(--span, 12);
+  min-width: 0;
 }
 
-/* The name hangs in the label columns (1–3), like the date in the rows view. */
-.ledger-row > :nth-child(1) {
-  grid-column: span 3;
-}
-
-.ledger-row > :nth-child(2) {
-  grid-column: span 5;
-}
-
-.ledger-row > :nth-child(3),
-.ledger-row > :nth-child(4) {
-  grid-column: span 2;
-}
-
-/* The column names: small and soft, above the first line. */
+/* The column names: small and soft, above the first line, unruled. */
 .ledger-row.is-heading {
+  border-top: none;
   font-size: var(--size-small);
   line-height: var(--leading-small);
   color: var(--ink-soft);
 }
 
-/* A second, quieter line inside a cell (an agent's description under its status). */
+/* A row that is a link: the second cell (its title) underlines on hover. */
+.ledger-row.is-link:hover {
+  text-decoration: none;
+}
+
+.ledger-row.is-link:hover .ledger-cell:nth-child(2) {
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.ledger-row.is-faded {
+  opacity: 0.25;
+}
+
+/* A second, quieter line inside a cell (a description under a name). */
 .ledger-note {
   display: block;
 }
 
-.ledger-row.is-faded {
-  color: var(--ink-soft);
+/* Rows holding fields line up at the top, so a name sits level with the
+   first line of a longer text box beside it. */
+.ledger-row:has(textarea) {
+  align-items: start;
 }
 
-/* The log: when, in the margin of each line; then who · what · where, the text, the entry. */
-/* Spans the page grid: when in columns 1–3, the line itself from column 4. */
-.agent-log-line {
-  display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  column-gap: var(--gutter);
-  align-items: baseline;
-  padding: calc(var(--line) / 2) 0;
-  border-top: var(--rule-faint);
+/* Fields inside a ledger fill their cell. */
+.ledger input,
+.ledger textarea {
+  width: 100%;
+  resize: vertical;
+  border-bottom: var(--rule-faint);
 }
 
-.agent-log-line:first-child {
-  border-top: none;
+.ledger input:focus,
+.ledger textarea:focus {
+  border-bottom: var(--rule);
 }
 
-.agent-log-line > :nth-child(1) {
-  grid-column: span 3;
+/* On phones the cells stack and the column names go. */
+@media (max-width: 720px) {
+  .ledger-cell {
+    grid-column: 1 / -1;
+  }
+
+  .ledger-row.is-heading {
+    display: none;
+  }
 }
 
-.agent-log-line > :nth-child(2) {
-  grid-column: span 9;
-}
-
-.agent-log-entry {
-  margin: 0;
-}
-
-.agent-log-meta {
-  margin: 0;
+/* The agent log: who did what (small) over what they wrote. Findings and
+   questions (questions are for the owner) are set in full ink. */
+.log-line-said {
+  display: block;
   font-size: var(--size-small);
   line-height: var(--leading-small);
   color: var(--ink-soft);
 }
 
-.agent-log-text {
+.log-line-text {
+  display: block;
   max-width: 34em;
-  margin: 0;
   color: var(--ink-soft);
 }
 
-/* Findings and questions (questions are for the owner) are set in full ink, so they're found. */
-.agent-log-line.is-question .agent-log-text,
-.agent-log-line.is-finding .agent-log-text,
-.agent-log-line.is-question .agent-log-meta {
+.log-line.is-question .log-line-text,
+.log-line.is-finding .log-line-text,
+.log-line.is-question .log-line-said {
   color: var(--ink);
 }
 
-@media (max-width: 720px) {
-  .ledger-row > :nth-child(n) {
-    grid-column: 1 / -1;
-  }
-
-  .agent-log-line > :nth-child(n) {
-    grid-column: 1 / -1;
-  }
-}
-
-/* The studio's boards: name and address on one line, the brief under it. */
-.board-manager-add,
-.board-manager-row {
-  margin-bottom: var(--line);
-}
-
-.board-manager-add p,
-.board-manager-row p {
-  margin-bottom: calc(var(--line) / 4);
-}
-
-.board-manager-add input,
-.board-manager-row input {
-  border-bottom: var(--rule-faint);
-}
-
-.board-manager textarea {
-  width: 100%;
-  resize: vertical;
-}
-
-.agent-manager-add {
-  margin-bottom: var(--line);
-}
-
-.agent-manager-add input {
-  border-bottom: var(--rule-faint);
-}
-
-.agent-manager-row {
-  margin-bottom: var(--line);
-}
-
-.agent-manager-row p {
-  margin-bottom: calc(var(--line) / 4);
-}
-
-.agent-token-notice {
-  margin-bottom: var(--line);
-}
-
+/* An agent's token, shown once in the studio. */
 .agent-token-notice pre {
   margin: 0 0 calc(var(--line) / 2);
   font-size: var(--size-small);

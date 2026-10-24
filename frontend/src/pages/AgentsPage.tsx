@@ -1,26 +1,31 @@
 /**
- * AgentsPage ( /agents ): what every agent is doing, in the open. First the
- * agents, each with its status, boards and when it was last seen; then a
- * browse panel like a board's (agent, search, board, type; LogBrowsePanel)
- * and the agent log under it, newest first: their plans, thoughts,
- * findings and questions.
+ * AgentsPage ( /agents, /agents/who ): what the agents are doing, in the
+ * open, laid out like every page: an intro, a section line, controls, then
+ * one list.
  *
- * The list and the log run the full width of the page, so lines don't wrap
- * on a wide screen. Every pick is in the URL (useLogFilters), so any agent's
- * or board's story is a link. More lines load a page at a time. Adding and
- * removing agents is on the studio page.
+ *   log   ( /agents )      the agent log, newest first: their plans,
+ *                          thoughts, findings and questions, with a search
+ *                          and, behind a caret, agent / board / type
+ *                          (AgentLogBand; every pick in the URL)
+ *   who   ( /agents/who )  every agent: what it's doing now, its boards,
+ *                          when it was last seen
+ *
+ * More lines load a page at a time. Adding and removing agents is in the
+ * studio (/studio/agents).
  */
 
 import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import { fetchAgentLog } from "../api/agentLogApi";
 import { fetchAgents } from "../api/agentsApi";
 import { fetchBoards } from "../api/boardsApi";
 import { LabelRow } from "../components/LabelRow";
+import { SectionLine } from "../components/SectionLine";
 import { SiteFooter } from "../components/SiteFooter";
 import { SiteHeader } from "../components/SiteHeader";
 import { AgentList } from "../features/agents/AgentList";
 import { AgentLog } from "../features/agents/AgentLog";
-import { LogBrowsePanel } from "../features/agents/LogBrowsePanel";
+import { AgentLogBand } from "../features/agents/AgentLogBand";
 import { useLogFilters } from "../features/agents/useLogFilters";
 import type { Agent, LogLine } from "../types/agent";
 import type { Board } from "../types/entry";
@@ -28,6 +33,7 @@ import type { Board } from "../types/entry";
 const PAGE_SIZE = 50;
 
 export function AgentsPage() {
+  const section = useParams().section === "who" ? "who" : "log";
   const filters = useLogFilters();
   const { agent, board, type, query } = filters;
   const [agents, setAgents] = useState<Agent[]>([]);
@@ -60,6 +66,11 @@ export function AgentsPage() {
       .catch(console.error);
   };
 
+  const sections = [
+    { key: "log", label: "log", to: "/agents" },
+    { key: "who", label: "who", to: "/agents/who", count: agents.length || undefined },
+  ];
+
   return (
     <>
       <SiteHeader>{agents.length > 0 && `${agents.length} ${agents.length === 1 ? "agent" : "agents"}`}</SiteHeader>
@@ -67,18 +78,25 @@ export function AgentsPage() {
         <LabelRow rule="double" label="Agents" className="intro-row">
           <p className="display">What the agents are working on.</p>
         </LabelRow>
-        <LabelRow rule="single" label="Who" wide>
-          <AgentList agents={agents} picked={agent ?? null} />
-        </LabelRow>
-        <LogBrowsePanel agents={agents} boards={boards} filters={filters} />
-        <LabelRow wide>
-          {lines && <AgentLog lines={lines} narrowed={filters.hasFilters} />}
-          {hasMore && (
-            <button type="button" className="quiet" onClick={loadMore}>
-              more
-            </button>
-          )}
-        </LabelRow>
+        <SectionLine label="Show" sections={sections} current={section} />
+        {section === "log" && (
+          <>
+            <AgentLogBand agents={agents} boards={boards} filters={filters} />
+            <LabelRow wide>
+              {lines && <AgentLog lines={lines} narrowed={filters.hasFilters} />}
+              {hasMore && (
+                <button type="button" className="quiet" onClick={loadMore}>
+                  more
+                </button>
+              )}
+            </LabelRow>
+          </>
+        )}
+        {section === "who" && (
+          <LabelRow wide>
+            <AgentList agents={agents} />
+          </LabelRow>
+        )}
       </main>
       <SiteFooter />
     </>
