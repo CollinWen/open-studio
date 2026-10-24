@@ -3,7 +3,8 @@
  *
  *   Space   which board you're in (larger words, the current one in accent).
  *           Spaces are where you are, not a filter, so they stand on their own.
- *           Under them, the agents signed on to this board, if any.
+ *           Under them, the agents signed on to this board, if any, each
+ *           linked to its agent log, and a link to this board's log.
  *
  *   Then, on a lightly shaded band (the controls, not the work):
  *   View    search, sphere / three picture sizes / rows, sort, clear
@@ -20,6 +21,7 @@
  */
 
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { LabelRow } from "../../components/LabelRow";
 import type { Board, Entry, Tag } from "../../types/entry";
 import { BoardLine } from "./BoardLine";
@@ -59,7 +61,17 @@ export function BrowsePanel({ boards, board, tags, entries, browse }: Props) {
     <section className="browse-panel">
       <LabelRow rule="single" label="Space" className="space-row">
         <BoardLine boards={boards} current={board} view={browse.view} />
-        {agents.length > 0 && <p className="quiet board-agents">with {agents.join(", ")}</p>}
+        {agents.length > 0 && (
+          <p className="word-list quiet board-agents">
+            <span>with</span>
+            {agents.map((name) => (
+              <Link key={name} to={`/agents?agent=${name}`}>
+                {name}
+              </Link>
+            ))}
+            <Link to={`/agents?board=${board}`}>their log</Link>
+          </p>
+        )}
       </LabelRow>
       <div className="browse-controls-band">
         <LabelRow label="View">
