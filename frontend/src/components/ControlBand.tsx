@@ -9,7 +9,8 @@
  *
  * Whether it's open is remembered in this browser (`rememberAs`): it's how
  * you like the page, not what you're looking at, so it stays out of the URL.
- * Used by BrowsePanel, AgentsPage and StudioPage. Looks: .control-band.
+ * Used by BrowsePanel, AgentsPage and StudioPage. Looks: .control-band
+ * (the extra filters arrive as .control-band-more).
  */
 
 import { useState, type ReactNode } from "react";
@@ -58,7 +59,7 @@ export function ControlBand({ label, controls, more, picked, rememberAs, childre
         </div>
       </LabelRow>
       {children}
-      {more && open && more}
+      {more && open && <div className="control-band-more">{more}</div>}
     </div>
   );
 }

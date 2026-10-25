@@ -112,6 +112,17 @@ a {
   text-decoration: none;
 }
 
+/* Words, ovals and dots ease into their hover and picked colors instead of
+   snapping. Only color changes here, so it stays on with reduced motion. */
+a,
+button,
+.dot-choice {
+  transition:
+    color var(--motion-quick) var(--ease-enter),
+    background-color var(--motion-quick) var(--ease-enter),
+    border-color var(--motion-quick) var(--ease-enter);
+}
+
 a:hover,
 a.is-underlined,
 a.active {
@@ -459,7 +470,8 @@ main {
   padding: calc(var(--line) / 2) 0;
 }
 
-.control-band .label-row + .label-row {
+.control-band .label-row + .label-row,
+.control-band-more {
   margin-top: calc(var(--line) / 2);
 }
 
@@ -721,7 +733,7 @@ main {
   display: block;
   break-inside: avoid;
   margin-bottom: calc(2 * var(--line));
-  transition: opacity 0.3s;
+  transition: opacity var(--motion-standard) var(--ease-enter);
 }
 
 .entry-card:hover {
@@ -786,7 +798,7 @@ main {
   left: 0;
   display: block;
   will-change: transform;
-  transition: opacity 0.25s;
+  transition: opacity var(--motion-standard) var(--ease-enter);
 }
 
 .sphere-item:hover {
@@ -820,7 +832,7 @@ main {
   width: 220px;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.2s;
+  transition: opacity var(--motion-standard) var(--ease-enter);
 }
 
 .sphere-label.is-visible {
@@ -851,7 +863,7 @@ main {
   position: absolute;
   display: block;
   overflow: hidden;
-  transition: opacity 0.25s;
+  transition: opacity var(--motion-standard) var(--ease-enter);
 }
 
 .sheet-tile:hover {
@@ -895,7 +907,7 @@ main {
   stroke: #fff;
   stroke-width: 1;
   opacity: 0.12;
-  transition: opacity 0.25s;
+  transition: opacity var(--motion-standard) var(--ease-enter);
 }
 
 .link-line circle {
@@ -1056,7 +1068,7 @@ main {
   align-items: baseline;
   padding: calc(var(--line) / 4) 0;
   border-top: var(--rule-faint);
-  transition: opacity 0.3s;
+  transition: opacity var(--motion-standard) var(--ease-enter);
 }
 
 .ledger-cell {
@@ -1226,6 +1238,21 @@ main {
   animation-delay: calc(var(--arrive-order, 0) * var(--stagger));
 }
 
+/* Each page settles in when you go to it: its content rises a little while
+   the header stays put. Backwards fill only, so once it's done main keeps
+   no transform (which would change how fixed pieces inside it are placed). */
+main {
+  animation: arrive var(--motion-standard) var(--ease-enter) backwards;
+}
+
+/* A control band's extra filters follow the caret down, one line after another. */
+.control-band-more > * {
+  animation: arrive var(--motion-standard) var(--ease-enter) both;
+}
+
+.control-band-more > :nth-child(2) { animation-delay: var(--stagger); }
+.control-band-more > :nth-child(n + 3) { animation-delay: calc(2 * var(--stagger)); }
+
 @keyframes arrive {
   from {
     opacity: 0;
@@ -1248,7 +1275,9 @@ main {
   .entry-sheet,
   .entry-sheet.is-closing,
   .entry-sheet .entry-form > *,
-  .is-arriving {
+  .is-arriving,
+  main,
+  .control-band-more > * {
     animation-name: backdrop-fade;
     animation-duration: var(--motion-quick);
     animation-delay: 0ms;
