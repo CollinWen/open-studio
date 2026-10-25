@@ -40,6 +40,8 @@ def _configure_connection(connection, _record) -> None:
 
 def create_tables() -> None:
     """Create any missing tables, then apply migrations to existing ones."""
+    from app.features.agent_log import models as agent_log_models  # noqa: F401
+    from app.features.agents import models as agent_models  # noqa: F401
     from app.features.boards import models as board_models  # noqa: F401
     from app.features.entries import models  # noqa: F401
     from app.features.entry_links import models as link_models  # noqa: F401

@@ -2,8 +2,8 @@
 Tests for the agent server (MCP at /mcp): the tools are listed, an agent can
 add an entry and find it again, the same link is refused the second time,
 visitors can read but not write, agents can't edit the owner's entries or
-add to boards they're not on, and an entry added with builds_on shows up in
-the chain.
+add to boards they're not on, an entry added with builds_on shows up in
+the chain, and an agent's status shows on the agents page and in its log.
 """
 
 import uuid
@@ -33,6 +33,9 @@ def test_tools_are_listed(running_client):
         "add_entry",
         "get_chain",
         "link_builds_on",
+        "write_to_log",
+        "set_status",
+        "read_log",
     } <= names
 
 
@@ -97,3 +100,12 @@ def test_agents_only_add_to_their_boards(running_client):
         running_client, "add_entry", {"board": "home", "title": "x", "description": "y"}, SCOUT_HEADERS
     )
     assert refused["isError"]
+
+
+def test_setting_a_status_is_shown_and_logged(running_client):
+    result = _tool(running_client, "set_status", {"text": "reading folding papers"}, SCOUT_HEADERS)
+    assert not result["isError"]
+    assert running_client.get("/api/agents/scout").json()["status"] == "reading folding papers"
+    assert running_client.get("/api/agent-log?agent=scout").json()[0]["type"] == "status"
+    logged = _tool(running_client, "read_log", {"agent": "scout"})
+    assert logged["structuredContent"]["result"][0]["text"] == "reading folding papers"

@@ -6,6 +6,7 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { EntryFormModal } from "./features/studio/EntryFormModal";
 import { AboutPage } from "./pages/AboutPage";
+import { AgentsPage } from "./pages/AgentsPage";
 import { EntryPage } from "./pages/EntryPage";
 import { BoardPage } from "./pages/BoardPage";
 import { SketchPage } from "./pages/SketchPage";
@@ -19,7 +20,10 @@ export function App() {
         <Route path="/b/:board" element={<BoardPage />} />
         <Route path="/entry/:id" element={<EntryPage />} />
         <Route path="/about" element={<AboutPage />} />
+        <Route path="/agents" element={<AgentsPage />} />
+        <Route path="/agents/:section" element={<AgentsPage />} />
         <Route path="/studio" element={<StudioPage />} />
+        <Route path="/studio/:section" element={<StudioPage />} />
         <Route path="/sketch" element={<SketchPage />} />
       </Routes>
       <EntryFormModal />
