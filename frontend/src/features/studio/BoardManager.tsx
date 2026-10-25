@@ -14,6 +14,7 @@ import { createBoard, updateBoard } from "../../api/boardsApi";
 import { ControlBand } from "../../components/ControlBand";
 import { Icon } from "../../components/Icon";
 import { LabelRow } from "../../components/LabelRow";
+import { LoadingWord } from "../../components/LoadingWord";
 import { Ledger } from "../../components/Ledger";
 import { LedgerRow } from "../../components/LedgerRow";
 import type { Board } from "../../types/entry";
@@ -90,13 +91,15 @@ function slugFor(name: string): string {
     .slice(0, 40);
 }
 
+const SAVING = "saving…";
+
 function BoardRow({ board }: { board: Board }) {
   const [name, setName] = useState(board.name);
   const [description, setDescription] = useState(board.description);
   const [status, setStatus] = useState("");
 
   const save = (changes: { name?: string; description?: string }) => {
-    setStatus("saving…");
+    setStatus(SAVING);
     updateBoard(board.slug, changes)
       .then(() => setStatus("saved"))
       .catch((error) => setStatus(error instanceof Error ? error.message : String(error)));
@@ -115,7 +118,7 @@ function BoardRow({ board }: { board: Board }) {
             <Link to={boardPath(board.slug)} className="quiet">
               {boardPath(board.slug)}
             </Link>
-            <span className="quiet"> {status}</span>
+            <span className="quiet"> {status === SAVING ? <LoadingWord>{status}</LoadingWord> : status}</span>
           </span>
         </>,
         <textarea

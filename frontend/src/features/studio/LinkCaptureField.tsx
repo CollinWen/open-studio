@@ -8,6 +8,7 @@
 
 import { useState } from "react";
 import { captureLink } from "../../api/captureApi";
+import { LoadingWord } from "../../components/LoadingWord";
 import type { CapturedLink } from "../../types/entry";
 
 interface Props {
@@ -16,13 +17,15 @@ interface Props {
   autoFocus?: boolean;
 }
 
+const READING = "reading…";
+
 export function LinkCaptureField({ onCaptured, autoFocus = false }: Props) {
   const [url, setUrl] = useState("");
   const [status, setStatus] = useState("");
 
   async function read() {
     if (!url.trim()) return;
-    setStatus("reading…");
+    setStatus(READING);
     try {
       onCaptured(await captureLink(url.trim()));
       setUrl("");
@@ -46,7 +49,12 @@ export function LinkCaptureField({ onCaptured, autoFocus = false }: Props) {
           }
         }}
       />
-      {status && <p className="quiet">{status}</p>}
+      {status === READING && (
+        <p>
+          <LoadingWord>{status}</LoadingWord>
+        </p>
+      )}
+      {status && status !== READING && <p className="quiet">{status}</p>}
     </div>
   );
 }

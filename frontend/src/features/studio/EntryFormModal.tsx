@@ -3,7 +3,8 @@
  * page, so adding or editing never takes you away from what you were
  * looking at. Opens on `?add` or `?edit=<id>` (see useEntryFormParam);
  * Escape, "close" or "cancel" put it away. It drops in and lifts out
- * (.entry-sheet in global.css).
+ * (.entry-sheet in global.css). While the entry to edit is on its way the
+ * sheet says "loading".
  *
  * A new entry goes into the board you were looking at (/b/<slug>, or home)
  * unless you pick another. Mounted once for the whole site in App.tsx, and
@@ -17,6 +18,7 @@ import { fetchBoards } from "../../api/boardsApi";
 import { fetchEntry } from "../../api/entriesApi";
 import { readOwnerToken } from "../../api/ownerToken";
 import { LabelRow } from "../../components/LabelRow";
+import { LoadingWord } from "../../components/LoadingWord";
 import type { Board, Entry } from "../../types/entry";
 import { HOME_BOARD } from "../grid/boardPath";
 import { EntryForm } from "./EntryForm";
@@ -76,6 +78,11 @@ export function EntryFormModal() {
         closeEntryForm();
       }}
     >
+      {isOpen && !shown && (
+        <LabelRow label="Edit">
+          <LoadingWord />
+        </LabelRow>
+      )}
       {shown && (
         <LabelRow
           label={

@@ -6,6 +6,7 @@
 
 import { useState } from "react";
 import { uploadMedia } from "../../api/mediaApi";
+import { LoadingWord } from "../../components/LoadingWord";
 import type { MediaItem } from "../../types/entry";
 
 interface Props {
@@ -13,12 +14,14 @@ interface Props {
   onChange: (media: MediaItem[]) => void;
 }
 
+const UPLOADING = "uploading…";
+
 export function MediaListEditor({ media, onChange }: Props) {
   const [status, setStatus] = useState("");
 
   async function addFiles(files: FileList | null) {
     if (!files?.length) return;
-    setStatus("uploading…");
+    setStatus(UPLOADING);
     try {
       const added: MediaItem[] = [];
       for (const file of Array.from(files)) {
@@ -61,7 +64,8 @@ export function MediaListEditor({ media, onChange }: Props) {
         add file
         <input type="file" accept="image/*,video/*" multiple hidden onChange={(e) => addFiles(e.target.files)} />
       </label>
-      {status && <span className="quiet"> {status}</span>}
+      {status === UPLOADING && <LoadingWord> {status}</LoadingWord>}
+      {status && status !== UPLOADING && <span className="quiet"> {status}</span>}
     </div>
   );
 }

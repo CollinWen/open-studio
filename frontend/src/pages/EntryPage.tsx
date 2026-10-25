@@ -1,7 +1,7 @@
 /**
  * EntryPage ( /entry/:id ): one entry on its own, as labeled rows: the wall
  * label (title, kind, date, source, notes), tags, every picture, then
- * related entries.
+ * related entries. "loading" breathes in the header until both are in.
  * The owner also sees an Owner row under the title: "edit" opens the entry
  * form over this page (?edit=<id>), and the page reloads after a save.
  */
@@ -11,6 +11,7 @@ import { Link, useParams } from "react-router-dom";
 import { fetchEntry, fetchRelatedEntries } from "../api/entriesApi";
 import { readOwnerToken } from "../api/ownerToken";
 import { LabelRow } from "../components/LabelRow";
+import { LoadingWord } from "../components/LoadingWord";
 import { SiteFooter } from "../components/SiteFooter";
 import { SiteHeader } from "../components/SiteHeader";
 import { EntryTags } from "../features/entries/EntryTags";
@@ -23,7 +24,8 @@ import type { Entry } from "../types/entry";
 export function EntryPage() {
   const { id = "" } = useParams();
   const [entry, setEntry] = useState<Entry | null>(null);
-  const [related, setRelated] = useState<Entry[]>([]);
+  // null while on its way, so the header can say "loading".
+  const [related, setRelated] = useState<Entry[] | null>(null);
   const [missing, setMissing] = useState(false);
 
   const load = useCallback(() => {
@@ -38,13 +40,14 @@ export function EntryPage() {
 
   useEffect(() => {
     setEntry(null);
+    setRelated(null);
     load();
   }, [load]);
   useOnEntrySaved(load);
 
   return (
     <>
-      <SiteHeader />
+      <SiteHeader>{!missing && (!entry || !related) && <LoadingWord />}</SiteHeader>
       <main>
         {missing && (
           <LabelRow rule="double" label="Entry">
@@ -70,7 +73,7 @@ export function EntryPage() {
                 <MediaSeries media={entry.media} title={entry.title} />
               </LabelRow>
             )}
-            <RelatedEntries entries={related} />
+            <RelatedEntries entries={related ?? []} />
           </>
         )}
       </main>

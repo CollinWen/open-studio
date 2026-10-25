@@ -529,7 +529,8 @@ main {
   text-decoration: none;
 }
 
-.icon-button:disabled {
+.icon-button:disabled,
+button[type="submit"]:disabled {
   opacity: 0.4;
   cursor: default;
 }
@@ -1178,6 +1179,9 @@ main {
   padding: var(--line) 0 calc(2 * var(--line));
   overflow-y: auto;
   border: none;
+  /* While the entry to edit is on its way the sheet itself holds focus; its
+     fields show focus, never the whole sheet. */
+  outline: none;
   /* Two 1px lines, 1px apart: the same double rule as .label-row.is-double. */
   border-bottom: 3px double var(--ink);
   background: var(--paper);
@@ -1260,9 +1264,22 @@ main {
   }
 }
 
-/* "loading" in the header while pages are still coming in: a slow breath. */
+/* Anything on its way ("loading", "searching", "saving…"; components/
+   LoadingWord.tsx): soft ink, breathing slowly. */
 .loading-word {
+  color: var(--ink-soft);
   animation: breathe var(--motion-ambient) ease-in-out infinite alternate;
+}
+
+/* A picture stays clear until it has loaded, then fades in whole
+   (components/FadeInImage.tsx). */
+.fade-in-image {
+  opacity: 0;
+  transition: opacity var(--motion-standard) var(--ease-enter);
+}
+
+.fade-in-image.is-loaded {
+  opacity: 1;
 }
 
 @keyframes breathe {
