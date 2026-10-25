@@ -11,6 +11,7 @@ import { useState } from "react";
 import { saveTagNotes } from "../../api/tagsApi";
 import { ControlBand } from "../../components/ControlBand";
 import { LabelRow } from "../../components/LabelRow";
+import { LoadingWord } from "../../components/LoadingWord";
 import { Ledger } from "../../components/Ledger";
 import { LedgerRow } from "../../components/LedgerRow";
 import { SearchField } from "../../components/SearchField";
@@ -52,13 +53,15 @@ export function TagNotesEditor({ tags, query, onSearch }: Props) {
   );
 }
 
+const SAVING = "saving…";
+
 function TagNotesRow({ tag }: { tag: Tag }) {
   const [description, setDescription] = useState(tag.description);
   const [importance, setImportance] = useState<TagImportance>(tag.importance);
   const [status, setStatus] = useState("");
 
   async function save(next: { description: string; importance: TagImportance }) {
-    setStatus("saving…");
+    setStatus(SAVING);
     try {
       await saveTagNotes(tag.name, next);
       setStatus("saved");
@@ -72,7 +75,7 @@ function TagNotesRow({ tag }: { tag: Tag }) {
       cells={[
         <>
           {tag.name} <span className="quiet">{tag.count}</span>
-          <span className="quiet ledger-note">{status}</span>
+          <span className="quiet ledger-note">{status === SAVING ? <LoadingWord>{status}</LoadingWord> : status}</span>
         </>,
         <textarea
           rows={1}

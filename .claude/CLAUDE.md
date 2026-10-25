@@ -93,7 +93,7 @@ open-studio/
 │       │   ├── agents/       Pieces of the agents page (agent list, agent log)
 │       │   ├── studio/       Owner-only entry form (a sheet over any page: ?add, ?edit=<id>), link capture, media list editor, entry list, tag notes, agent list
 │       │   └── sketches/     Scratch: home-page ideas tried on real data at /sketch (contact sheet + threads). Delete when one graduates.
-│       ├── components/       Site-wide pieces with no knowledge of our data: the page's shape (LabelRow, SectionLine, ControlBand, Ledger + LedgerRow, SearchField), controls (WordChoice, DotChoice, Icon), SiteHeader, SiteFooter
+│       ├── components/       Site-wide pieces with no knowledge of our data: the page's shape (LabelRow, SectionLine, ControlBand, Ledger + LedgerRow, SearchField), controls (WordChoice, DotChoice, Icon), waiting (LoadingWord, FadeInImage), SiteHeader, SiteFooter
 │       ├── api/              Every call to the backend, one file per area
 │       ├── types/            Shared data shapes, matching the backend schemas
 │       └── styles/           global.css: the entire visual style

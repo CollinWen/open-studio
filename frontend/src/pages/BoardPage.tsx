@@ -12,7 +12,7 @@
  *
  * Entries load a page at a time (useEntryPages): the first pictures show at
  * once and the rest rise in behind them, with "loading" breathing in the
- * header until the last page is in. After the owner saves an entry the page
+ * header until the last page is in (and "searching" while a search runs). After the owner saves an entry the page
  * reloads quietly. Every choice lives in the URL (useBrowseParams).
  */
 
@@ -22,6 +22,7 @@ import { fetchBoards } from "../api/boardsApi";
 import { searchEntries } from "../api/searchApi";
 import { fetchTags } from "../api/tagsApi";
 import { LabelRow } from "../components/LabelRow";
+import { LoadingWord } from "../components/LoadingWord";
 import { SiteFooter } from "../components/SiteFooter";
 import { SiteHeader } from "../components/SiteHeader";
 import { HOME_BOARD } from "../features/grid/boardPath";
@@ -74,7 +75,8 @@ export function BoardPage() {
     <>
       <SiteHeader>
         {entries && `${entries.length} ${entries.length === 1 ? "entry" : "entries"}`}
-        {!query && collection.loading && <span className="loading-word">loading</span>}
+        {!query && collection.loading && <LoadingWord />}
+        {query && found === null && <LoadingWord>searching</LoadingWord>}
       </SiteHeader>
       <main>
         <LabelRow rule="double" label={tag ? "Tag" : undefined} className="intro-row board-intro">

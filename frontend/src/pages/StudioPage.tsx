@@ -10,7 +10,7 @@
  *   agents   ( /studio/agents )  add, pause, re-key, remove; which boards
  *
  * This page loads all four lists (for the counts) and reloads them after
- * any change. ?q= searches entries or tags. Adding and editing an entry
+ * any change; "loading" breathes in the header until all four are in. ?q= searches entries or tags. Adding and editing an entry
  * happen in the form that opens over the page (features/studio/
  * EntryFormModal.tsx). Linked as "owner" ("studio" once signed in) in the header.
  */
@@ -23,6 +23,7 @@ import { fetchEntries } from "../api/entriesApi";
 import { forgetOwnerToken, readOwnerToken } from "../api/ownerToken";
 import { fetchTags } from "../api/tagsApi";
 import { LabelRow } from "../components/LabelRow";
+import { LoadingWord } from "../components/LoadingWord";
 import { SectionLine } from "../components/SectionLine";
 import { SiteFooter } from "../components/SiteFooter";
 import { SiteHeader } from "../components/SiteHeader";
@@ -81,6 +82,7 @@ export function StudioPage() {
   return (
     <>
       <SiteHeader>
+        {hasToken && [entries, boards, tags, agents].includes(null) && <LoadingWord />}
         {hasToken && (
           <button
             type="button"

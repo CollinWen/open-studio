@@ -14,6 +14,7 @@
 
 import { useState } from "react";
 import { createEntry, updateEntry } from "../../api/entriesApi";
+import { LoadingWord } from "../../components/LoadingWord";
 import { WordChoice } from "../../components/WordChoice";
 import type { Board, CapturedLink, Entry, EntryDraft, Visibility } from "../../types/entry";
 import { LinkCaptureField } from "./LinkCaptureField";
@@ -28,6 +29,7 @@ interface Props {
   onCancel: () => void;
 }
 
+const SAVING = "saving, suggesting tags…";
 const KINDS = ["note", "link", "project", "photo", "video", "book", "artwork", "sketch", "recipe", "post"];
 const VISIBILITIES: Visibility[] = ["private", "unlisted", "public"];
 
@@ -55,7 +57,7 @@ export function EntryForm({ editing, boards, defaultBoard, onSaved, onCancel }: 
   }
 
   async function save() {
-    setStatus("saving, suggesting tags…");
+    setStatus(SAVING);
     const payload = { ...draft, tags: parseTags(tagText) };
     try {
       if (editing) await updateEntry(editing.id, payload);
@@ -138,11 +140,13 @@ export function EntryForm({ editing, boards, defaultBoard, onSaved, onCancel }: 
       </p>
 
       <p className="word-list">
-        <button type="submit">save</button>
+        <button type="submit" disabled={status === SAVING}>
+          save
+        </button>
         <button type="button" className="quiet" onClick={onCancel}>
           cancel
         </button>
-        <span className="quiet">{status}</span>
+        {status === SAVING ? <LoadingWord>{status}</LoadingWord> : <span className="quiet">{status}</span>}
       </p>
     </form>
   );
