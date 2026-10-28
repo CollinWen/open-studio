@@ -36,6 +36,7 @@ targets:
       properties:
         CFBundleDisplayName: Open Studio
         UILaunchScreen: {}
+        UIAppFonts: [Inter-Regular.ttf, Inter-Medium.ttf, Inter-SemiBold.ttf]
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         AppGroupID: $(APP_GROUP_ID)
         NSAppTransportSecurity:
@@ -58,6 +59,7 @@ targets:
       path: ShareToStudio/Info.plist
       properties:
         CFBundleDisplayName: Open Studio
+        UIAppFonts: [Inter-Regular.ttf, Inter-Medium.ttf, Inter-SemiBold.ttf]
         AppGroupID: $(APP_GROUP_ID)
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
@@ -66,8 +68,10 @@ targets:
           NSExtensionPointIdentifier: com.apple.share-services
           NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
           NSExtensionAttributes:
-            # When "Open Studio" shows up in the share sheet: a link, text (a note from
-            # Notes, or a link shared as text), or photos and videos.
+            # When "Open Studio" shows up in the share sheet: a link (any app that shares
+            # one: Safari, Instagram, X, YouTube, TikTok, Pinterest, Spotify, Maps), text
+            # (a note from Notes, or a link shared as text), or photos and videos
+            # (Photos, Files, screenshots).
             NSExtensionActivationRule:
               NSExtensionActivationSupportsWebURLWithMaxCount: 1
               NSExtensionActivationSupportsText: true

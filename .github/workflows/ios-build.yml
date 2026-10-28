@@ -1,0 +1,31 @@
+# iOS build: whenever ios/ changes, build the app and its share extension on a
+# Mac runner, so a change that doesn't compile is caught without a Mac at hand.
+# Nothing is signed or shipped; ios/README.md says how to put it on a phone.
+
+name: iOS build
+
+on:
+  pull_request:
+    paths: ["ios/**", ".github/workflows/ios-build.yml"]
+  push:
+    branches: [main]
+    paths: ["ios/**"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate the Xcode project from project.yml
+        working-directory: ios
+        run: |
+          brew install xcodegen
+          xcodegen
+
+      - name: Build for the simulator (builds the share extension too)
+        working-directory: ios
+        run: |
+          xcodebuild -project OpenStudio.xcodeproj -target OpenStudio -sdk iphonesimulator \
+            CODE_SIGNING_ALLOWED=NO build

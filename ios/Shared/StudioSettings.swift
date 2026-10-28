@@ -1,8 +1,10 @@
 /**
  * StudioSettings: where the site's backend lives (server address) and the
- * owner token that proves it's you. Saved in the shared keychain.
+ * owner token that proves it's you, plus the board the last entry went to.
+ * Saved in the shared keychain.
  *
- * The app's SetupView writes these; the share extension only reads them.
+ * The app's SetupView writes the address and token; the share extension reads
+ * them, and remembers the board so the next share starts there.
  */
 
 import Foundation
@@ -28,6 +30,13 @@ struct StudioSettings: Equatable {
             serverAddress: SharedKeychain.read("serverAddress") ?? "",
             ownerToken: SharedKeychain.read("ownerToken") ?? ""
         )
+    }
+
+    /// The board the last shared entry went to, so the share sheet starts there.
+    static var lastBoard: String? { SharedKeychain.read("lastBoard") }
+
+    static func rememberBoard(_ slug: String) {
+        SharedKeychain.write("lastBoard", slug)
     }
 
     func save() {
