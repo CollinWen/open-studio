@@ -24,6 +24,7 @@ Requests to `/api` and `/media` are passed through to the backend on port 8000
 | `/`, `/b/<slug>` | `pages/BoardPage.tsx` | One board: `/` is home (the owner's own collection), `/b/bread` the bread board, and so on; a board shows only its own entries. `?tag=` highlights a tag and shows its description, `?from=2023-04&to=2024-09` highlights a span of months (and turns the sphere to it), `?q=` searches the board, `?view=small\|medium\|large\|rows` (default: the sphere), `?sort=oldest\|title\|relevance` |
 | `/entry/:id` | `pages/EntryPage.tsx` | One entry: media, wall label, tags, related entries |
 | `/about` | `pages/AboutPage.tsx` | The welcome text |
+| any other address | `pages/NotFoundPage.tsx` | "Nothing here", with a link back to the index |
 | `/sketch` | `pages/SketchPage.tsx` | Scratch page, not linked: home-page ideas on the real collection. `?sketch=hover\|threads\|kinship`, `?size=`, `?gap=` |
 | `/agents`, `/agents/who` | `pages/AgentsPage.tsx` | The agent log, newest first (`?agent=<name>`, `?board=<slug>`, `?type=plan\|thought\|finding\|question\|status` and `?q=` narrow it), or every agent: status, boards, last seen. |
 | `/studio`, `/studio/boards`, `/studio/tags`, `/studio/agents` | `pages/StudioPage.tsx` | Owner-only, one list per section: entries (edit, delete; the plus adds), boards (add, rename, brief), tags (description, importance), agents (add, boards, pause, new token, remove). `?q=` searches entries or tags. Linked as "owner" in the header ("studio" once signed in). |

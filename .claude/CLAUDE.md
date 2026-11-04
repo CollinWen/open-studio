@@ -86,7 +86,7 @@ open-studio/
 │   └── src/
 │       ├── main.tsx          Mounts the app
 │       ├── App.tsx           Route table: which URL shows which page
-│       ├── pages/            One file per URL (BoardPage for / and /b/<slug>, EntryPage, AgentsPage, AboutPage, StudioPage, SketchPage)
+│       ├── pages/            One file per URL (BoardPage for / and /b/<slug>, EntryPage, AgentsPage, AboutPage, StudioPage, SketchPage, NotFoundPage)
 │       ├── features/
 │       │   ├── grid/         Browsing a board: the browse panel (spaces, tag ovals, time slider, view controls), sphere/grid/rows views, cards, the shared highlight rule, URL state, loading a page at a time
 │       │   ├── entries/      Pieces of the entry page (wall label, media series, tags, related)
