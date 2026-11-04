@@ -1,26 +1,27 @@
 /**
- * StudioMark: the site's logo, a small panel of dots. Read across, its dots
- * make a C and a W; turned on its side, it looks like a display panel of lit
- * numbers. Drawn from MARK_PATTERN below, so changing the rows there redraws
- * it everywhere (the favicon in public/favicon.svg is a copy; redraw it too,
+ * StudioMark: the site's logo, a small panel of squares. Each lit cell is a
+ * whole square, so neighbours meet edge to edge or at a corner and the mark
+ * reads as one pixel glyph: across, a C and a W; on its side, a display
+ * panel. Drawn from MARK_PATTERN below, so changing the rows there redraws it
+ * everywhere (the favicon in public/favicon.svg is a copy; redraw it too,
  * and ios/Shared/StudioMark.swift draws the same pattern for the phone).
  *
- * While something is on its way (`playing`), the dots light up in a sweep
+ * While something is on its way (`playing`), the squares light up in a sweep
  * from the top-left corner and fade again, like a panel refreshing. Used by
  * LoadingWord, LoadingMark and the footer.
  *
- * Looks: .studio-mark in global.css (dot ink, sizes, the sweep).
+ * Looks: .studio-mark in global.css (ink, sizes, the sweep).
  */
 
 import type { CSSProperties } from "react";
 
-// "O" is a lit dot, "_" an empty place. Every row the same length.
+// "O" is a lit square, "_" an empty place. Every row the same length.
 export const MARK_PATTERN = ["_O_O_", "O_O_O", "O_O_O", "_O_O_"];
 
-// Each dot sits in a 1 × 1 cell; its radius leaves a gap around it.
-const DOT_RADIUS = 0.36;
+// A hair over one cell, so squares that share an edge show no seam between them.
+const SQUARE = 1.002;
 
-const DOTS = MARK_PATTERN.flatMap((row, y) =>
+const SQUARES = MARK_PATTERN.flatMap((row, y) =>
   [...row].flatMap((cell, x) => (cell === "O" ? [{ x, y }] : [])),
 );
 const WIDTH = MARK_PATTERN[0].length;
@@ -39,13 +40,14 @@ export function StudioMark({ playing = false, size = "small" }: Props) {
       aria-hidden="true"
       focusable="false"
     >
-      {DOTS.map(({ x, y }) => (
-        <circle
+      {SQUARES.map(({ x, y }) => (
+        <rect
           key={`${x}-${y}`}
-          cx={x + 0.5}
-          cy={y + 0.5}
-          r={DOT_RADIUS}
-          // The sweep: a dot lights later the further it is from the top-left corner.
+          x={x}
+          y={y}
+          width={SQUARE}
+          height={SQUARE}
+          // The sweep: a square lights later the further it is from the top-left corner.
           style={{ "--mark-order": x + y } as CSSProperties}
         />
       ))}

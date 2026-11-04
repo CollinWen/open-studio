@@ -1,8 +1,9 @@
 /**
- * StudioMark: the studio's logo for the phone, the same panel of dots as the
- * site's components/StudioMark.tsx and drawn from the same pattern (change
- * both together). Still, every dot is lit; playing, the dots light up in a
- * sweep from the top-left corner and fade again, like a panel refreshing.
+ * StudioMark: the studio's logo for the phone, the same panel of squares as
+ * the site's components/StudioMark.tsx and drawn from the same pattern (change
+ * both together). Each lit cell is a whole square, so neighbours meet edge to
+ * edge or at a corner. Still, every square is lit; playing, the squares light
+ * up in a sweep from the top-left corner and fade again, like a panel refreshing.
  * With reduced motion it holds still.
  *
  * Used by LoadingWord.
@@ -17,16 +18,14 @@ struct StudioMark: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    // "O" is a lit dot, "_" an empty place, as on the site.
+    // "O" is a lit square, "_" an empty place, as on the site.
     static let pattern = ["_O_O_", "O_O_O", "O_O_O", "_O_O_"]
 
-    private static let dots: [(x: Int, y: Int)] = pattern.enumerated().flatMap { y, row in
+    private static let squares: [(x: Int, y: Int)] = pattern.enumerated().flatMap { y, row in
         row.enumerated().compactMap { x, cell -> (x: Int, y: Int)? in cell == "O" ? (x: x, y: y) : nil }
     }
     private static let columns = CGFloat(pattern[0].count)
     private static let rows = CGFloat(pattern.count)
-    /// Each dot's radius, as a share of its cell.
-    private static let dotRadius: CGFloat = 0.36
     /// One sweep across the panel, the site's --motion-ambient.
     private static let period: Double = 1.6
     private static let restOpacity: Double = 0.18
@@ -48,19 +47,18 @@ struct StudioMark: View {
     private func panel(at time: Double?) -> some View {
         Canvas { context, size in
             let cell = size.height / Self.rows
-            for dot in Self.dots {
-                let center = CGPoint(x: (CGFloat(dot.x) + 0.5) * cell, y: (CGFloat(dot.y) + 0.5) * cell)
-                let radius = Self.dotRadius * cell
-                let circle = Path(ellipseIn: CGRect(x: center.x - radius, y: center.y - radius, width: 2 * radius, height: 2 * radius))
-                let opacity = time.map { Self.opacity(order: dot.x + dot.y, time: $0) } ?? 1
-                context.fill(circle, with: .color(StudioStyle.ink.opacity(opacity)))
+            for square in Self.squares {
+                // A hair over one cell, so squares that share an edge show no seam.
+                let rect = CGRect(x: CGFloat(square.x) * cell, y: CGFloat(square.y) * cell, width: cell + 0.5, height: cell + 0.5)
+                let opacity = time.map { Self.opacity(order: square.x + square.y, time: $0) } ?? 1
+                context.fill(Path(rect), with: .color(StudioStyle.ink.opacity(opacity)))
             }
         }
     }
 
-    /// Where a dot is in its sweep: it lights decelerating over the first fifth
+    /// Where a square is in its sweep: it lights decelerating over the first fifth
     /// of the period, fades accelerating until three fifths, then rests faint,
-    /// each dot a fourteenth of the period after the one before (as the site's
+    /// each square a fourteenth of the period after the one before (as the site's
     /// mark-light keyframes).
     private static func opacity(order: Int, time: Double) -> Double {
         var phase = (time / period - Double(order) / 14).truncatingRemainder(dividingBy: 1)

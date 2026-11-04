@@ -1277,8 +1277,8 @@ main {
   }
 }
 
-/* The studio mark (components/StudioMark.tsx): dots in the ink color.
-   Playing, each dot rests faint, lights decelerating and fades accelerating,
+/* The studio mark (components/StudioMark.tsx): squares in the ink color.
+   Playing, each square rests faint, lights decelerating and fades accelerating,
    one after another from the top-left corner (--mark-order), so a sweep
    crosses the panel once per --motion-ambient and starts again. */
 .studio-mark {
@@ -1287,13 +1287,15 @@ main {
   width: auto;
   fill: currentColor;
   flex: none;
+  /* Square edges stay sharp at small sizes instead of blurring. */
+  shape-rendering: crispEdges;
 }
 
 .studio-mark-large {
   height: var(--mark-large);
 }
 
-.studio-mark.is-playing circle {
+.studio-mark.is-playing rect {
   opacity: 0.18;
   animation: mark-light var(--motion-ambient) infinite backwards;
   animation-delay: calc(var(--mark-order) * var(--motion-ambient) / 14);
@@ -1352,7 +1354,7 @@ main {
   color: var(--ink);
 }
 
-.site-footer-sign:hover .studio-mark circle {
+.site-footer-sign:hover .studio-mark rect {
   animation: mark-light var(--motion-ambient) 1 backwards;
   animation-delay: calc(var(--mark-order) * var(--motion-ambient) / 14);
 }
@@ -1385,8 +1387,8 @@ main {
   }
 
   /* The mark holds still, every dot lit; the word still says what's happening. */
-  .studio-mark.is-playing circle,
-  .site-footer-sign:hover .studio-mark circle {
+  .studio-mark.is-playing rect,
+  .site-footer-sign:hover .studio-mark rect {
     animation: none;
     opacity: 1;
   }

@@ -48,11 +48,11 @@ Requests to `/api` and `/media` are passed through to the backend on port 8000
 
 ## The studio mark
 
-The logo is a small panel of dots: read across it makes a C and a W; on its
+The logo is a small panel of squares: read across it makes a C and a W; on its
 side it looks like a display panel of lit numbers. It is drawn from one
-pattern of rows (`O` a dot, `_` a gap), `MARK_PATTERN` in
+pattern of rows (`O` a square, `_` a gap), `MARK_PATTERN` in
 `src/components/StudioMark.tsx`. It sits in the footer, is the favicon, and is
-the sign of waiting: while something loads its dots light up in a sweep from
+the sign of waiting: while something loads its squares light up in a sweep from
 the top-left corner. To redraw it, change the pattern there, then the copies
 in `public/favicon.svg` and `../ios/Shared/StudioMark.swift`. Its sizes and
 the sweep are under "studio mark" in `global.css`.
