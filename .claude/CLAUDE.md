@@ -4,6 +4,8 @@ This file is for any agent (or person) working in this repo. Read it before you 
 
 What we're building is described in [open-studio-brief.md](../open-studio-brief.md). This file covers **how** we build it.
 
+**Before changing how anything looks or reads, read [DESIGN_VOICE.md](DESIGN_VOICE.md).** The design is the owner's. Don't settle questions of taste yourself: when you notice yourself reaching for a common AI-design default (pills, dividers, eyebrows, extra shades, ...), name it and ask the owner a guiding question.
+
 ### Current direction (where we differ from the brief)
 
 - **Every board opens on the sphere view**: each entry's picture floats on the surface of one orb in time order, newest at the top and oldest at the bottom, so each year is a band. It turns slowly and can be dragged. A Time slider (`?from=2023-04&to=2024-09`) picks a span of months, highlights it in every view and turns the orb so that band faces you. The masonry grid (newest first) and rows are one click away. (A free-form canvas/map and an ink-blot view were tried and dropped.)
@@ -49,7 +51,7 @@ React frontend, Python backend, one repo.
 
 ```
 open-studio/
-├── .claude/                  Agent guidelines (this file) + local run config
+├── .claude/                  Agent guidelines (this file), DESIGN_VOICE.md (keeping the design the owner's) + local run config
 ├── .github/workflows/        deploy.yml: runs the tests and deploy.py on every push to main; ios-build.yml: builds the iOS app when ios/ changes
 ├── open-studio-brief.md      Product brief: what we're building and why
 ├── README.md                 How to run it; map of the top-level folders
