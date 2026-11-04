@@ -91,17 +91,23 @@ export function BoardPage() {
           entries={collection.entries ?? []}
           browse={browse}
         />
-        <LabelRow wide>
-          {!shown && <LoadingMark />}
-          {shown?.length === 0 && <p className="quiet">{query ? "Nothing matches that." : "Nothing here yet."}</p>}
-          {shown && view === "sphere" && shown.length > 0 && <SphereView entries={shown} highlight={highlight} />}
-          {shown && view === "rows" && (
-            <EntryRows entries={shown} highlight={highlight} arriveOrder={collection.orderOf} />
-          )}
-          {shown && view !== "rows" && view !== "sphere" && (
-            <EntryGrid entries={shown} highlight={highlight} size={view} arriveOrder={collection.orderOf} />
-          )}
-        </LabelRow>
+        {shown?.length === 0 ? (
+          // A plain row, so the message starts at column 4 like other text, and no view draws an empty list.
+          <LabelRow>
+            <p className="quiet">{query ? "Nothing matches that." : "Nothing here yet."}</p>
+          </LabelRow>
+        ) : (
+          <LabelRow wide>
+            {!shown && <LoadingMark />}
+            {shown && view === "sphere" && <SphereView entries={shown} highlight={highlight} />}
+            {shown && view === "rows" && (
+              <EntryRows entries={shown} highlight={highlight} arriveOrder={collection.orderOf} />
+            )}
+            {shown && view !== "rows" && view !== "sphere" && (
+              <EntryGrid entries={shown} highlight={highlight} size={view} arriveOrder={collection.orderOf} />
+            )}
+          </LabelRow>
+        )}
       </main>
       <SiteFooter />
     </>
