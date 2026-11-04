@@ -50,7 +50,7 @@ React frontend, Python backend, one repo.
 ```
 open-studio/
 ├── .claude/                  Agent guidelines (this file) + local run config
-├── .github/workflows/        deploy.yml: runs the tests and deploy.py on every push to main
+├── .github/workflows/        deploy.yml: runs the tests and deploy.py on every push to main; ios-build.yml: builds the iOS app when ios/ changes
 ├── open-studio-brief.md      Product brief: what we're building and why
 ├── README.md                 How to run it; map of the top-level folders
 ├── deploy.py                 Ships backend (Fly.io) and frontend (Firebase) using deploy.toml
@@ -104,8 +104,8 @@ open-studio/
     ├── README.md             How to build it on a Mac and get it onto a phone
     ├── project.yml           Xcode project description (XcodeGen); the .xcodeproj is generated
     ├── OpenStudio/           The app: enter server address + owner token
-    ├── ShareToStudio/        The share extension: link, note or photos → made by me / inspiration, visibility, note → entry
-    └── Shared/               Used by both: backend calls, data shapes, settings storage
+    ├── ShareToStudio/        The share extension: link, note or photos → board, made by me / inspiration, visibility, builds on, note → entry
+    └── Shared/               Used by both: backend calls, data shapes, settings storage, the site's look (StudioStyle, Inter in Fonts/) and its page pieces
 ```
 
 **Adding a new top-level folder, a new feature folder, or a new dependency is a structural decision. Propose it to the owner first.** Adding files inside existing folders doesn't need approval.

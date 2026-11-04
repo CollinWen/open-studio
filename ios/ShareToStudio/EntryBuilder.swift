@@ -5,9 +5,11 @@
  *   A link:   title, source, pictures and date come from capture (the backend's
  *             link readers). If capture failed, the link itself is enough.
  *   A note:   kind "note", titled with its first line; the rest is the description.
- *   Photos:   one entry holding every photo/video, dated when the first was taken.
+ *   Photos:   one entry holding every photo/video, dated when the first was taken,
+ *             titled with any caption shared alongside, or else that date.
  *
- * What's typed in the sheet becomes the description ("why it's here"). Tags are left to the backend.
+ * Every entry goes on the board picked in the sheet. What's typed in the sheet
+ * becomes the description ("why it's here"). Tags are left to the backend.
  */
 
 import Foundation
@@ -30,7 +32,8 @@ enum EntryBuilder {
             sourceUrl: captured?.sourceUrl ?? link.absoluteString,
             media: captured?.media ?? [],
             occurredAt: captured?.occurredAt,
-            visibility: choices.visibility
+            visibility: choices.visibility,
+            board: choices.board
         )
     }
 
@@ -45,7 +48,8 @@ enum EntryBuilder {
             sourceUrl: "",
             media: [],
             occurredAt: nil,
-            visibility: choices.visibility
+            visibility: choices.visibility,
+            board: choices.board
         )
     }
 
@@ -53,15 +57,16 @@ enum EntryBuilder {
         let takenAt = uploaded.compactMap(\.takenAt).min()
         let onlyVideos = uploaded.allSatisfy { $0.item.type == "video" }
         return NewEntry(
-            // Photos have no title of their own; the date stands in until one is written on /studio.
-            title: (takenAt ?? .now).formatted(date: .long, time: .omitted),
+            // Without a caption, the date stands in until a title is written on /studio.
+            title: firstFilled(choices.title, (takenAt ?? .now).formatted(date: .long, time: .omitted)),
             description: choices.note.trimmingCharacters(in: .whitespacesAndNewlines),
             kind: onlyVideos ? "video" : "photo",
             sourceName: "",
             sourceUrl: "",
             media: uploaded.map(\.item),
             occurredAt: takenAt.map { ISO8601DateFormatter().string(from: $0) },
-            visibility: choices.visibility
+            visibility: choices.visibility,
+            board: choices.board
         )
     }
 

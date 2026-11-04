@@ -1,8 +1,9 @@
 /**
  * SharedItems: works out what another app handed to the share sheet:
- *   - a web link (Instagram, X, YouTube, Safari, ...)
- *   - written text (a note from Notes): first line is the title, the rest the body
- *   - photos and videos (Photos)
+ *   - a web link (Instagram, X, YouTube, TikTok, Pinterest, Spotify, Safari, ...)
+ *   - photos and videos (Photos, Files, screenshots), with any text shared
+ *     alongside them (a post's caption) as their title and note
+ *   - written text (a note from Notes, Messages): first line is the title, the rest the body
  *
  * In that order. Some apps share links as plain text, so text that is little more
  * than a link counts as a link; anything longer is a note. Used by ShareFormModel.
@@ -14,7 +15,8 @@ import UniformTypeIdentifiers
 enum SharedThing {
     case link(URL, pageTitle: String?)
     case note(title: String, body: String)
-    case media([NSItemProvider])
+    /// Photos and videos, with the title and body of any text shared alongside (often empty).
+    case media([NSItemProvider], title: String, body: String)
     case nothingUsable
 }
 
@@ -30,15 +32,18 @@ enum SharedItems {
         if let link = await firstWebLink(in: providers) {
             return .link(link, pageTitle: contentText)
         }
-        if let text = await firstText(in: providers) ?? (providers.isEmpty ? contentText : nil) {
-            if let link = linkOnly(in: text) { return .link(link, pageTitle: nil) }
-            return note(from: text)
+        let text = await firstText(in: providers) ?? contentText
+        if let text, let link = linkOnly(in: text) {
+            return .link(link, pageTitle: nil)
         }
         let media = providers.filter {
             $0.hasItemConformingToTypeIdentifier(UTType.image.identifier)
                 || $0.hasItemConformingToTypeIdentifier(UTType.movie.identifier)
         }
-        return media.isEmpty ? .nothingUsable : .media(media)
+        let (title, body) = split(text ?? "")
+        if !media.isEmpty { return .media(media, title: title, body: body) }
+        if !title.isEmpty || !body.isEmpty { return .note(title: title, body: body) }
+        return .nothingUsable
     }
 
     // MARK: - Links
@@ -81,11 +86,11 @@ enum SharedItems {
     }
 
     /// Notes puts the title on the first line; everything after it is the body.
-    private static func note(from text: String) -> SharedThing {
+    private static func split(_ text: String) -> (title: String, body: String) {
         let lines = text.trimmingCharacters(in: .whitespacesAndNewlines).components(separatedBy: .newlines)
         let title = lines.first?.trimmingCharacters(in: .whitespaces) ?? ""
         let body = lines.dropFirst().joined(separator: "\n").trimmingCharacters(in: .whitespacesAndNewlines)
-        return .note(title: title, body: body)
+        return (title, body)
     }
 
     private static func loadItem(from provider: NSItemProvider, as type: UTType) async throws -> NSSecureCoding? {

@@ -1,6 +1,7 @@
 /**
- * ShareChoices: what's asked in the share sheet: who made it, who can see it,
- * and a note on why it's here. For a shared note, also its title.
+ * ShareChoices: what's asked in the share sheet: which board it goes on, who
+ * made it, who can see it, what it builds on, and a note on why it's here.
+ * For shared notes and photos, also a title.
  *
  * Filled in by ShareForm, turned into an entry by EntryBuilder.
  */
@@ -14,9 +15,13 @@ enum Origin: CaseIterable {
 }
 
 struct ShareChoices {
+    /// A board's slug. Starts on the board the last entry went to.
+    var board = "home"
     var origin: Origin = .inspiration
     var visibility: Visibility = .private
+    /// The id of an earlier entry on the same board this one builds on, if any.
+    var buildsOn: String?
     var note = ""
-    /// Only used for shared notes, where it starts as the note's first line.
+    /// For shared notes and photos, where it starts as the text's first line. Links take their title from capture.
     var title = ""
 }
