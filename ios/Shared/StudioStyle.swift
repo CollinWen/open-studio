@@ -46,7 +46,6 @@ enum StudioStyle {
     static let arrive = Animation.timingCurve(0.2, 0, 0, 1, duration: 0.35)
     static let quick = Animation.timingCurve(0.2, 0, 0, 1, duration: 0.2)
     static let leave = Animation.timingCurve(0.3, 0, 1, 1, duration: 0.25)
-    static let breathe = Animation.easeInOut(duration: 1.6).repeatForever(autoreverses: true)
 
     private static func rgb(_ hex: UInt32, opacity: Double = 1) -> Color {
         Color(
