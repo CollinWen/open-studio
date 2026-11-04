@@ -1,7 +1,7 @@
 /**
- * SiteHeader: the top row of every page. My name sits in the label column;
- * the words of navigation (index, agents, about, owner) start the content
- * column. "owner" goes to the studio page, where the owner signs in; once
+ * SiteHeader: the top row of every page: my name, then the words of
+ * navigation (index, about, owner). The agent log isn't here: it's internal,
+ * reached from the studio's agents list. "owner" goes to the studio page, where the owner signs in; once
  * signed in it reads "studio". Anything passed as
  * children sits on the far right (an entry count, "loading").
  *
@@ -14,7 +14,7 @@ import type { ReactNode } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { readOwnerToken } from "../api/ownerToken";
 import { Icon } from "./Icon";
-import { LabelRow } from "./LabelRow";
+import { PageRow } from "./PageRow";
 
 export function SiteHeader({ children }: { children?: ReactNode }) {
   const isOwner = Boolean(readOwnerToken());
@@ -25,12 +25,14 @@ export function SiteHeader({ children }: { children?: ReactNode }) {
 
   return (
     <header className="site-header">
-      <LabelRow label={<Link to="/">Collin Wen</Link>}>
+      <PageRow>
         <nav className="site-nav">
+          <Link to="/" className="site-name">
+            Collin Wen
+          </Link>
           <NavLink to="/" end>
             index
           </NavLink>
-          <NavLink to="/agents">agents</NavLink>
           <NavLink to="/about">about</NavLink>
           <NavLink to="/studio">{isOwner ? "studio" : "owner"}</NavLink>
           {isOwner && (
@@ -40,7 +42,7 @@ export function SiteHeader({ children }: { children?: ReactNode }) {
           )}
         </nav>
         <span className="site-header-extra">{children}</span>
-      </LabelRow>
+      </PageRow>
     </header>
   );
 }

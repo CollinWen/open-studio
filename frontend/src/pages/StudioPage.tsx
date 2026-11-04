@@ -22,7 +22,7 @@ import { fetchBoards } from "../api/boardsApi";
 import { fetchEntries } from "../api/entriesApi";
 import { forgetOwnerToken, readOwnerToken } from "../api/ownerToken";
 import { fetchTags } from "../api/tagsApi";
-import { LabelRow } from "../components/LabelRow";
+import { PageRow } from "../components/PageRow";
 import { LoadingWord } from "../components/LoadingWord";
 import { SectionLine } from "../components/SectionLine";
 import { SiteFooter } from "../components/SiteFooter";
@@ -96,13 +96,13 @@ export function StudioPage() {
         )}
       </SiteHeader>
       <main>
-        <LabelRow rule="double" label="Studio" className="intro-row">
+        <PageRow rule="double" className="intro-row">
           <p className="display">The back room.</p>
-        </LabelRow>
+        </PageRow>
         {!hasToken && (
-          <LabelRow rule="single" label="Owner">
+          <PageRow rule="single">
             <OwnerTokenForm onSaved={() => setHasToken(true)} />
-          </LabelRow>
+          </PageRow>
         )}
         {hasToken && (
           <>

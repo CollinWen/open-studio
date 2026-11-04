@@ -4,7 +4,7 @@
  * Edit the words here directly.
  */
 
-import { LabelRow } from "../components/LabelRow";
+import { PageRow } from "../components/PageRow";
 import { SiteFooter } from "../components/SiteFooter";
 import { SiteHeader } from "../components/SiteHeader";
 
@@ -13,12 +13,12 @@ export function AboutPage() {
     <>
       <SiteHeader />
       <main>
-        <LabelRow rule="double" label="About" className="intro-row">
+        <PageRow rule="double" className="intro-row">
           <p className="display">
             Welcome. This is a working collection of things I make and things I'm curious about.
           </p>
-        </LabelRow>
-        <LabelRow rule="single" label="Notes">
+        </PageRow>
+        <PageRow>
           <div className="prose">
             <p>
               You'll find computer science, cooking experiments, art, and everything in between. Part portfolio, part
@@ -34,7 +34,7 @@ export function AboutPage() {
             </p>
             <p>If something here catches your eye, I'd love to talk about it. Send me a note.</p>
           </div>
-        </LabelRow>
+        </PageRow>
       </main>
       <SiteFooter />
     </>

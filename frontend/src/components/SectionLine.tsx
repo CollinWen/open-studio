@@ -5,13 +5,12 @@
  * underlined in the accent; a count, when given, follows in brackets.
  * Each word is a link, so every section has its own address.
  *
- * Anything passed as children sits under the words (a board's agents).
+ * `label` names the line for screen readers; it isn't shown.
  * Used by BrowsePanel, AgentsPage and StudioPage. Looks: .section-line.
  */
 
-import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { LabelRow } from "./LabelRow";
+import { PageRow } from "./PageRow";
 
 export interface Section {
   key: string;
@@ -24,12 +23,11 @@ interface Props {
   label: string;
   sections: Section[];
   current: string;
-  children?: ReactNode;
 }
 
-export function SectionLine({ label, sections, current, children }: Props) {
+export function SectionLine({ label, sections, current }: Props) {
   return (
-    <LabelRow rule="single" label={label} className="section-row">
+    <PageRow rule="single" className="section-row">
       <nav className="word-list section-line" aria-label={label}>
         {sections.map((section) => (
           <Link
@@ -43,7 +41,6 @@ export function SectionLine({ label, sections, current, children }: Props) {
           </Link>
         ))}
       </nav>
-      {children}
-    </LabelRow>
+    </PageRow>
   );
 }

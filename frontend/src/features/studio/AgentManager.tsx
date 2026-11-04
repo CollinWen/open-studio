@@ -2,20 +2,21 @@
  * AgentManager: the studio's "agents". The control band adds one (a name,
  * what it's for, a plus); its token is then shown once in the band, with
  * the line that connects a Claude session, and never again. Below, a Ledger
- * of every agent: the boards it may add to (an oval per board, filled when
+ * of every agent: the boards it may add to (a word per board, underlined when
  * it's on), when it was last seen, and pause / resume, a new token (the old
  * one stops working) and remove.
  *
  * Used by StudioPage, which loads the agents and boards. What agents are
- * doing is public at /agents.
+ * doing is at /agents, linked from here as "log" (it's not in the site's menu).
  */
 
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { addAgent, removeAgent, renewAgentToken, updateAgent } from "../../api/agentsApi";
 import { setBoardAgents } from "../../api/boardsApi";
 import { ControlBand } from "../../components/ControlBand";
 import { Icon } from "../../components/Icon";
-import { LabelRow } from "../../components/LabelRow";
+import { PageRow } from "../../components/PageRow";
 import { Ledger } from "../../components/Ledger";
 import { LedgerRow } from "../../components/LedgerRow";
 import { WordChoice } from "../../components/WordChoice";
@@ -64,7 +65,6 @@ export function AgentManager({ agents, boards, onChanged }: Props) {
   return (
     <>
       <ControlBand
-        label="Add"
         controls={
           <form
             className="browse-controls"
@@ -90,16 +90,19 @@ export function AgentManager({ agents, boards, onChanged }: Props) {
               <Icon name="plus" />
             </button>
             {message && <span>{message}</span>}
+            <Link to="/agents" className="quiet">
+              log
+            </Link>
           </form>
         }
       >
         {shownToken && (
-          <LabelRow label="Token">
+          <PageRow>
             <TokenNotice shown={shownToken} onDone={() => setShownToken(null)} />
-          </LabelRow>
+          </PageRow>
         )}
       </ControlBand>
-      <LabelRow wide>
+      <PageRow className="is-spaced">
         <Ledger columns={COLUMNS}>
           {agents.map((agent) => (
             <LedgerRow
@@ -110,12 +113,11 @@ export function AgentManager({ agents, boards, onChanged }: Props) {
                   {agent.name}
                   {agent.description && <span className="quiet ledger-note">{agent.description}</span>}
                 </>,
-                <span className="word-list is-ovals">
+                <span className="word-list">
                   {otherBoards.map((board) => (
                     <WordChoice
                       key={board.slug}
                       label={board.slug}
-                      look="oval"
                       active={board.agents.includes(agent.name)}
                       onPick={() => toggleBoard(agent, board)}
                     />
@@ -149,7 +151,7 @@ export function AgentManager({ agents, boards, onChanged }: Props) {
             />
           ))}
         </Ledger>
-      </LabelRow>
+      </PageRow>
     </>
   );
 }

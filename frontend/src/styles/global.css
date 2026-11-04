@@ -2,31 +2,47 @@
  * Global styles: the whole visual language of the site.
  *
  * Built the way Müller-Brockmann's "Grid Systems" builds a page:
- * - A 12-column grid inside generous margins. Small labels hang in columns
- *   1–3; text starts at column 4, so every page shares one strong left edge.
- *   Pictures span whole columns.
+ * - A 12-column grid inside generous margins. There are no side labels:
+ *   everything starts at the left margin, so every page shares one strong
+ *   left edge, and what's on the page says what it is. Pictures and list
+ *   columns span whole grid columns.
  * - One line of body text (--line) is the unit for everything vertical, and
  *   the gutter between columns is one line wide too.
- * - One typeface (Inter), few sizes. Hierarchy comes from size, ink strength
- *   and space, never boxes. The only color that isn't the work's is one
+ * - One typeface (Inter), few sizes, normal letter-spacing. Hierarchy comes
+ *   from size, ink strength and space, never boxes. Ink has five strengths
+ *   (--strength-*): full, soft, muted, faint, ghost; every quieter color and
+ *   every fade uses one of them. The only color that isn't the work's is one
  *   accent (--accent) and one shaded paper (--paper-shade), kept for the
  *   controls, so moving around reads apart from the work itself.
- * - Rules run the full width of the screen: a double rule for major breaks,
- *   a single hairline for minor ones (see components/LabelRow.tsx).
+ * - Rules run the full width of the screen, and only where the page switches
+ *   context: a double rule for the site's frame (under the header, before
+ *   the footer), a single one between the parts of a page. Inside a part,
+ *   space separates things, never a line (see components/PageRow.tsx).
  * - Every page has one shape: a section line, a shaded control band (a
  *   caret opens more), then a ledger (components/SectionLine, ControlBand,
- *   Ledger). Every line of words is a `.word-list`; every pick-one word is a
- *   WordChoice. Tags sit in thin flat ovals (filled when picked); picture
- *   sizes are three dots (DotChoice); the few icons are thin strokes (Icon).
+ *   Ledger). Every line of words is a `.word-list`, every list of words that
+ *   should line up (tags) a `.word-columns`; every pickable word is a
+ *   WordChoice, underlined when picked. Picture sizes are three dots
+ *   (DotChoice); the few icons are thin strokes (Icon).
  * Change the look here, through the tokens below, not in components.
  * The paper is a warm off-white; the work supplies the color.
  */
 
 :root {
   --paper: #f3f1ec;
+  /* Ink's five strengths, strongest first. Soft: labels, details, words you
+     could pick but haven't. Muted: what can't be used right now. Faint:
+     what's faded back by a highlight, and the hairline under a field.
+     Ghost: the faintest marks (dimmed tiles and lines in the sketches). */
+  --strength-full: 1;
+  --strength-soft: 0.52;
+  --strength-muted: 0.35;
+  --strength-faint: 0.18;
+  --strength-ghost: 0.12;
+
   --ink: #141414;
-  --ink-soft: rgba(20, 20, 20, 0.52);
-  --ink-faint: rgba(20, 20, 20, 0.18);
+  --ink-soft: rgb(20 20 20 / var(--strength-soft));
+  --ink-faint: rgb(20 20 20 / var(--strength-faint));
   --rule: 1px solid var(--ink);
   --rule-faint: 1px solid var(--ink-faint);
 
@@ -64,9 +80,8 @@
   --arrive-distance: 12px;
   --sheet-drop: 24px;
 
-  /* Tag ovals, view dots and the time slider. */
-  --oval-padding: 0.55em;
-  --oval-gap: 0.4em;
+  /* View dots, the tag list and the time slider. */
+  --dot-gap: 0.4em;
   --dot-small: 6px;
   --dot-medium: 10px;
   --dot-large: 15px;
@@ -112,7 +127,7 @@ a {
   text-decoration: none;
 }
 
-/* Words, ovals and dots ease into their hover and picked colors instead of
+/* Words and dots ease into their hover and picked colors instead of
    snapping. Only color changes here, so it stays on with reduced motion. */
 a,
 button,
@@ -151,7 +166,6 @@ p {
   font-size: var(--size-display);
   font-weight: 560;
   line-height: var(--leading-display);
-  letter-spacing: -0.035em;
   max-width: 17em;
   margin: 0;
 }
@@ -203,36 +217,32 @@ button:hover {
   text-underline-offset: 0.18em;
 }
 
-/* A filter you can turn on and off (a tag): the word in a thin flat oval,
-   so it reads as something to pick. Picked, the oval fills with ink: the
-   one filled shape on the page, so it's always clear what is narrowing the
-   view. Clicking it again clears it. */
-.oval {
-  padding: 0 var(--oval-padding);
-  border: 1px solid var(--ink-faint);
-  border-radius: 1em;
-  line-height: calc(var(--line) - 2px);
+/* A list of words that should line up (a board's tags): one per line,
+   flowing down columns that land on the page grid, read like an index
+   rather than a wrapped line. Six columns divide twelve. */
+.word-columns {
+  columns: 6;
+  column-gap: var(--gutter);
 }
 
-.oval.is-key {
-  border-color: var(--ink-soft);
+.word-columns > * {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  text-align: left;
+  break-inside: avoid;
 }
 
-.oval:hover {
-  text-decoration: none;
-  border-color: var(--ink);
+@media (max-width: 1100px) {
+  .word-columns {
+    columns: 4;
+  }
 }
 
-.oval.is-picked {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: var(--paper);
-}
-
-/* Ovals sit closer than words, and wrap onto lines a little apart. */
-.word-list.is-ovals {
-  column-gap: var(--oval-gap);
-  row-gap: var(--oval-gap);
+@media (max-width: 720px) {
+  .word-columns {
+    columns: 2;
+  }
 }
 
 /* A size picked as a dot (small, medium, large pictures): soft ink until picked. */
@@ -269,7 +279,7 @@ button:hover {
 .dot-list {
   display: inline-flex;
   align-items: center;
-  gap: var(--oval-gap);
+  gap: var(--dot-gap);
   align-self: center;
 }
 
@@ -282,52 +292,32 @@ button:hover {
   color: var(--paper);
 }
 
-/* ---- Page grid (see components/LabelRow.tsx) ---- */
+/* ---- Page rows (see components/PageRow.tsx) ---- */
 
-/* Twelve columns inside the page margins. The label hangs in columns 1–3,
-   the content fills 4–12, and the two share a baseline. The row itself runs
-   edge to edge, so its rule does too. */
-.label-row {
+/* A row of the page: inside the margins, edge to edge, so its rule runs the
+   full width of the screen. What's inside lines up on the 12-column grid
+   on its own (ledger, pictures, tag list). */
+.page-row {
   position: relative;
-  display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  column-gap: var(--gutter);
-  align-items: baseline;
   padding: 0 var(--margin);
 }
 
-.label-row-label {
-  grid-column: 1 / span 3;
-  font-size: var(--size-small);
-  color: var(--ink-soft);
-}
-
-.label-row-content {
-  grid-column: 4 / -1;
-  min-width: 0;
-}
-
-/* Wide rows (the sphere, the grid of pictures) span all twelve columns,
-   under a label that may also run the full width (the active filters). */
-.label-row.is-wide .label-row-label,
-.label-row.is-wide .label-row-content {
-  grid-column: 1 / -1;
-}
-
-.label-row.is-wide .label-row-content {
+/* A row set a line apart from the one above, without a rule: the next
+   thing within the same part of the page. */
+.page-row.is-spaced {
   margin-top: var(--line);
 }
 
-/* A ruled row starts a section: a blank line, the rule, half a line, then text. */
-.label-row.is-ruled,
-.label-row.is-double {
+/* A ruled row starts a new part: a blank line, the rule, half a line, then text. */
+.page-row.is-ruled,
+.page-row.is-double {
   margin-top: var(--line);
   padding-top: calc(var(--line) / 2);
   border-top: var(--rule);
 }
 
 /* The second line of a double rule, 3px below the first. */
-.label-row.is-double::before {
+.page-row.is-double::before {
   content: "";
   position: absolute;
   top: 2px;
@@ -336,7 +326,7 @@ button:hover {
   border-top: var(--rule);
 }
 
-.label-row.is-double {
+.page-row.is-double {
   padding-top: calc(var(--line) / 2 + 3px);
 }
 
@@ -347,34 +337,17 @@ button:hover {
 
 /* A board's intro is always three display lines tall, however long the
    text, so the browse panel never moves; longer text is cut at the third line. */
-.board-intro .label-row-content {
-  height: calc(3 * var(--leading-display));
-}
-
 .board-intro .display {
+  height: calc(3 * var(--leading-display));
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
   overflow: hidden;
 }
 
-/* On phones the label sits on its own line above the content. */
 @media (max-width: 720px) {
-  .label-row-label,
-  .label-row-content {
-    grid-column: 1 / -1;
-  }
-
-  .label-row-label:empty {
-    display: none;
-  }
-
   .intro-row {
     padding-bottom: calc(2 * var(--line));
-  }
-
-  .intro-row .label-row-content {
-    margin-top: calc(var(--line) / 2);
   }
 }
 
@@ -384,23 +357,38 @@ button:hover {
   padding-top: var(--line);
 }
 
-/* The site name: the one place the large size is used. */
-.site-header .label-row-label {
-  font-size: var(--size-large);
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  color: var(--ink);
-}
-
-.site-header .label-row-content {
+/* The site name, then the navigation words on its baseline; anything
+   extra (a count, "loading") on the far right. */
+.site-header .page-row {
   display: flex;
   justify-content: space-between;
+  align-items: baseline;
   gap: 1em;
 }
 
 .site-nav {
   display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
   gap: 1em;
+}
+
+/* The site name: the one place the large size is used. */
+.site-name {
+  font-size: var(--size-large);
+  font-weight: 600;
+  margin-right: var(--gutter);
+}
+
+.site-header-extra {
+  white-space: nowrap;
+}
+
+/* On phones the name takes its own line, the words of navigation under it. */
+@media (max-width: 720px) {
+  .site-name {
+    flex-basis: 100%;
+  }
 }
 
 .site-header-extra {
@@ -455,22 +443,15 @@ main {
   font-size: var(--size-small);
 }
 
-/* A small line under the section words (a board's agents). */
-.section-note {
-  margin: calc(var(--line) / 4) 0 0;
-  font-size: var(--size-small);
-  line-height: var(--leading-small);
-}
-
-/* The controls sit on a shaded band edge to edge, under a hairline, so they
-   read as tools and not as part of the work. Lines half a line apart. */
+/* The controls sit on a shaded band edge to edge, so they read as tools
+   and not as part of the work. The shade is enough; no line. Lines half a
+   line apart. */
 .control-band {
   background: var(--paper-shade);
-  border-top: var(--rule-faint);
   padding: calc(var(--line) / 2) 0;
 }
 
-.control-band .label-row + .label-row,
+.control-band .page-row + .page-row,
 .control-band-more {
   margin-top: calc(var(--line) / 2);
 }
@@ -531,7 +512,7 @@ main {
 
 .icon-button:disabled,
 button[type="submit"]:disabled {
-  opacity: 0.4;
+  opacity: var(--strength-muted);
   cursor: default;
 }
 
@@ -746,7 +727,7 @@ button[type="submit"]:disabled {
 }
 
 .entry-card.is-faded {
-  opacity: 0.15;
+  opacity: var(--strength-faint);
 }
 
 .entry-cover {
@@ -872,7 +853,7 @@ button[type="submit"]:disabled {
 }
 
 .sheet-tile.is-dim {
-  opacity: 0.12;
+  opacity: var(--strength-ghost);
 }
 
 .sheet-tile img,
@@ -907,7 +888,7 @@ button[type="submit"]:disabled {
   fill: none;
   stroke: #fff;
   stroke-width: 1;
-  opacity: 0.12;
+  opacity: var(--strength-ghost);
   transition: opacity var(--motion-standard) var(--ease-enter);
 }
 
@@ -957,7 +938,7 @@ button[type="submit"]:disabled {
   margin: 0;
 }
 
-/* Pictures start on the column 4 edge and fill to the right margin, but a
+/* Pictures start on the left margin and fill to the right margin, but a
    tall one stops at most of the screen's height (its right edge goes ragged). */
 .media-view img,
 .media-view video,
@@ -995,13 +976,12 @@ button[type="submit"]:disabled {
   justify-content: space-between;
   align-items: baseline;
   gap: 1em;
-  padding: calc(var(--line) / 4) 0;
-  border-top: var(--rule-faint);
+  padding: calc(var(--line) / 8) 0;
 }
 
-.related-line:first-child {
-  border-top: none;
-  padding-top: 0;
+/* The quiet word over the list; space, not a rule, sets it off. */
+.related-heading {
+  margin: 0 0 calc(var(--line) / 4);
 }
 
 .related-line:hover {
@@ -1060,15 +1040,14 @@ button[type="submit"]:disabled {
 
 /* ---- Ledger: every list of things on the page grid (components/Ledger.tsx) ---- */
 
-/* Each row is the 12-column grid; each cell spans --span columns (the first
-   usually 3, so it hangs where labels do). Rows are ruled by hairlines. */
+/* Each row is the 12-column grid; each cell spans --span columns. Rows are
+   separated by a little space, not hairlines: a list is one context. */
 .ledger-row {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
   column-gap: var(--gutter);
   align-items: baseline;
-  padding: calc(var(--line) / 4) 0;
-  border-top: var(--rule-faint);
+  padding: calc(var(--line) / 8) 0;
   transition: opacity var(--motion-standard) var(--ease-enter);
 }
 
@@ -1077,9 +1056,8 @@ button[type="submit"]:disabled {
   min-width: 0;
 }
 
-/* The column names: small and soft, above the first line, unruled. */
+/* The column names: small and soft, above the first line. */
 .ledger-row.is-heading {
-  border-top: none;
   font-size: var(--size-small);
   line-height: var(--leading-small);
   color: var(--ink-soft);
@@ -1096,7 +1074,7 @@ button[type="submit"]:disabled {
 }
 
 .ledger-row.is-faded {
-  opacity: 0.25;
+  opacity: var(--strength-faint);
 }
 
 /* A second, quieter line inside a cell (a description under a name). */
@@ -1182,7 +1160,7 @@ button[type="submit"]:disabled {
   /* While the entry to edit is on its way the sheet itself holds focus; its
      fields show focus, never the whole sheet. */
   outline: none;
-  /* Two 1px lines, 1px apart: the same double rule as .label-row.is-double. */
+  /* Two 1px lines, 1px apart: the same double rule as .page-row.is-double. */
   border-bottom: 3px double var(--ink);
   background: var(--paper);
   color: var(--ink);
@@ -1191,7 +1169,8 @@ button[type="submit"]:disabled {
 
 .entry-sheet::backdrop {
   background: var(--paper);
-  opacity: 0.82;
+  /* The page shows through at faint strength. */
+  opacity: calc(1 - var(--strength-faint));
   animation: backdrop-fade var(--motion-quick) var(--ease-enter) both;
 }
 
@@ -1284,7 +1263,7 @@ main {
 
 @keyframes breathe {
   to {
-    opacity: 0.35;
+    opacity: var(--strength-muted);
   }
 }
 

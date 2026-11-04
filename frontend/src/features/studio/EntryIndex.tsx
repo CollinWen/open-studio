@@ -11,7 +11,7 @@ import { Link } from "react-router-dom";
 import { deleteEntry } from "../../api/entriesApi";
 import { ControlBand } from "../../components/ControlBand";
 import { Icon } from "../../components/Icon";
-import { LabelRow } from "../../components/LabelRow";
+import { PageRow } from "../../components/PageRow";
 import { Ledger } from "../../components/Ledger";
 import { LedgerRow } from "../../components/LedgerRow";
 import { SearchField } from "../../components/SearchField";
@@ -47,7 +47,6 @@ export function EntryIndex({ entries, query, onSearch, onEdit, onChanged }: Prop
   return (
     <>
       <ControlBand
-        label="Search"
         controls={
           <div className="browse-controls">
             <SearchField value={query} onSearch={onSearch} placeholder="titles and tags" />
@@ -57,7 +56,7 @@ export function EntryIndex({ entries, query, onSearch, onEdit, onChanged }: Prop
           </div>
         }
       />
-      <LabelRow wide>
+      <PageRow className="is-spaced">
         <Ledger columns={COLUMNS}>
           {shown.map((entry) => (
             <LedgerRow
@@ -79,7 +78,7 @@ export function EntryIndex({ entries, query, onSearch, onEdit, onChanged }: Prop
             />
           ))}
         </Ledger>
-      </LabelRow>
+      </PageRow>
     </>
   );
 }

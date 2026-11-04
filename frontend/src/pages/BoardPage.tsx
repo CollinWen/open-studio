@@ -3,7 +3,7 @@
  * home board (the owner's own collection); every other board has its own
  * address and shows only its own entries, tags and time, so spaces never mix.
  *
- * Laid out as labeled rows: the intro set large (the board's description,
+ * Laid out as rows: the intro set large (the board's description,
  * or a picked tag's) in a block of fixed height, so a longer or shorter
  * intro never moves what's below it; then the browse panel (spaces, tags, time, view: every
  * way to move around, in one block), then the entries on an orb by default,
@@ -21,7 +21,7 @@ import { useParams } from "react-router-dom";
 import { fetchBoards } from "../api/boardsApi";
 import { searchEntries } from "../api/searchApi";
 import { fetchTags } from "../api/tagsApi";
-import { LabelRow } from "../components/LabelRow";
+import { PageRow } from "../components/PageRow";
 import { LoadingWord } from "../components/LoadingWord";
 import { SiteFooter } from "../components/SiteFooter";
 import { SiteHeader } from "../components/SiteHeader";
@@ -79,9 +79,9 @@ export function BoardPage() {
         {query && found === null && <LoadingWord>searching</LoadingWord>}
       </SiteHeader>
       <main>
-        <LabelRow rule="double" label={tag ? "Tag" : undefined} className="intro-row board-intro">
+        <PageRow rule="double" className="intro-row board-intro">
           <p className="display">{intro}</p>
-        </LabelRow>
+        </PageRow>
         <BrowsePanel
           boards={boards}
           board={board}
@@ -89,7 +89,7 @@ export function BoardPage() {
           entries={collection.entries ?? []}
           browse={browse}
         />
-        <LabelRow wide>
+        <PageRow className="is-spaced">
           {shown?.length === 0 && <p className="quiet">{query ? "Nothing matches that." : "Nothing here yet."}</p>}
           {shown && view === "sphere" && shown.length > 0 && <SphereView entries={shown} highlight={highlight} />}
           {shown && view === "rows" && (
@@ -98,7 +98,7 @@ export function BoardPage() {
           {shown && view !== "rows" && view !== "sphere" && (
             <EntryGrid entries={shown} highlight={highlight} size={view} arriveOrder={collection.orderOf} />
           )}
-        </LabelRow>
+        </PageRow>
       </main>
       <SiteFooter />
     </>

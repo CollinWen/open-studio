@@ -1,9 +1,9 @@
 /**
- * TagFilter: the board's tags, each in a thin flat oval so it reads as
- * something to pick. Key tags (set in the studio) come first, in full ink;
- * every other tag follows in soft ink. Clicking one picks it: its oval fills
- * with ink, entries without it fade, and its description becomes the intro.
- * Clicking it again clears it.
+ * TagFilter: the board's tags as a list, flowing down aligned columns like
+ * an index, so it's read top to bottom instead of as a wrapped jumble. Key
+ * tags (set in the studio) come first, in full ink; every other tag follows
+ * in soft ink. Clicking one picks it: it's underlined, entries without it
+ * fade, and its description becomes the intro. Clicking it again clears it.
  */
 
 import { WordChoice } from "../../components/WordChoice";
@@ -21,12 +21,11 @@ export function TagFilter({ tags, activeTag, onSelect }: Props) {
   const otherTags = tags.filter((tag) => tag.importance !== 1);
 
   return (
-    <div className="word-list is-ovals">
+    <div className="word-columns">
       {[...keyTags, ...otherTags].map((tag) => (
         <WordChoice
           key={tag.name}
           label={tag.name}
-          look="oval"
           className={tag.importance === 1 ? "is-key" : "quiet"}
           active={tag.name === activeTag}
           onPick={() => onSelect(tag.name === activeTag ? null : tag.name)}

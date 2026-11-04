@@ -1,7 +1,7 @@
 /**
  * PickedFilters: what is narrowing a board while its tags and time are
- * closed: the picked tag in its filled oval, the span of months in an oval
- * too. Clicking one clears it. Shown beside the control band's caret.
+ * closed: the picked tag and the span of months, underlined. Clicking one
+ * clears it. Shown beside the control band's caret.
  *
  * Used by BrowsePanel.
  */
@@ -19,12 +19,11 @@ interface Props {
 export function PickedFilters({ tag, range, onClearTag, onClearRange }: Props) {
   if (!tag && !range) return null;
   return (
-    <span className="word-list is-ovals">
-      {tag && <WordChoice label={tag} look="oval" active onPick={onClearTag} />}
+    <span className="word-list">
+      {tag && <WordChoice label={tag} active onPick={onClearTag} />}
       {range && (
         <WordChoice
           label={`${formatMonth(range.from)} – ${formatMonth(range.to)}`}
-          look="oval"
           active
           onPick={onClearRange}
         />

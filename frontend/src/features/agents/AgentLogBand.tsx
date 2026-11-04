@@ -3,17 +3,17 @@
  * board's: a search over what agents wrote (and "clear" when anything is
  * picked), then a caret that opens
  *
- *   Agent   whose lines
- *   Board   which board they're about
- *   Type    plans, thoughts, findings, questions or status changes
+ *   whose lines ("all agents", then each name)
+ *   which board they're about ("every board", then each)
+ *   which kind: plans, thoughts, findings, questions or status changes
  *
- * While those are closed, each pick shows beside the caret in a filled
- * oval; clicking one clears it. Used by AgentsPage. Every pick lives in
+ * While those are closed, each pick shows beside the caret, underlined;
+ * clicking one clears it. Used by AgentsPage. Every pick lives in
  * the URL (useLogFilters).
  */
 
 import { ControlBand } from "../../components/ControlBand";
-import { LabelRow } from "../../components/LabelRow";
+import { PageRow } from "../../components/PageRow";
 import { SearchField } from "../../components/SearchField";
 import { WordChoice } from "../../components/WordChoice";
 import type { Agent, LogLineType } from "../../types/agent";
@@ -55,7 +55,6 @@ export function AgentLogBand({ agents, boards, filters }: Props) {
 
   return (
     <ControlBand
-      label="Search"
       rememberAs="log-filters-open"
       controls={
         <div className="browse-controls">
@@ -68,24 +67,24 @@ export function AgentLogBand({ agents, boards, filters }: Props) {
         </div>
       }
       picked={
-        <span className="word-list is-ovals">
+        <span className="word-list">
           {picks.map(
             ([label, name]) =>
-              label && <WordChoice key={name} label={label} look="oval" active onPick={() => setFilter(name, "")} />,
+              label && <WordChoice key={name} label={label} active onPick={() => setFilter(name, "")} />,
           )}
         </span>
       }
       more={
         <>
-          <LabelRow label="Agent">
+          <PageRow>
             {choices("agent", "all agents", agents.map((one) => [one.name, one.name]), agent)}
-          </LabelRow>
-          <LabelRow label="Board">
+          </PageRow>
+          <PageRow>
             {choices("board", "every board", boards.map((one) => [one.slug, one.slug]), board)}
-          </LabelRow>
-          <LabelRow label="Type">
+          </PageRow>
+          <PageRow>
             {choices("type", "everything", LINE_TYPES.map((one) => [one, TYPE_WORDS[one]]), type)}
-          </LabelRow>
+          </PageRow>
         </>
       }
     />

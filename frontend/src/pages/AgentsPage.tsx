@@ -20,7 +20,7 @@ import { useParams } from "react-router-dom";
 import { fetchAgentLog } from "../api/agentLogApi";
 import { fetchAgents } from "../api/agentsApi";
 import { fetchBoards } from "../api/boardsApi";
-import { LabelRow } from "../components/LabelRow";
+import { PageRow } from "../components/PageRow";
 import { LoadingWord } from "../components/LoadingWord";
 import { SectionLine } from "../components/SectionLine";
 import { SiteFooter } from "../components/SiteFooter";
@@ -88,14 +88,14 @@ export function AgentsPage() {
         {(section === "log" ? lines === null : agents === null) && <LoadingWord />}
       </SiteHeader>
       <main>
-        <LabelRow rule="double" label="Agents" className="intro-row">
+        <PageRow rule="double" className="intro-row">
           <p className="display">What the agents are working on.</p>
-        </LabelRow>
+        </PageRow>
         <SectionLine label="Show" sections={sections} current={section} />
         {section === "log" && (
           <>
             <AgentLogBand agents={knownAgents} boards={boards} filters={filters} />
-            <LabelRow wide>
+            <PageRow className="is-spaced">
               {lines && <AgentLog lines={lines} narrowed={filters.hasFilters} />}
               {hasMore && !loadingMore && (
                 <button type="button" className="quiet" onClick={loadMore}>
@@ -103,13 +103,13 @@ export function AgentsPage() {
                 </button>
               )}
               {loadingMore && <LoadingWord />}
-            </LabelRow>
+            </PageRow>
           </>
         )}
         {section === "who" && (
-          <LabelRow wide>
+          <PageRow className="is-spaced">
             <AgentList agents={knownAgents} />
-          </LabelRow>
+          </PageRow>
         )}
       </main>
       <SiteFooter />

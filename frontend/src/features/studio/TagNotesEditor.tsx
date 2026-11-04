@@ -10,7 +10,7 @@
 import { useState } from "react";
 import { saveTagNotes } from "../../api/tagsApi";
 import { ControlBand } from "../../components/ControlBand";
-import { LabelRow } from "../../components/LabelRow";
+import { PageRow } from "../../components/PageRow";
 import { LoadingWord } from "../../components/LoadingWord";
 import { Ledger } from "../../components/Ledger";
 import { LedgerRow } from "../../components/LedgerRow";
@@ -41,14 +41,14 @@ export function TagNotesEditor({ tags, query, onSearch }: Props) {
 
   return (
     <>
-      <ControlBand label="Search" controls={<SearchField value={query} onSearch={onSearch} placeholder="tag names" />} />
-      <LabelRow wide>
+      <ControlBand controls={<SearchField value={query} onSearch={onSearch} placeholder="tag names" />} />
+      <PageRow className="is-spaced">
         <Ledger columns={COLUMNS}>
           {shown.map((tag) => (
             <TagNotesRow key={tag.name} tag={tag} />
           ))}
         </Ledger>
-      </LabelRow>
+      </PageRow>
     </>
   );
 }

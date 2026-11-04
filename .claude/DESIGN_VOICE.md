@@ -38,23 +38,27 @@ These are the common defaults of AI-led design. Using one isn't wrong; using one
 17. Gradient backgrounds
 18. Periods at the end of titles
 
-## Where the site stands (audit, November 2026)
+## Where the site stands
 
 **Not present:** italics (2), Instrument Serif (3), diagrams (9), code breadcrumbs (11), section numbers (12), squircles (14), mono (15), all caps (16), gradients (17). Keep them out unless the owner asks.
 
-**Present, and waiting on the owner's decision:**
+**Settled:** pills (1, 8), kerning (4), dividers (6), shades (7), eyebrows and side labels (13), the agents menu item (5). See "Decisions".
 
-- **Pills (1, 8).** Tags sit in thin rounded ovals with a border (`.oval`). They're the one bordered shape on the site, chosen so a tag reads as pickable. Open: is the oval yours, or a default we picked up?
-- **Tight kerning (4).** The display intro is set at `-0.035em`, the site name at `-0.01em` (`global.css`, `.display` and `.site-header`). Open: is the poster-tight intro part of the voice?
-- **Detail (5).** A board page carries the section line with counts, a shaded control band, a caret, size dots, a month-bar time slider and the sphere. Open: which of these do you use, and which are there because they could be?
-- **Dividers (6).** Every section starts with a full-width rule (double or single). Inside sections there are also hairlines between related entries, between ledger rows, above the control band and under every text field. Open: what is a rule *for* on this site?
-- **Shades and opacities (7).** Two ink strengths (`--ink-soft` 52%, `--ink-faint` 18%) plus a shaded paper, and seven different one-off fades in components (0.12, 0.15, 0.25, 0.35, 0.4, 0.82). The one-offs break the "change the look through tokens" rule however this is decided. Open: how many levels of "quieter" does the site need?
-- **Eyebrows (13).** The label column ("Entry", "About", "Studio", "Tag") hangs beside each display intro; on phones it moves above it, which makes it a literal eyebrow. Open: is the label part of the Swiss grid you want, or does the intro speak for itself?
-- **Periods in titles (18).** Every display intro ends in a period: "The back room.", "What the agents are working on.", "Everything tagged “bread”." Open: are intros sentences you're saying, or titles?
-- **Verbose text (10).** Mostly lean. Watch the not-found line and generated tag intros.
+**Still open:**
+
+- **Intro wording and periods (10, 18).** Waiting on the owner's own words (see Decisions). Until then, leave the current lines alone and don't write replacements.
+- **Detail (5).** Beyond the agents link, nobody has looked at which board controls get used yet (counts in brackets, size dots, the time slider's month bars).
+- **The "related" heading.** With the labels gone, the related list on an entry page sits under one quiet word, "related", in body size. Check that this doesn't creep back into being an eyebrow.
+- **Ledger column names.** Lists in the studio and on /agents still have small column names over their columns. They're list headers, not side labels, but they're the closest thing left to the form feel the owner disliked.
 
 ## Decisions
 
 Record each answer here: the pattern, what was decided, and the reason in the owner's words. Newest at the bottom.
 
-- *(none yet)*
+- **Tags (1, pills).** No ovals: they "seem a little trite". Underlined plain words are right, but a wrapped line of them felt chaotic. Tags are a *list* in aligned columns that you read down like an index (`.word-columns`); picked is underlined. Reason: "navigating a list of things might be easier than seeing a bunch of words wrapped across a few rows". Use the same list for any group of words someone browses.
+- **Rules (6, dividers).** "A line might only be needed for separating the portions of the website; they serve as canvases for switching context. But within these contexts I would like the interaction to be smooth, like seeing related posts, or just seeing the metadata of an entry." So: a double rule frames the site, a single rule starts a new part of a page, and inside a part only space separates things. No hairlines between list rows, related entries or the control band.
+- **Shades (7).** Five ink strengths, as tokens (`--strength-full / soft / muted / faint / ghost`); every quieter color and fade uses one of them, never a one-off number. The owner is open to fewer if someone makes the case. The shaded paper and the existing color gradations stay as they are for now.
+- **Intros (10, 18).** Intros are for the visitor and need rephrasing, but the owner writes them: the personal statement, the board descriptions and the page intros are creative direction. Agents don't draft or "improve" this copy unless asked.
+- **Side labels (13, eyebrows).** Removed everywhere. "They're informative, but it almost feels like a form that is kind of constricting and not super meaningful to the delivery of the message." The labelling column isn't a point of emphasis, so content starts at the left margin and says what it is (look at how online galleries do it). Don't add labels beside or above content to explain it; if something needs explaining, rethink the thing.
+- **Kerning (4).** Normal letter-spacing everywhere. Not a focus for the owner; don't tighten type to make it feel designed.
+- **Agents in the menu (5).** Not in the public menu: it's internal. The log is reached from the studio's agents list ("log"). Board pages no longer list their agents.

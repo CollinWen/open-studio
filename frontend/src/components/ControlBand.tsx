@@ -15,10 +15,9 @@
 
 import { useState, type ReactNode } from "react";
 import { Icon } from "./Icon";
-import { LabelRow } from "./LabelRow";
+import { PageRow } from "./PageRow";
 
 interface Props {
-  label: string;
   controls: ReactNode;
   more?: ReactNode;
   picked?: ReactNode;
@@ -26,7 +25,7 @@ interface Props {
   children?: ReactNode;
 }
 
-export function ControlBand({ label, controls, more, picked, rememberAs, children }: Props) {
+export function ControlBand({ controls, more, picked, rememberAs, children }: Props) {
   const [open, setOpen] = useState(() => readOpen(rememberAs));
 
   const toggle = () => {
@@ -41,7 +40,7 @@ export function ControlBand({ label, controls, more, picked, rememberAs, childre
 
   return (
     <div className="control-band">
-      <LabelRow label={label}>
+      <PageRow>
         <div className="control-line">
           {controls}
           {more && (
@@ -57,7 +56,7 @@ export function ControlBand({ label, controls, more, picked, rememberAs, childre
           )}
           {more && !open && picked}
         </div>
-      </LabelRow>
+      </PageRow>
       {children}
       {more && open && <div className="control-band-more">{more}</div>}
     </div>

@@ -1,19 +1,20 @@
 /**
- * SiteFooter: the last row, under a double rule of the page: the year in the label
- * column, then a link to the about page. (The way into the studio is in the header.)
+ * SiteFooter: the last row, under the page's closing double rule: the year,
+ * then a link to the about page. (The way into the studio is in the header.)
  */
 
 import { Link } from "react-router-dom";
-import { LabelRow } from "./LabelRow";
+import { PageRow } from "./PageRow";
 
 export function SiteFooter() {
   return (
     <footer className="site-footer">
-      <LabelRow rule="double" label={`© ${new Date().getFullYear()}`}>
-        <span className="quiet">
+      <PageRow rule="double">
+        <p className="word-list quiet">
+          <span>© {new Date().getFullYear()}</span>
           <Link to="/about">about</Link>
-        </span>
-      </LabelRow>
+        </p>
+      </PageRow>
     </footer>
   );
 }

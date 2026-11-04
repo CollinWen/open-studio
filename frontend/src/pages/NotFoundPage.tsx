@@ -8,7 +8,7 @@
  */
 
 import { Link } from "react-router-dom";
-import { LabelRow } from "../components/LabelRow";
+import { PageRow } from "../components/PageRow";
 import { SiteFooter } from "../components/SiteFooter";
 import { SiteHeader } from "../components/SiteHeader";
 
@@ -17,11 +17,11 @@ export function NotFoundPage() {
     <>
       <SiteHeader />
       <main>
-        <LabelRow rule="double" label="Not found">
+        <PageRow rule="double">
           <p className="quiet">
             Nothing here. <Link to="/">Back to the index.</Link>
           </p>
-        </LabelRow>
+        </PageRow>
       </main>
       <SiteFooter />
     </>

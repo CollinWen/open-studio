@@ -13,7 +13,7 @@ import { Link } from "react-router-dom";
 import { createBoard, updateBoard } from "../../api/boardsApi";
 import { ControlBand } from "../../components/ControlBand";
 import { Icon } from "../../components/Icon";
-import { LabelRow } from "../../components/LabelRow";
+import { PageRow } from "../../components/PageRow";
 import { LoadingWord } from "../../components/LoadingWord";
 import { Ledger } from "../../components/Ledger";
 import { LedgerRow } from "../../components/LedgerRow";
@@ -48,7 +48,6 @@ export function BoardManager({ boards, onChanged }: Props) {
   return (
     <>
       <ControlBand
-        label="Add"
         controls={
           <form
             className="browse-controls"
@@ -71,13 +70,13 @@ export function BoardManager({ boards, onChanged }: Props) {
           </form>
         }
       />
-      <LabelRow wide>
+      <PageRow className="is-spaced">
         <Ledger columns={COLUMNS}>
           {boards.map((board) => (
             <BoardRow key={board.slug} board={board} />
           ))}
         </Ledger>
-      </LabelRow>
+      </PageRow>
     </>
   );
 }

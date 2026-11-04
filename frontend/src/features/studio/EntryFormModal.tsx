@@ -17,7 +17,7 @@ import { useLocation } from "react-router-dom";
 import { fetchBoards } from "../../api/boardsApi";
 import { fetchEntry } from "../../api/entriesApi";
 import { readOwnerToken } from "../../api/ownerToken";
-import { LabelRow } from "../../components/LabelRow";
+import { PageRow } from "../../components/PageRow";
 import { LoadingWord } from "../../components/LoadingWord";
 import type { Board, Entry } from "../../types/entry";
 import { HOME_BOARD } from "../grid/boardPath";
@@ -79,21 +79,18 @@ export function EntryFormModal() {
       }}
     >
       {isOpen && !shown && (
-        <LabelRow label="Edit">
+        <PageRow>
           <LoadingWord />
-        </LabelRow>
+        </PageRow>
       )}
       {shown && (
-        <LabelRow
-          label={
-            <p className="word-list">
-              <span>{shown.entry ? "Edit" : "Add"}</span>
-              <button type="button" className="quiet" onClick={closeEntryForm}>
-                close
-              </button>
-            </p>
-          }
-        >
+        <PageRow>
+          <p className="word-list sheet-title">
+            <span>{shown.entry ? "edit" : "add"}</span>
+            <button type="button" className="quiet" onClick={closeEntryForm}>
+              close
+            </button>
+          </p>
           <EntryForm
             key={shown.entry?.id ?? "new"}
             editing={shown.entry}
@@ -105,7 +102,7 @@ export function EntryFormModal() {
             }}
             onCancel={closeEntryForm}
           />
-        </LabelRow>
+        </PageRow>
       )}
     </dialog>
   );

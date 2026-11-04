@@ -2,14 +2,14 @@
  * BrowsePanel: every way to move around a board, above the work, in the
  * shape every page shares (components/SectionLine + ControlBand):
  *
- *   Space   the boards, as larger words; the one you're in is in accent.
+ *   spaces  the boards, as larger words; the one you're in is in accent.
  *           Each is its own page, so spaces never mix. Switching keeps the
- *           view and drops what you'd picked. Under them, the agents signed
- *           on to this board, each linked to its log.
- *   View    search, sphere / three picture sizes / rows, sort, clear; then
+ *           view and drops what you'd picked.
+ *   view    search, sphere / three picture sizes / rows, sort, clear; then
  *           a caret that opens
- *   Tags    the board's tags, each in an oval; pick one to highlight it
- *   Time    a slider over the months that have entries
+ *   tags    the board's tags, a list in aligned columns; pick one to
+ *           highlight it
+ *   time    a slider over the months that have entries
  *
  * While tags and time are closed, a picked tag or span still shows beside
  * the caret (PickedFilters). Used by BoardPage, which loads the boards, tags
@@ -17,9 +17,8 @@
  */
 
 import { useMemo } from "react";
-import { Link } from "react-router-dom";
 import { ControlBand } from "../../components/ControlBand";
-import { LabelRow } from "../../components/LabelRow";
+import { PageRow } from "../../components/PageRow";
 import { SectionLine } from "../../components/SectionLine";
 import type { Board, Entry, Tag } from "../../types/entry";
 import { boardPath } from "./boardPath";
@@ -41,7 +40,6 @@ interface Props {
 
 export function BrowsePanel({ boards, board, tags, entries, browse }: Props) {
   const months = useMemo(() => countMonths(entries), [entries]);
-  const agents = boards.find((candidate) => candidate.slug === board)?.agents ?? [];
   const keepView = browse.view === DEFAULT_VIEW ? "" : `?view=${browse.view}`;
   const sections = boards.map((candidate) => ({
     key: candidate.slug,
@@ -51,21 +49,8 @@ export function BrowsePanel({ boards, board, tags, entries, browse }: Props) {
 
   return (
     <section className="browse-panel">
-      <SectionLine label="Space" sections={sections} current={board}>
-        {agents.length > 0 && (
-          <p className="word-list quiet section-note">
-            <span>with</span>
-            {agents.map((name) => (
-              <Link key={name} to={`/agents?agent=${name}`}>
-                {name}
-              </Link>
-            ))}
-            <Link to={`/agents?board=${board}`}>their log</Link>
-          </p>
-        )}
-      </SectionLine>
+      <SectionLine label="Spaces" sections={sections} current={board} />
       <ControlBand
-        label="View"
         rememberAs="board-filters-open"
         controls={
           <BrowseControls
@@ -88,12 +73,12 @@ export function BrowsePanel({ boards, board, tags, entries, browse }: Props) {
         }
         more={
           <>
-            <LabelRow label="Tags">
+            <PageRow>
               <TagFilter tags={tags} activeTag={browse.tag} onSelect={(name) => browse.setParam("tag", name)} />
-            </LabelRow>
-            <LabelRow label="Time">
+            </PageRow>
+            <PageRow>
               <TimeRangeFilter months={months} range={browse.range} onChange={browse.setRange} />
-            </LabelRow>
+            </PageRow>
           </>
         }
       />
