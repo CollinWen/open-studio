@@ -10,8 +10,9 @@
  *   who   ( /agents/who )  every agent: what it's doing now, its boards,
  *                          when it was last seen
  *
- * More lines load a page at a time; "loading" breathes in the header (or
- * in place of "more") while they come. Adding and removing agents is in the
+ * More lines load a page at a time; "loading" sweeps in the header (or
+ * in place of "more") while they come, and the large studio mark holds the
+ * list until its first lines are in. Adding and removing agents is in the
  * studio (/studio/agents).
  */
 
@@ -21,6 +22,7 @@ import { fetchAgentLog } from "../api/agentLogApi";
 import { fetchAgents } from "../api/agentsApi";
 import { fetchBoards } from "../api/boardsApi";
 import { LabelRow } from "../components/LabelRow";
+import { LoadingMark } from "../components/LoadingMark";
 import { LoadingWord } from "../components/LoadingWord";
 import { SectionLine } from "../components/SectionLine";
 import { SiteFooter } from "../components/SiteFooter";
@@ -96,6 +98,7 @@ export function AgentsPage() {
           <>
             <AgentLogBand agents={knownAgents} boards={boards} filters={filters} />
             <LabelRow wide>
+              {lines === null && <LoadingMark />}
               {lines && <AgentLog lines={lines} narrowed={filters.hasFilters} />}
               {hasMore && !loadingMore && (
                 <button type="button" className="quiet" onClick={loadMore}>
@@ -108,6 +111,7 @@ export function AgentsPage() {
         )}
         {section === "who" && (
           <LabelRow wide>
+            {agents === null && <LoadingMark />}
             <AgentList agents={knownAgents} />
           </LabelRow>
         )}

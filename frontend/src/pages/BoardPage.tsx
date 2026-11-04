@@ -11,8 +11,9 @@
  * entries in whichever view is showing.
  *
  * Entries load a page at a time (useEntryPages): the first pictures show at
- * once and the rest rise in behind them, with "loading" breathing in the
- * header until the last page is in (and "searching" while a search runs). After the owner saves an entry the page
+ * once and the rest rise in behind them. Until the first page is in, the
+ * large studio mark sweeps where the view will be; "loading" (or "searching")
+ * stays in the header until the last page is in. After the owner saves an entry the page
  * reloads quietly. Every choice lives in the URL (useBrowseParams).
  */
 
@@ -22,6 +23,7 @@ import { fetchBoards } from "../api/boardsApi";
 import { searchEntries } from "../api/searchApi";
 import { fetchTags } from "../api/tagsApi";
 import { LabelRow } from "../components/LabelRow";
+import { LoadingMark } from "../components/LoadingMark";
 import { LoadingWord } from "../components/LoadingWord";
 import { SiteFooter } from "../components/SiteFooter";
 import { SiteHeader } from "../components/SiteHeader";
@@ -90,6 +92,7 @@ export function BoardPage() {
           browse={browse}
         />
         <LabelRow wide>
+          {!shown && <LoadingMark />}
           {shown?.length === 0 && <p className="quiet">{query ? "Nothing matches that." : "Nothing here yet."}</p>}
           {shown && view === "sphere" && shown.length > 0 && <SphereView entries={shown} highlight={highlight} />}
           {shown && view === "rows" && (

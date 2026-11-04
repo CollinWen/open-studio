@@ -1,9 +1,9 @@
 /**
- * LoadingWord: a word that breathes slowly while something is on its way
- * ("reading…", "saving, suggesting tags…"), the one sign of waiting, like the
- * site's components/LoadingWord.tsx. With reduced motion it simply stays soft.
+ * LoadingWord: the sign that something is on its way ("reading…", "saving,
+ * suggesting tags…"): the studio mark sweeping beside a soft word, like the
+ * site's components/LoadingWord.tsx. With reduced motion the mark holds still.
  *
- * Used by ShareForm and SetupView.
+ * Used by ShareForm and SetupView. The mark itself is StudioMark.
  */
 
 import SwiftUI
@@ -11,16 +11,10 @@ import SwiftUI
 struct LoadingWord: View {
     let text: String
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var faded = false
-
     var body: some View {
-        Text(text)
-            .foregroundStyle(StudioStyle.inkSoft)
-            .opacity(faded ? 0.35 : 1)
-            .onAppear {
-                guard !reduceMotion else { return }
-                withAnimation(StudioStyle.breathe) { faded = true }
-            }
+        HStack(spacing: StudioStyle.wordGap * 0.45) {
+            StudioMark(isPlaying: true)
+            Text(text).foregroundStyle(StudioStyle.inkSoft)
+        }
     }
 }

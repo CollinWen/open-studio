@@ -72,6 +72,10 @@
   --dot-large: 15px;
   --time-bar-height: calc(1.5 * var(--line));
   --time-handle: 11px;
+  /* The studio mark (components/StudioMark.tsx), by its height: beside a
+     word, and standing in for a view still on its way. */
+  --mark-small: calc(0.6 * var(--line));
+  --mark-large: calc(3 * var(--line));
 }
 
 @media (max-width: 1100px) {
@@ -407,6 +411,15 @@ button:hover {
   display: flex;
   gap: 1em;
   color: var(--ink-soft);
+}
+
+/* On a narrow phone the navigation and the far-right words (a count,
+   "loading", "leave") can't share a line: the far-right words drop below. */
+@media (max-width: 720px) {
+  .site-header .label-row-content {
+    flex-wrap: wrap;
+    row-gap: 0;
+  }
 }
 
 /* The page is at least as tall as the window, and main takes up the slack,
@@ -1264,11 +1277,86 @@ main {
   }
 }
 
-/* Anything on its way ("loading", "searching", "saving…"; components/
-   LoadingWord.tsx): soft ink, breathing slowly. */
+/* The studio mark (components/StudioMark.tsx): squares in the ink color.
+   Playing, each square rests faint, lights decelerating and fades accelerating,
+   one after another from the top-left corner (--mark-order), so a sweep
+   crosses the panel once per --motion-ambient and starts again. */
+.studio-mark {
+  display: inline-block;
+  height: var(--mark-small);
+  width: auto;
+  fill: currentColor;
+  flex: none;
+  /* Square edges stay sharp at small sizes instead of blurring. */
+  shape-rendering: crispEdges;
+}
+
+.studio-mark-large {
+  height: var(--mark-large);
+}
+
+.studio-mark.is-playing rect {
+  opacity: 0.18;
+  animation: mark-light var(--motion-ambient) infinite backwards;
+  animation-delay: calc(var(--mark-order) * var(--motion-ambient) / 14);
+}
+
+@keyframes mark-light {
+  0% {
+    opacity: 0.18;
+    animation-timing-function: var(--ease-enter);
+  }
+  20% {
+    opacity: 1;
+    animation-timing-function: var(--ease-exit);
+  }
+  60%,
+  100% {
+    opacity: 0.18;
+  }
+}
+
+/* Anything small on its way ("loading", "searching", "saving…"; components/
+   LoadingWord.tsx): the mark sweeping in full ink, then the word in soft ink. */
 .loading-word {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
   color: var(--ink-soft);
-  animation: breathe var(--motion-ambient) ease-in-out infinite alternate;
+}
+
+.loading-word .studio-mark {
+  color: var(--ink);
+}
+
+/* A whole view on its way (components/LoadingMark.tsx): the large mark,
+   centred in the space the view will fill. */
+.loading-mark {
+  display: flex;
+  justify-content: center;
+  padding: calc(6 * var(--line)) 0;
+}
+
+@media (max-width: 720px) {
+  .loading-mark {
+    padding: calc(3 * var(--line)) 0;
+  }
+}
+
+/* The footer's mark beside the year; pointing at it plays one sweep. */
+.site-footer-sign {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+}
+
+.site-footer-sign .studio-mark {
+  color: var(--ink);
+}
+
+.site-footer-sign:hover .studio-mark rect {
+  animation: mark-light var(--motion-ambient) 1 backwards;
+  animation-delay: calc(var(--mark-order) * var(--motion-ambient) / 14);
 }
 
 /* A picture stays clear until it has loaded, then fades in whole
@@ -1280,12 +1368,6 @@ main {
 
 .fade-in-image.is-loaded {
   opacity: 1;
-}
-
-@keyframes breathe {
-  to {
-    opacity: 0.35;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1304,7 +1386,10 @@ main {
     animation-direction: reverse;
   }
 
-  .loading-word {
+  /* The mark holds still, every dot lit; the word still says what's happening. */
+  .studio-mark.is-playing rect,
+  .site-footer-sign:hover .studio-mark rect {
     animation: none;
+    opacity: 1;
   }
 }

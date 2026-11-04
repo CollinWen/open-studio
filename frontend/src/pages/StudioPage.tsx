@@ -10,9 +10,10 @@
  *   agents   ( /studio/agents )  add, pause, re-key, remove; which boards
  *
  * This page loads all four lists (for the counts) and reloads them after
- * any change; "loading" breathes in the header until all four are in. ?q= searches entries or tags. Adding and editing an entry
- * happen in the form that opens over the page (features/studio/
- * EntryFormModal.tsx). Linked as "owner" ("studio" once signed in) in the header.
+ * any change; "loading" sweeps in the header until all four are in, and the
+ * large studio mark holds the section until its own list is in. ?q=
+ * searches entries or tags. Adding and editing an entry happen in the form
+ * that opens over the page (features/studio/EntryFormModal.tsx). Linked as "owner" ("studio" once signed in) in the header.
  */
 
 import { useCallback, useEffect, useState } from "react";
@@ -23,6 +24,7 @@ import { fetchEntries } from "../api/entriesApi";
 import { forgetOwnerToken, readOwnerToken } from "../api/ownerToken";
 import { fetchTags } from "../api/tagsApi";
 import { LabelRow } from "../components/LabelRow";
+import { LoadingMark } from "../components/LoadingMark";
 import { LoadingWord } from "../components/LoadingWord";
 import { SectionLine } from "../components/SectionLine";
 import { SiteFooter } from "../components/SiteFooter";
@@ -107,6 +109,7 @@ export function StudioPage() {
         {hasToken && (
           <>
             <SectionLine label="Show" sections={sections} current={section} />
+            {{ entries, boards, tags, agents }[section] === null && <LoadingMark />}
             {section === "entries" && entries && (
               <EntryIndex
                 entries={entries}

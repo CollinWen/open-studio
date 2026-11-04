@@ -1,7 +1,8 @@
 /**
  * EntryPage ( /entry/:id ): one entry on its own, as labeled rows: the wall
  * label (title, kind, date, source, notes), tags, every picture, then
- * related entries. "loading" breathes in the header until both are in.
+ * related entries. "loading" sweeps in the header until both are in, and
+ * the large studio mark holds the page until the entry itself arrives.
  * The owner also sees an Owner row under the title: "edit" opens the entry
  * form over this page (?edit=<id>), and the page reloads after a save.
  */
@@ -11,6 +12,7 @@ import { Link, useParams } from "react-router-dom";
 import { fetchEntry, fetchRelatedEntries } from "../api/entriesApi";
 import { readOwnerToken } from "../api/ownerToken";
 import { LabelRow } from "../components/LabelRow";
+import { LoadingMark } from "../components/LoadingMark";
 import { LoadingWord } from "../components/LoadingWord";
 import { SiteFooter } from "../components/SiteFooter";
 import { SiteHeader } from "../components/SiteHeader";
@@ -49,6 +51,7 @@ export function EntryPage() {
     <>
       <SiteHeader>{!missing && (!entry || !related) && <LoadingWord />}</SiteHeader>
       <main>
+        {!missing && !entry && <LoadingMark />}
         {missing && (
           <LabelRow rule="double" label="Entry">
             <p className="quiet">Nothing here.</p>

@@ -40,10 +40,22 @@ Requests to `/api` and `/media` are passed through to the backend on port 8000
 | `src/features/sketches/` | The sketch page's experiments: a justified contact sheet (`justifyRows`), threads between related entries (`LinkLines`, `relatedLinks`) |
 | `src/features/agents/` | The agents page's pieces: the list of agents (`AgentList`), the log's control band (`AgentLogBand`: search, then agent, board, type behind the caret) with its URL state (`useLogFilters`), the log (`AgentLog`), and `formatTimeAgo` |
 | `src/features/studio/` | The owner's entry form, shown as a sheet over any page (`EntryFormModal`, opened by `?add` / `?edit=<id>`; `entrySavedEvent` tells the page to reload): paste-a-link capture, the essentials first with the rest behind "more", the media list (cover, captions, uploads); plus the boards list (`BoardManager`), the entry list, tag notes (description + importance) and the agents list (`AgentManager`) |
-| `src/components/` | Site-wide pieces that know nothing of our data. The shape every page shares: `LabelRow` (one row of the page grid), `SectionLine` (what you're looking at), `ControlBand` (the shaded controls, with a caret for more), `Ledger` + `LedgerRow` (every list), `SearchField`. Controls: `WordChoice` (a word you pick), `DotChoice` (a size dot), `Icon` (caret, plus). Header and footer. |
+| `src/components/` | Site-wide pieces that know nothing of our data. The shape every page shares: `LabelRow` (one row of the page grid), `SectionLine` (what you're looking at), `ControlBand` (the shaded controls, with a caret for more), `Ledger` + `LedgerRow` (every list), `SearchField`. Controls: `WordChoice` (a word you pick), `DotChoice` (a size dot), `Icon` (caret, plus). The studio mark: `StudioMark` (the logo), `LoadingWord` (the mark sweeping beside a word, in the header and forms), `LoadingMark` (the large mark where a view will appear). Header and footer. |
+| `public/` | Files served as they are: `favicon.svg` (the studio mark) |
 | `src/api/` | Every call to the backend, and the stored owner token |
 | `src/types/` | Data shapes, matching the backend's `schemas.py` files |
 | `src/styles/global.css` | The entire visual style; tokens (colors, type sizes, line unit, gutter, margins) at the top. The typeface comes from `@fontsource-variable/inter`, loaded in `main.tsx` |
+
+## The studio mark
+
+The logo is a small panel of squares: read across it makes a C and a W; on its
+side it looks like a display panel of lit numbers. It is drawn from one
+pattern of rows (`O` a square, `_` a gap), `MARK_PATTERN` in
+`src/components/StudioMark.tsx`. It sits in the footer, is the favicon, and is
+the sign of waiting: while something loads its squares light up in a sweep from
+the top-left corner. To redraw it, change the pattern there, then the copies
+in `public/favicon.svg` and `../ios/Shared/StudioMark.swift`. Its sizes and
+the sweep are under "studio mark" in `global.css`.
 
 Config files (`package.json`, `tsconfig.json`, `vite.config.ts`, `index.html`) are standard Vite + React setup.
 
