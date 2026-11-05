@@ -19,10 +19,12 @@
  *   WordChoice. Tags sit in thin flat ovals (filled when picked); picture
  *   sizes are three dots (DotChoice); the few icons are thin strokes (Icon).
  * Change the look here, through the tokens below, not in components.
- * The paper is a warm off-white; the work supplies the color.
+ * The paper is a warm off-white (a warm near-black in dark mode); the work
+ * supplies the color.
  */
 
 :root {
+  color-scheme: light;
   --paper: #f3f1ec;
   --ink: #141414;
   --ink-soft: rgba(20, 20, 20, 0.52);
@@ -76,6 +78,20 @@
      word, and standing in for a view still on its way. */
   --mark-small: calc(0.6 * var(--line));
   --mark-large: calc(3 * var(--line));
+}
+
+/* Dark: the same page at night. Only the paper, inks and the two accents
+   change; the work is never altered. Applied when <html data-theme="dark">,
+   which components/ThemeChoice.tsx sets from the visitor's pick ("auto"
+   follows the system), and index.html sets before the first paint. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #151412;
+  --ink: #ebe8e1;
+  --ink-soft: rgba(235, 232, 225, 0.55);
+  --ink-faint: rgba(235, 232, 225, 0.2);
+  --accent: #e2593d;
+  --paper-shade: #1f1d1a;
 }
 
 @media (max-width: 1100px) {
@@ -1341,6 +1357,14 @@ main {
   .loading-mark {
     padding: calc(3 * var(--line)) 0;
   }
+}
+
+/* The footer's one line: the about link, and the light/dark pick at the far end. */
+.site-footer-line {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  column-gap: var(--gutter);
 }
 
 /* The footer's mark beside the year; pointing at it plays one sweep. */
