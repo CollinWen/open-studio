@@ -1359,7 +1359,6 @@ main {
   }
 }
 
-/* The footer's mark beside the year; pointing at it plays one sweep. */
 /* The footer's one line: the about link, and the light/dark pick at the far end. */
 .site-footer-line {
   display: flex;
@@ -1368,6 +1367,7 @@ main {
   column-gap: var(--gutter);
 }
 
+/* The footer's mark beside the year; pointing at it plays one sweep. */
 .site-footer-sign {
   display: inline-flex;
   align-items: center;
