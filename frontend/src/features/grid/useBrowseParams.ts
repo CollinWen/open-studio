@@ -3,9 +3,9 @@
  * the URL so any view is a link you can share or come back to:
  *
  *   ?tag=fermentation           highlight one tag
- *   ?from=2023-04&to=2024-09    highlight a span of months (and turn the sphere to it)
+ *   ?from=2023-04&to=2024-09    highlight a span of months
  *   ?q=bread                    search
- *   ?view=rows                  sphere | small | medium | large | rows   (default sphere)
+ *   ?view=rows                  small | medium | large | rows   (default medium)
  *   ?sort=oldest                recent | oldest | title | relevance (default: relevance when searching, else recent)
  *
  * Which board is showing is the page's address itself ("/", "/b/bread").
@@ -16,9 +16,9 @@ import { useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import type { MonthRange } from "./monthRange";
 
-export const VIEWS = ["sphere", "small", "medium", "large", "rows"] as const;
+export const VIEWS = ["small", "medium", "large", "rows"] as const;
 export type View = (typeof VIEWS)[number];
-export const DEFAULT_VIEW: View = "sphere";
+export const DEFAULT_VIEW: View = "medium";
 
 export const SORTS = ["recent", "oldest", "title", "relevance"] as const;
 export type Sort = (typeof SORTS)[number];

@@ -10,8 +10,8 @@
  *   agents   ( /studio/agents )  add, pause, re-key, remove; which boards
  *
  * This page loads all four lists (for the counts) and reloads them after
- * any change; "loading" sweeps in the header until all four are in, and the
- * large studio mark holds the section until its own list is in. ?q=
+ * any change; the large studio mark holds the section until its own list
+ * is in. "leave" (under the section words) forgets the owner token. ?q=
  * searches entries or tags. Adding and editing an entry happen in the form
  * that opens over the page (features/studio/EntryFormModal.tsx). Linked as "owner" ("studio" once signed in) in the header.
  */
@@ -25,7 +25,6 @@ import { forgetOwnerToken, readOwnerToken } from "../api/ownerToken";
 import { fetchTags } from "../api/tagsApi";
 import { LabelRow } from "../components/LabelRow";
 import { LoadingMark } from "../components/LoadingMark";
-import { LoadingWord } from "../components/LoadingWord";
 import { SectionLine } from "../components/SectionLine";
 import { SiteFooter } from "../components/SiteFooter";
 import { SiteHeader } from "../components/SiteHeader";
@@ -83,32 +82,31 @@ export function StudioPage() {
 
   return (
     <>
-      <SiteHeader>
-        {hasToken && [entries, boards, tags, agents].includes(null) && <LoadingWord />}
-        {hasToken && (
-          <button
-            type="button"
-            onClick={() => {
-              forgetOwnerToken();
-              setHasToken(false);
-            }}
-          >
-            leave
-          </button>
-        )}
-      </SiteHeader>
+      <SiteHeader />
       <main>
-        <LabelRow rule="double" label="Studio" className="intro-row">
+        <LabelRow rule="double" className="intro-row">
           <p className="display">The back room.</p>
         </LabelRow>
         {!hasToken && (
-          <LabelRow rule="single" label="Owner">
+          <LabelRow rule="single" label="Owner token">
             <OwnerTokenForm onSaved={() => setHasToken(true)} />
           </LabelRow>
         )}
         {hasToken && (
           <>
-            <SectionLine label="Show" sections={sections} current={section} />
+            <SectionLine label="Studio" sections={sections} current={section}>
+              <p className="word-list quiet section-note">
+                <button
+                  type="button"
+                  onClick={() => {
+                    forgetOwnerToken();
+                    setHasToken(false);
+                  }}
+                >
+                  leave the studio
+                </button>
+              </p>
+            </SectionLine>
             {{ entries, boards, tags, agents }[section] === null && <LoadingMark />}
             {section === "entries" && entries && (
               <EntryIndex

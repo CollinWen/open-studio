@@ -7,6 +7,8 @@
  * view, so a closed band never hides a filter. `children` are lines that
  * are always shown (an "add" form).
  *
+ * `label` names the band for screen readers; it isn't shown.
+ *
  * Whether it's open is remembered in this browser (`rememberAs`): it's how
  * you like the page, not what you're looking at, so it stays out of the URL.
  * Used by BrowsePanel, AgentsPage and StudioPage. Looks: .control-band
@@ -40,8 +42,8 @@ export function ControlBand({ label, controls, more, picked, rememberAs, childre
   };
 
   return (
-    <div className="control-band">
-      <LabelRow label={label}>
+    <div className="control-band" role="group" aria-label={label}>
+      <LabelRow>
         <div className="control-line">
           {controls}
           {more && (

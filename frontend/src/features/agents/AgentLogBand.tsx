@@ -37,7 +37,7 @@ const TYPE_WORDS: Record<LogLineType, string> = {
 export function AgentLogBand({ agents, boards, filters }: Props) {
   const { agent, board, type, query, setFilter, clearFilters, hasFilters } = filters;
 
-  /** One line of pick-one words, "all" first. */
+  /** One line of pick-one words, "all" first, which also says what the line picks. */
   const choices = (name: "agent" | "board" | "type", all: string, options: [string, string][], current: string) => (
     <div className="word-list">
       <WordChoice label={all} active={!current} onPick={() => setFilter(name, "")} />
@@ -77,13 +77,13 @@ export function AgentLogBand({ agents, boards, filters }: Props) {
       }
       more={
         <>
-          <LabelRow label="Agent">
+          <LabelRow>
             {choices("agent", "all agents", agents.map((one) => [one.name, one.name]), agent)}
           </LabelRow>
-          <LabelRow label="Board">
+          <LabelRow>
             {choices("board", "every board", boards.map((one) => [one.slug, one.slug]), board)}
           </LabelRow>
-          <LabelRow label="Type">
+          <LabelRow>
             {choices("type", "everything", LINE_TYPES.map((one) => [one, TYPE_WORDS[one]]), type)}
           </LabelRow>
         </>
