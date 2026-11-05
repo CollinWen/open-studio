@@ -45,7 +45,7 @@ export function useBrowseParams() {
   const defaultSort: Sort = query ? "relevance" : "recent";
   const sort = asOneOf(searchParams.get("sort"), SORTS, defaultSort);
 
-  /** Set some values at once (null removes one). Typing and dragging replace history instead of adding to it. */
+  /** Set some values at once (null removes one). */
   const setParams = (values: Partial<Record<Param, string | null>>) => {
     setSearchParams(
       (current) => {
@@ -56,7 +56,7 @@ export function useBrowseParams() {
         }
         return next;
       },
-      { replace: "q" in values || "from" in values },
+      { replace: continuesAnEdit(searchParams, values) },
     );
   };
 
@@ -66,6 +66,17 @@ export function useBrowseParams() {
   const hasFilters = Boolean(tag || range || query);
 
   return { tag, range, query, view, sort, defaultSort, hasFilters, setParam, setRange, clearFilters };
+}
+
+/**
+ * Typing a search or dragging the Time slider changes the URL many times a
+ * second. The first change adds one Back step (so Back returns to where you
+ * were before you began); the rest replace it. Starting, clearing and every
+ * other pick add a step of their own.
+ */
+function continuesAnEdit(current: URLSearchParams, values: Partial<Record<Param, string | null>>): boolean {
+  const keepsGoing = (name: Param) => name in values && Boolean(values[name]) && current.has(name);
+  return keepsGoing("q") || keepsGoing("from");
 }
 
 function asOneOf<T extends string>(value: string | null, options: readonly T[], fallback: T): T {
