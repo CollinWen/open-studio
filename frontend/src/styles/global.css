@@ -66,6 +66,11 @@
   --arrive-distance: 12px;
   --sheet-drop: 24px;
 
+  /* Keyboard focus: a thin ink outline, the weight of a rule, just off the
+     control. Shown only when moving with the keyboard, never for the mouse. */
+  --focus-ring: 1px solid var(--ink);
+  --focus-offset: 2px;
+
   /* Tag ovals, view dots and the time slider. */
   --oval-padding: 0.55em;
   --oval-gap: 0.4em;
@@ -210,6 +215,14 @@ button {
 
 button {
   cursor: pointer;
+}
+
+/* The reset above hides the browser's focus ring so buttons read as words;
+   this puts one back for keyboard users, the same on links and buttons. */
+a:focus-visible,
+button:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
 }
 
 button:hover {
@@ -656,8 +669,8 @@ button[type="submit"]:disabled {
 }
 
 .time-strip input[type="range"]:focus-visible::-webkit-slider-thumb {
-  outline: 1px solid var(--ink);
-  outline-offset: 2px;
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
 }
 
 .time-years {
