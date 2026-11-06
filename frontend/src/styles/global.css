@@ -31,6 +31,10 @@
   --ink-faint: rgba(20, 20, 20, 0.18);
   --rule: 1px solid var(--ink);
   --rule-faint: 1px solid var(--ink-faint);
+  /* Keyboard focus: a thin ink outline, the weight of a rule, just off the
+     control. Shown only when moving with the keyboard, never for the mouse. */
+  --focus-ring: 1px solid var(--ink);
+  --focus-offset: 2px;
 
   /* The controls' two small accents: a Swiss red for where you are, and a
      slightly shaded paper under the view and filter lines. */
@@ -210,6 +214,14 @@ button {
 
 button {
   cursor: pointer;
+}
+
+/* The reset above hides the browser's focus ring so buttons read as words;
+   this puts one back for keyboard users, the same on links and buttons. */
+a:focus-visible,
+button:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
 }
 
 button:hover {
@@ -656,8 +668,8 @@ button[type="submit"]:disabled {
 }
 
 .time-strip input[type="range"]:focus-visible::-webkit-slider-thumb {
-  outline: 1px solid var(--ink);
-  outline-offset: 2px;
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
 }
 
 .time-years {
