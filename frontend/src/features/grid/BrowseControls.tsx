@@ -1,13 +1,13 @@
 /**
- * BrowseControls: the last line of the browse panel. A search field, then
- * the views (sphere, three dots for small, medium and large pictures, rows),
- * then the sort orders, then "clear" when anything is picked or searched.
- * The current view and sort are underlined (the dots fill in). The sphere
- * arranges entries by time on its own, so sorting is hidden there.
+ * BrowseControls: the first line of the browse panel. A search field, then
+ * the views (three dots for small, medium and large pictures, and three
+ * lines for rows), then the sort orders, then "clear" when anything is
+ * picked or searched. The current view and sort sit on a solid ink square.
  * Sits in the first line of the board's ControlBand (BrowsePanel).
  */
 
-import { DotChoice } from "../../components/DotChoice";
+import { Icon } from "../../components/Icon";
+import { Dot, MarkChoice } from "../../components/MarkChoice";
 import { SearchField } from "../../components/SearchField";
 import { WordChoice } from "../../components/WordChoice";
 import { DEFAULT_VIEW, SORTS, type Sort, type View } from "./useBrowseParams";
@@ -31,33 +31,28 @@ export function BrowseControls({ query, view, sort, defaultSort, hasFilters, onC
   return (
     <div className="browse-controls">
       <SearchField value={query} onSearch={(words) => onChange("q", words || null)} />
-      <span className="word-list view-choice">
-        <WordChoice label="sphere" active={view === "sphere"} onPick={() => pickView("sphere")} />
-        <span className="dot-list">
-          {PICTURE_SIZES.map((size) => (
-            <DotChoice
-              key={size}
-              size={size}
-              label={`${size} pictures`}
-              active={view === size}
-              onPick={() => pickView(size)}
-            />
-          ))}
-        </span>
-        <WordChoice label="rows" active={view === "rows"} onPick={() => pickView("rows")} />
+      <span className="mark-list" role="group" aria-label="view">
+        {PICTURE_SIZES.map((size) => (
+          <MarkChoice
+            key={size}
+            mark={<Dot size={size} />}
+            label={`${size} pictures`}
+            active={view === size}
+            onPick={() => pickView(size)}
+          />
+        ))}
+        <MarkChoice mark={<Icon name="rows" />} label="rows" active={view === "rows"} onPick={() => pickView("rows")} />
       </span>
-      {view !== "sphere" && (
-        <span className="word-list">
-          {sorts.map((option) => (
-            <WordChoice
-              key={option}
-              label={option}
-              active={option === sort}
-              onPick={() => onChange("sort", option === defaultSort ? null : option)}
-            />
-          ))}
-        </span>
-      )}
+      <span className="word-list" role="group" aria-label="sort">
+        {sorts.map((option) => (
+          <WordChoice
+            key={option}
+            label={option}
+            active={option === sort}
+            onPick={() => onChange("sort", option === defaultSort ? null : option)}
+          />
+        ))}
+      </span>
       {hasFilters && (
         <button type="button" className="clear-word" onClick={onClear}>
           clear ×

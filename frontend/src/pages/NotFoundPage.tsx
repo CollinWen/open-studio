@@ -17,7 +17,7 @@ export function NotFoundPage() {
     <>
       <SiteHeader />
       <main>
-        <LabelRow rule="double" label="Not found">
+        <LabelRow rule="double">
           <p className="quiet">
             Nothing here. <Link to="/">Back to the index.</Link>
           </p>

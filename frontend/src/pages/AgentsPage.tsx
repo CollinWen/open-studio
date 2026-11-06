@@ -10,9 +10,9 @@
  *   who   ( /agents/who )  every agent: what it's doing now, its boards,
  *                          when it was last seen
  *
- * More lines load a page at a time; "loading" sweeps in the header (or
- * in place of "more") while they come, and the large studio mark holds the
- * list until its first lines are in. Adding and removing agents is in the
+ * More lines load a page at a time; the small studio mark sweeps in place
+ * of "more" while they come, and the large one holds the list until its
+ * first lines are in. Adding and removing agents is in the
  * studio (/studio/agents).
  */
 
@@ -40,7 +40,7 @@ export function AgentsPage() {
   const section = useParams().section === "who" ? "who" : "log";
   const filters = useLogFilters();
   const { agent, board, type, query } = filters;
-  // null while on its way, so the header can say "loading".
+  // null while on its way, so the large studio mark can hold its place.
   const [agents, setAgents] = useState<Agent[] | null>(null);
   const [boards, setBoards] = useState<Board[]>([]);
   const [lines, setLines] = useState<LogLine[] | null>(null);
@@ -85,15 +85,12 @@ export function AgentsPage() {
 
   return (
     <>
-      <SiteHeader>
-        {knownAgents.length > 0 && `${knownAgents.length} ${knownAgents.length === 1 ? "agent" : "agents"}`}
-        {(section === "log" ? lines === null : agents === null) && <LoadingWord />}
-      </SiteHeader>
+      <SiteHeader />
       <main>
-        <LabelRow rule="double" label="Agents" className="intro-row">
+        <LabelRow rule="double" className="intro-row">
           <p className="display">What the agents are working on.</p>
         </LabelRow>
-        <SectionLine label="Show" sections={sections} current={section} />
+        <SectionLine label="Agents" sections={sections} current={section} />
         {section === "log" && (
           <>
             <AgentLogBand agents={knownAgents} boards={boards} filters={filters} />

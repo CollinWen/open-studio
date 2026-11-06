@@ -3,7 +3,7 @@
  * entries stand out. Picking a tag or a span of months highlights the
  * entries that match both; the rest fade (not hide), so crossovers stay visible.
  *
- * Used by SphereView, EntryGrid and EntryRows. The picks themselves live in
+ * Used by EntryGrid and EntryRows. The picks themselves live in
  * the URL (useBrowseParams).
  */
 

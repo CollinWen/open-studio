@@ -2,9 +2,10 @@
  * Global styles: the whole visual language of the site.
  *
  * Built the way Müller-Brockmann's "Grid Systems" builds a page:
- * - A 12-column grid inside generous margins. Small labels hang in columns
- *   1–3; text starts at column 4, so every page shares one strong left edge.
- *   Pictures span whole columns.
+ * - A 12-column grid inside generous margins. Everything starts on one
+ *   strong left edge (column 1); a row that needs a label carries it as a
+ *   small caption above, not in a column beside it. Pictures span whole
+ *   columns; lists (the Ledger) use the columns as a table.
  * - One line of body text (--line) is the unit for everything vertical, and
  *   the gutter between columns is one line wide too.
  * - One typeface (Inter), few sizes. Hierarchy comes from size, ink strength
@@ -16,8 +17,10 @@
  * - Every page has one shape: a section line, a shaded control band (a
  *   caret opens more), then a ledger (components/SectionLine, ControlBand,
  *   Ledger). Every line of words is a `.word-list`; every pick-one word is a
- *   WordChoice. Tags sit in thin flat ovals (filled when picked); picture
- *   sizes are three dots (DotChoice); the few icons are thin strokes (Icon).
+ *   WordChoice, sitting on a solid ink square when picked (the space you're
+ *   in: an accent square). Tags sit in thin flat ovals (filled when picked);
+ *   picture sizes are three dots and rows three lines, each in a small
+ *   square (MarkChoice); the few icons are thin strokes (Icon).
  * Change the look here, through the tokens below, not in components.
  * The paper is a warm off-white (a warm near-black in dark mode); the work
  * supplies the color.
@@ -66,9 +69,11 @@
   --arrive-distance: 12px;
   --sheet-drop: 24px;
 
-  /* Tag ovals, view dots and the time slider. */
+  /* Picked squares, tag ovals, view marks and the time slider. */
+  --square-padding: 0.4em;
   --oval-padding: 0.55em;
   --oval-gap: 0.4em;
+  --mark-choice: calc(var(--line) + 4px);
   --dot-small: 6px;
   --dot-medium: 10px;
   --dot-large: 15px;
@@ -78,6 +83,10 @@
      word, and standing in for a view still on its way. */
   --mark-small: calc(0.6 * var(--line));
   --mark-large: calc(3 * var(--line));
+  /* The entry form's window: how wide it opens, and the smallest it can be dragged to. */
+  --sheet-width: 720px;
+  --sheet-min-width: 360px;
+  --sheet-min-height: 240px;
 }
 
 /* Dark: the same page at night. Only the paper, inks and the two accents
@@ -136,7 +145,7 @@ a {
    snapping. Only color changes here, so it stays on with reduced motion. */
 a,
 button,
-.dot-choice {
+.mark-choice {
   transition:
     color var(--motion-quick) var(--ease-enter),
     background-color var(--motion-quick) var(--ease-enter),
@@ -217,10 +226,26 @@ button:hover {
   text-underline-offset: 0.18em;
 }
 
-.is-active {
+/* A mode word (a view, a sort, who sees it): a square of paper around the
+   word, shaded when pointed at, solid ink when picked, so the pick reads at
+   a glance. The padding is taken back by the margin, so the words sit where
+   they would without it (the first on the line's edge). */
+.square {
+  padding: 0 var(--square-padding);
+  margin: 0 calc(-1 * var(--square-padding));
+  line-height: var(--line);
+}
+
+.square:hover {
+  text-decoration: none;
+  background: var(--ink-faint);
   color: var(--ink);
-  text-decoration: underline;
-  text-underline-offset: 0.18em;
+}
+
+.square.is-picked,
+.square.is-primary {
+  background: var(--ink);
+  color: var(--paper);
 }
 
 /* A filter you can turn on and off (a tag): the word in a thin flat oval,
@@ -255,20 +280,31 @@ button:hover {
   row-gap: var(--oval-gap);
 }
 
-/* A size picked as a dot (small, medium, large pictures): soft ink until picked. */
-.dot-choice {
-  display: inline-block;
+/* A view picked as a mark (MarkChoice): a dot whose size is the picture
+   size, or the rows icon, in full ink inside a small square. Shaded when
+   pointed at; picked, the square fills with ink and the mark turns paper. */
+.mark-choice {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--mark-choice);
+  height: var(--mark-choice);
+  color: var(--ink);
+}
+
+.mark-choice:hover {
+  background: var(--ink-faint);
+}
+
+.mark-choice.is-picked {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.dot {
+  display: block;
   border-radius: 50%;
-  background: var(--ink-soft);
-  vertical-align: middle;
-}
-
-.dot-choice:hover {
-  background: var(--ink);
-}
-
-.dot-choice.is-picked {
-  background: var(--ink);
+  background: currentColor;
 }
 
 .dot-small {
@@ -286,11 +322,27 @@ button:hover {
   height: var(--dot-large);
 }
 
-.dot-list {
+.mark-choice .icon {
+  width: var(--dot-large);
+  height: var(--dot-large);
+  vertical-align: 0;
+}
+
+.mark-list {
   display: inline-flex;
   align-items: center;
-  gap: var(--oval-gap);
+  gap: 2px;
   align-self: center;
+}
+
+/* Words only screen readers need ("loading" under the large mark). */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 ::placeholder {
@@ -304,9 +356,9 @@ button:hover {
 
 /* ---- Page grid (see components/LabelRow.tsx) ---- */
 
-/* Twelve columns inside the page margins. The label hangs in columns 1–3,
-   the content fills 4–12, and the two share a baseline. The row itself runs
-   edge to edge, so its rule does too. */
+/* Twelve columns inside the page margins. Content starts on column 1, the
+   page's one left edge; a label, when there is one, is a small caption on
+   its own line above. The row itself runs edge to edge, so its rule does too. */
 .label-row {
   position: relative;
   display: grid;
@@ -317,23 +369,19 @@ button:hover {
 }
 
 .label-row-label {
-  grid-column: 1 / span 3;
+  grid-column: 1 / -1;
+  margin-bottom: calc(var(--line) / 4);
   font-size: var(--size-small);
+  line-height: var(--leading-small);
   color: var(--ink-soft);
 }
 
 .label-row-content {
-  grid-column: 4 / -1;
+  grid-column: 1 / -1;
   min-width: 0;
 }
 
-/* Wide rows (the sphere, the grid of pictures) span all twelve columns,
-   under a label that may also run the full width (the active filters). */
-.label-row.is-wide .label-row-label,
-.label-row.is-wide .label-row-content {
-  grid-column: 1 / -1;
-}
-
+/* Wide rows (the grid of pictures, a list) get a line of space above. */
 .label-row.is-wide .label-row-content {
   margin-top: var(--line);
 }
@@ -378,64 +426,40 @@ button:hover {
   overflow: hidden;
 }
 
-/* On phones the label sits on its own line above the content. */
 @media (max-width: 720px) {
-  .label-row-label,
-  .label-row-content {
-    grid-column: 1 / -1;
-  }
-
-  .label-row-label:empty {
-    display: none;
-  }
-
   .intro-row {
     padding-bottom: calc(2 * var(--line));
-  }
-
-  .intro-row .label-row-content {
-    margin-top: calc(var(--line) / 2);
   }
 }
 
 /* ---- Page frame ---- */
 
 .site-header {
-  padding-top: var(--line);
-}
-
-/* The site name: the one place the large size is used. */
-.site-header .label-row-label {
-  font-size: var(--size-large);
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  color: var(--ink);
-}
-
-.site-header .label-row-content {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
-  gap: 1em;
+  align-items: baseline;
+  gap: 0 1em;
+  padding: var(--line) var(--margin) 0;
 }
 
 .site-nav {
   display: flex;
+  align-items: baseline;
   gap: 1em;
 }
 
-.site-header-extra {
-  display: flex;
-  gap: 1em;
-  color: var(--ink-soft);
+/* The site name: the one place the large size is used. */
+.site-name {
+  margin-right: 1em;
+  font-size: var(--size-large);
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
-/* On a narrow phone the navigation and the far-right words (a count,
-   "loading", "leave") can't share a line: the far-right words drop below. */
-@media (max-width: 720px) {
-  .site-header .label-row-content {
-    flex-wrap: wrap;
-    row-gap: 0;
-  }
+.site-name:hover,
+.site-name.active {
+  text-decoration: none;
 }
 
 /* The page is at least as tall as the window, and main takes up the slack,
@@ -459,7 +483,7 @@ main {
 /* ---- The shape every page shares: SectionLine, ControlBand, Icon (components/) ---- */
 
 /* The section line: what you're looking at, as the largest words among the
-   controls, on the paper itself, with the current one in the accent. */
+   controls, on the paper itself; the current one sits on an accent square. */
 .section-row {
   padding-bottom: calc(var(--line) / 2);
 }
@@ -469,15 +493,13 @@ main {
   line-height: var(--line);
 }
 
-.section-line a:hover {
-  color: var(--ink);
+.section-line .square {
+  line-height: calc(1.5 * var(--line));
 }
 
-.section-line .is-active {
-  color: var(--accent);
-  text-decoration: underline;
-  text-underline-offset: 0.18em;
-  text-decoration-thickness: 1px;
+.section-line .is-current {
+  background: var(--accent);
+  color: var(--paper);
 }
 
 .section-count {
@@ -502,10 +524,6 @@ main {
 .control-band .label-row + .label-row,
 .control-band-more {
   margin-top: calc(var(--line) / 2);
-}
-
-.control-band .is-active {
-  text-decoration-color: var(--accent);
 }
 
 /* The band's first line: its controls, then the caret, then what's picked. */
@@ -683,13 +701,14 @@ button[type="submit"]:disabled {
   color: var(--ink);
 }
 
-/* ---- Board views: sphere, grid, rows ---- */
+/* ---- Board views: grid, rows ---- */
 
 /* Search, view, sort and clear, on one line that wraps on phones. */
 .browse-controls {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: center;
+  row-gap: calc(var(--line) / 4);
   column-gap: calc(2 * var(--gutter));
 }
 
@@ -806,75 +825,6 @@ button[type="submit"]:disabled {
   overflow: hidden;
 }
 
-/* ---- Sphere view (see features/grid/SphereView.tsx) ---- */
-
-/* The space the pictures float in: full page width, most of the screen tall
-   (but no taller than it is wide plus a little, so phones don't get empty
-   space above and below). Sideways drags spin it on phones; up and down
-   still scrolls the page. */
-.sphere-view {
-  position: relative;
-  height: clamp(360px, 78vh, calc(100vw + 120px));
-  margin: 0;
-  overflow: hidden;
-  touch-action: pan-y;
-  user-select: none;
-}
-
-/* Each picture is placed and sized every frame by SphereView. */
-.sphere-item {
-  position: absolute;
-  top: 0;
-  left: 0;
-  display: block;
-  will-change: transform;
-  transition: opacity var(--motion-standard) var(--ease-enter);
-}
-
-.sphere-item:hover {
-  text-decoration: none;
-}
-
-.sphere-item img,
-.sphere-item video {
-  display: block;
-  width: 100%;
-  margin: 0;
-  height: auto;
-  pointer-events: none;
-  -webkit-user-drag: none;
-}
-
-/* Entries without a picture float as their title. */
-.sphere-item > span {
-  display: block;
-  font-size: var(--size-small);
-  line-height: var(--leading-small);
-  text-align: center;
-}
-
-/* The title and date that follow the pointer over a picture. */
-.sphere-label {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 20000;
-  width: 220px;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity var(--motion-standard) var(--ease-enter);
-}
-
-.sphere-label.is-visible {
-  opacity: 1;
-}
-
-.sphere-label > span {
-  display: block;
-  font-size: var(--size-small);
-  line-height: var(--leading-small);
-}
-
 /* ---- Sketch page (see pages/SketchPage.tsx; scratch, not on the home page) ---- */
 
 .sketch-controls {
@@ -975,6 +925,43 @@ button[type="submit"]:disabled {
 
 /* ---- Entry page ---- */
 
+/* The wall label's facts (Board, Kind, Date, Source, Added by): one row
+   across the grid, each two columns wide, a small caption over its value. */
+.fact-row {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--gutter);
+  row-gap: calc(var(--line) / 2);
+  margin: 0;
+}
+
+.fact {
+  grid-column: span 2;
+  min-width: 0;
+}
+
+.fact dt {
+  font-size: var(--size-small);
+  line-height: var(--leading-small);
+  color: var(--ink-soft);
+}
+
+.fact dd {
+  margin: 0;
+}
+
+@media (max-width: 1100px) {
+  .fact {
+    grid-column: span 4;
+  }
+}
+
+@media (max-width: 720px) {
+  .fact {
+    grid-column: span 6;
+  }
+}
+
 /* Pictures run down the content column one after another. */
 .media-series {
   display: flex;
@@ -986,7 +973,7 @@ button[type="submit"]:disabled {
   margin: 0;
 }
 
-/* Pictures start on the column 4 edge and fill to the right margin, but a
+/* Pictures start on the left edge and fill to the right margin, but a
    tall one stops at most of the screen's height (its right edge goes ragged). */
 .media-view img,
 .media-view video,
@@ -1047,13 +1034,23 @@ button[type="submit"]:disabled {
   display: flex;
   flex-direction: column;
   gap: calc(var(--line) / 2);
-  max-width: 640px;
+}
+
+/* "add" / "save" and "cancel": a line of room above them. */
+.entry-form-actions {
+  margin-top: calc(var(--line) / 2);
 }
 
 .entry-form input,
 .entry-form textarea {
   width: 100%;
   resize: vertical;
+  border-bottom: var(--rule-faint);
+}
+
+.entry-form input:focus,
+.entry-form textarea:focus {
+  border-bottom: var(--rule);
 }
 
 .entry-form label {
@@ -1089,8 +1086,8 @@ button[type="submit"]:disabled {
 
 /* ---- Ledger: every list of things on the page grid (components/Ledger.tsx) ---- */
 
-/* Each row is the 12-column grid; each cell spans --span columns (the first
-   usually 3, so it hangs where labels do). Rows are ruled by hairlines. */
+/* Each row is the 12-column grid; each cell spans --span columns, so lists
+   line up with the page's columns. Rows are ruled by hairlines. */
 .ledger-row {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
@@ -1195,27 +1192,55 @@ button[type="submit"]:disabled {
 
 /* ---- Entry sheet: the add / edit form over the page (features/studio/EntryFormModal.tsx) ---- */
 
-/* A sheet of paper dropped over the top of the page, edge to edge like the
-   rows, closed off by a double rule. No box, no shadow: the page behind
-   fades back toward paper instead. */
+/* A window of paper in the middle of the screen, edged by a thin rule (no
+   shadow), that you can resize from its bottom-right corner. The page
+   behind fades back toward paper. A thin × closes it from the top corner. */
 .entry-sheet {
   position: fixed;
-  inset: 0 0 auto 0;
-  width: 100%;
-  max-width: none;
-  max-height: 100vh;
-  margin: 0;
-  padding: var(--line) 0 calc(2 * var(--line));
-  overflow-y: auto;
-  border: none;
-  /* While the entry to edit is on its way the sheet itself holds focus; its
-     fields show focus, never the whole sheet. */
+  inset: 0;
+  width: min(var(--sheet-width), calc(100vw - 2 * var(--margin)));
+  min-width: min(var(--sheet-min-width), calc(100vw - 2 * var(--margin)));
+  max-width: calc(100vw - 2 * var(--margin));
+  min-height: var(--sheet-min-height);
+  max-height: calc(100vh - 2 * var(--line));
+  margin: auto;
+  padding: var(--line) calc(2 * var(--gutter)) calc(1.5 * var(--line));
+  overflow: auto;
+  resize: both;
+  border: var(--rule);
+  /* While the entry to edit is on its way the window itself holds focus; its
+     fields show focus, never the whole window. */
   outline: none;
-  /* Two 1px lines, 1px apart: the same double rule as .label-row.is-double. */
-  border-bottom: 3px double var(--ink);
   background: var(--paper);
   color: var(--ink);
   animation: sheet-drop var(--motion-standard) var(--ease-enter) both;
+}
+
+.entry-sheet-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: var(--line);
+}
+
+.entry-sheet-title {
+  margin: 0;
+  font-size: var(--size-small);
+  line-height: var(--leading-small);
+  color: var(--ink-soft);
+}
+
+/* The × sits in the corner, a little larger than other icons. */
+.entry-sheet-close {
+  position: absolute;
+  top: calc(var(--line) / 2);
+  right: calc(var(--line) / 2);
+  padding: calc(var(--line) / 4);
+  font-size: var(--size-large);
+}
+
+.entry-sheet-close:hover {
+  background: var(--ink-faint);
 }
 
 .entry-sheet::backdrop {
@@ -1232,7 +1257,7 @@ button[type="submit"]:disabled {
   animation: backdrop-fade var(--motion-exit) var(--ease-exit) reverse both;
 }
 
-/* The form's lines follow the sheet down, in reading order. */
+/* The form's lines follow the window up, in reading order. */
 .entry-sheet .entry-form > * {
   animation: arrive var(--motion-standard) var(--ease-enter) both;
 }
@@ -1245,14 +1270,14 @@ button[type="submit"]:disabled {
 @keyframes sheet-drop {
   from {
     opacity: 0;
-    transform: translateY(calc(-1 * var(--sheet-drop)));
+    transform: translateY(var(--sheet-drop));
   }
 }
 
 @keyframes sheet-lift {
   to {
     opacity: 0;
-    transform: translateY(calc(-1 * var(--sheet-drop)));
+    transform: translateY(var(--sheet-drop));
   }
 }
 

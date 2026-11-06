@@ -1,9 +1,8 @@
 /**
  * EntryPage ( /entry/:id ): one entry on its own, as labeled rows: the wall
  * label (title, kind, date, source, notes), tags, every picture, then
- * related entries. "loading" sweeps in the header until both are in, and
- * the large studio mark holds the page until the entry itself arrives.
- * The owner also sees an Owner row under the title: "edit" opens the entry
+ * related entries. The large studio mark holds the page until the entry
+ * itself arrives. The owner also sees a line under the title: "edit" opens the entry
  * form over this page (?edit=<id>), and the page reloads after a save.
  */
 
@@ -13,7 +12,6 @@ import { fetchEntry, fetchRelatedEntries } from "../api/entriesApi";
 import { readOwnerToken } from "../api/ownerToken";
 import { LabelRow } from "../components/LabelRow";
 import { LoadingMark } from "../components/LoadingMark";
-import { LoadingWord } from "../components/LoadingWord";
 import { SiteFooter } from "../components/SiteFooter";
 import { SiteHeader } from "../components/SiteHeader";
 import { EntryTags } from "../features/entries/EntryTags";
@@ -26,7 +24,7 @@ import type { Entry } from "../types/entry";
 export function EntryPage() {
   const { id = "" } = useParams();
   const [entry, setEntry] = useState<Entry | null>(null);
-  // null while on its way, so the header can say "loading".
+  // null while on its way.
   const [related, setRelated] = useState<Entry[] | null>(null);
   const [missing, setMissing] = useState(false);
 
@@ -49,11 +47,11 @@ export function EntryPage() {
 
   return (
     <>
-      <SiteHeader>{!missing && (!entry || !related) && <LoadingWord />}</SiteHeader>
+      <SiteHeader />
       <main>
         {!missing && !entry && <LoadingMark />}
         {missing && (
-          <LabelRow rule="double" label="Entry">
+          <LabelRow rule="double">
             <p className="quiet">Nothing here.</p>
           </LabelRow>
         )}
@@ -72,7 +70,7 @@ export function EntryPage() {
             />
             <EntryTags tags={entry.tags} board={entry.board} />
             {entry.media.length > 0 && (
-              <LabelRow rule="double" label="Media">
+              <LabelRow rule="double">
                 <MediaSeries media={entry.media} title={entry.title} />
               </LabelRow>
             )}

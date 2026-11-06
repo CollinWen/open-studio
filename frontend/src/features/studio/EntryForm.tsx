@@ -8,6 +8,9 @@
  * Pasting a link at the top fills in whatever fields are still empty and adds
  * the link's pictures to the media list (see LinkCaptureField).
  *
+ * The last line holds the buttons: "add" (or "save" when editing), a solid
+ * ink square, and "cancel".
+ *
  * Saving can take a few seconds: the backend generates tags and an
  * embedding before it replies.
  */
@@ -116,7 +119,7 @@ export function EntryForm({ editing, boards, defaultBoard, onSaved, onCancel }: 
       )}
 
       {boards.length > 1 && (
-        <p className="word-list">
+        <p className="word-list" role="group" aria-label="board">
           {boards.map((board) => (
             <WordChoice
               key={board.slug}
@@ -128,7 +131,7 @@ export function EntryForm({ editing, boards, defaultBoard, onSaved, onCancel }: 
         </p>
       )}
 
-      <p className="word-list">
+      <p className="word-list" role="group" aria-label="who sees it">
         {VISIBILITIES.map((visibility) => (
           <WordChoice
             key={visibility}
@@ -139,11 +142,11 @@ export function EntryForm({ editing, boards, defaultBoard, onSaved, onCancel }: 
         ))}
       </p>
 
-      <p className="word-list">
-        <button type="submit" disabled={status === SAVING}>
-          save
+      <p className="word-list entry-form-actions">
+        <button type="submit" className="square is-primary" disabled={status === SAVING}>
+          {editing ? "save" : "add"}
         </button>
-        <button type="button" className="quiet" onClick={onCancel}>
+        <button type="button" className="square quiet" onClick={onCancel}>
           cancel
         </button>
         {status === SAVING ? <LoadingWord>{status}</LoadingWord> : <span className="quiet">{status}</span>}
