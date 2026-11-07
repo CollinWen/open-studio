@@ -712,6 +712,12 @@ button[type="submit"]:disabled {
   column-gap: calc(2 * var(--gutter));
 }
 
+/* On a band's first line the controls join that line itself, so on a narrow
+   screen the caret wraps along with them instead of onto a line of its own. */
+.control-line > .browse-controls {
+  display: contents;
+}
+
 .search-field {
   width: 200px;
   max-width: 100%;
