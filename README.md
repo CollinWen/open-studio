@@ -60,6 +60,10 @@ First-time account setup (R2 bucket, Fly volume, Firebase project, DNS) is in
 ([.github/workflows/deploy.yml](.github/workflows/deploy.yml)). It needs three GitHub secrets,
 listed at the top of that file. When you change `deploy.toml`, update the `DEPLOY_TOML` secret too.
 
+**Versions:** each deploy from `main` is tagged with the next version (`v0.1.0`, `v0.1.1`, ...),
+and the site's footer shows the version that's live. To start a new series, push a tag by hand
+(`git tag v0.2.0 && git push origin v0.2.0`); the next deploy counts on from it.
+
 **Changing the data:** when a field is added to a `models.py`, add a step to
 `backend/app/database_migrations.py`. It runs once on the live database at the next deploy,
 right after a snapshot of the database is taken.
