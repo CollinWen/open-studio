@@ -15,7 +15,8 @@
  * search's results), the large studio mark sweeps where the view will be;
  * the board's count appears beside its name once the last page is in.
  * After the owner saves an entry the page reloads quietly. Every choice
- * lives in the URL (useBrowseParams).
+ * lives in the URL (useBrowseParams). An address for a board that doesn't
+ * exist (/b/nope) shows the not-found page instead of an empty board.
  */
 
 import { useEffect, useMemo, useState } from "react";
@@ -35,6 +36,7 @@ import { sortEntries } from "../features/grid/sortEntries";
 import { useBrowseParams } from "../features/grid/useBrowseParams";
 import { useEntryPages } from "../features/grid/useEntryPages";
 import { useOnEntrySaved } from "../features/studio/entrySavedEvent";
+import { NotFoundPage } from "./NotFoundPage";
 import type { Board, Entry, Tag } from "../types/entry";
 
 const HOME_INTRO = "A working collection of things I make and things I'm curious about.";
@@ -44,7 +46,8 @@ export function BoardPage() {
   const browse = useBrowseParams();
   const { tag, range, query, view, sort } = browse;
   const collection = useEntryPages(board);
-  const [boards, setBoards] = useState<Board[]>([]);
+  // Null until the list arrives, so a board isn't called missing before we know.
+  const [boards, setBoards] = useState<Board[] | null>(null);
   const [found, setFound] = useState<Entry[] | null>(null);
   const [tags, setTags] = useState<Tag[]>([]);
   const entries = query ? found : collection.entries;
@@ -64,13 +67,15 @@ export function BoardPage() {
   }, [query, board]);
   useOnEntrySaved(collection.reload);
 
-  const current = boards.find((candidate) => candidate.slug === board);
+  const current = boards?.find((candidate) => candidate.slug === board);
   const activeTag = tags.find((candidate) => candidate.name === tag);
   const boardIntro = board === HOME_BOARD ? HOME_INTRO : current?.description || current?.name;
   const intro = tag ? activeTag?.description || `Everything tagged “${tag}”.` : boardIntro;
   // Kept stable between renders so the views don't redo work on every hover.
   const shown = useMemo(() => entries && sortEntries(entries, sort), [entries, sort]);
   const highlight = useMemo(() => ({ tag, range }), [tag, range]);
+
+  if (boards && !current) return <NotFoundPage />;
 
   return (
     <>
@@ -80,7 +85,7 @@ export function BoardPage() {
           <p className="display">{intro}</p>
         </LabelRow>
         <BrowsePanel
-          boards={boards}
+          boards={boards ?? []}
           board={board}
           tags={tags}
           entries={collection.entries ?? []}
