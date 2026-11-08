@@ -1308,9 +1308,12 @@ button[type="submit"]:disabled {
 /* ---- Arriving and loading ---- */
 
 /* A card or row rising into place as its page of entries arrives. Each new
-   one waits its turn (--arrive-order, set by EntryGrid and EntryRows). */
+   one waits its turn (--arrive-order, set by EntryGrid and EntryRows).
+   Backwards fill only, so once it's done the card holds no animated opacity:
+   with "both", Chrome could leave a card in the grid's first column painted
+   half-faded until the pointer passed over it. */
 .is-arriving {
-  animation: arrive var(--motion-standard) var(--ease-enter) both;
+  animation: arrive var(--motion-standard) var(--ease-enter) backwards;
   animation-delay: calc(var(--arrive-order, 0) * var(--stagger));
 }
 
