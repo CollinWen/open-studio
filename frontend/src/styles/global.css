@@ -1367,7 +1367,7 @@ main {
 .studio-mark.is-playing rect {
   opacity: 0.18;
   animation: mark-light var(--motion-ambient) infinite backwards;
-  animation-delay: calc(var(--mark-order) * var(--motion-ambient) / 14);
+  animation-delay: calc(var(--mark-order) * var(--motion-ambient) / 20);
 }
 
 @keyframes mark-light {
@@ -1433,7 +1433,7 @@ main {
 
 .site-footer-sign:hover .studio-mark rect {
   animation: mark-light var(--motion-ambient) 1 backwards;
-  animation-delay: calc(var(--mark-order) * var(--motion-ambient) / 14);
+  animation-delay: calc(var(--mark-order) * var(--motion-ambient) / 20);
 }
 
 /* A picture stays clear until it has loaded, then fades in whole
