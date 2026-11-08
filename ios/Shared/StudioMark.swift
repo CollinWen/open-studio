@@ -19,7 +19,7 @@ struct StudioMark: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     // "O" is a lit square, "_" an empty place, as on the site.
-    static let pattern = ["_O_O_", "O_O_O", "O_O_O", "_O_O_"]
+    static let pattern = ["_OO_OO_", "O__O__O", "O__O__O", "O__O__O", "_OO_OO_"]
 
     private static let squares: [(x: Int, y: Int)] = pattern.enumerated().flatMap { y, row in
         row.enumerated().compactMap { x, cell -> (x: Int, y: Int)? in cell == "O" ? (x: x, y: y) : nil }
@@ -58,10 +58,10 @@ struct StudioMark: View {
 
     /// Where a square is in its sweep: it lights decelerating over the first fifth
     /// of the period, fades accelerating until three fifths, then rests faint,
-    /// each square a fourteenth of the period after the one before (as the site's
+    /// each square a twentieth of the period after the one before (as the site's
     /// mark-light keyframes).
     private static func opacity(order: Int, time: Double) -> Double {
-        var phase = (time / period - Double(order) / 14).truncatingRemainder(dividingBy: 1)
+        var phase = (time / period - Double(order) / 20).truncatingRemainder(dividingBy: 1)
         if phase < 0 { phase += 1 }
         let lit: Double
         if phase < 0.2 {

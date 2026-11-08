@@ -16,7 +16,7 @@
 import type { CSSProperties } from "react";
 
 // "O" is a lit square, "_" an empty place. Every row the same length.
-export const MARK_PATTERN = ["_O_O_", "O_O_O", "O_O_O", "_O_O_"];
+export const MARK_PATTERN = ["_OO_OO_", "O__O__O", "O__O__O", "O__O__O", "_OO_OO_"];
 
 // A hair over one cell, so squares that share an edge show no seam between them.
 const SQUARE = 1.002;
