@@ -1,5 +1,9 @@
 # Deploy: on every push to main, run the backend tests, then ship the backend
 # (Fly.io) and the site (Firebase) with deploy.py, exactly as a hand deploy would.
+# Each deploy gets the next version number (v0.1.0, v0.1.1, ...): it's built into
+# the site's footer, and pushed as a git tag once the deploy succeeds. To start a
+# new series, push a tag by hand (git tag v0.2.0 && git push origin v0.2.0); the
+# next deploy counts on from it.
 #
 # GitHub secrets it needs (repo → Settings → Secrets and variables → Actions):
 #   DEPLOY_TOML                the whole deploy.toml file   (gh secret set DEPLOY_TOML < deploy.toml)
@@ -15,11 +19,16 @@ on:
 
 concurrency: deploy    # never two deploys at once
 
+permissions:
+  contents: write      # to push the version tag
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # every tag, to find the last version
 
       - uses: actions/setup-python@v5
         with:
@@ -53,7 +62,21 @@ jobs:
           printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/firebase-key.json"
           echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/firebase-key.json" >> "$GITHUB_ENV"
 
+      - name: Pick the next version
+        run: |
+          last=$(git tag --list 'v*.*.*' --sort=-v:refname | head -n 1)
+          if [ -z "$last" ]; then next=v0.1.0
+          else IFS=. read -r major minor patch <<< "${last#v}"; next="v$major.$minor.$((patch + 1))"; fi
+          # A commit that already has a version (a re-run) keeps it.
+          next=$(git tag --points-at HEAD --list 'v*.*.*' --sort=-v:refname | head -n 1 | grep . || echo "$next")
+          git tag "$next" 2>/dev/null || true
+          echo "Deploying $next"
+          echo "STUDIO_VERSION=$next" >> "$GITHUB_ENV"
+
       - name: Deploy
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
         run: python deploy.py
+
+      - name: Push the version tag
+        run: git push origin "$STUDIO_VERSION"
