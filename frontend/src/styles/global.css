@@ -1308,9 +1308,13 @@ button[type="submit"]:disabled {
 /* ---- Arriving and loading ---- */
 
 /* A card or row rising into place as its page of entries arrives. Each new
-   one waits its turn (--arrive-order, set by EntryGrid and EntryRows). */
+   one waits its turn (--arrive-order, set by EntryGrid and EntryRows).
+   It only rises, with no fade of its own (its picture still fades in as it
+   loads): a card fading inside the grid's columns while main fades in too
+   could leave Chrome painting the first card half-faded until the pointer
+   passed over it. Backwards fill, so nothing stays on the card once it's in. */
 .is-arriving {
-  animation: arrive var(--motion-standard) var(--ease-enter) both;
+  animation: rise var(--motion-standard) var(--ease-enter) backwards;
   animation-delay: calc(var(--arrive-order, 0) * var(--stagger));
 }
 
@@ -1332,6 +1336,12 @@ main {
 @keyframes arrive {
   from {
     opacity: 0;
+    transform: translateY(var(--arrive-distance));
+  }
+}
+
+@keyframes rise {
+  from {
     transform: translateY(var(--arrive-distance));
   }
 }
@@ -1441,12 +1451,16 @@ main {
   .entry-sheet,
   .entry-sheet.is-closing,
   .entry-sheet .entry-form > *,
-  .is-arriving,
   main,
   .control-band-more > * {
     animation-name: backdrop-fade;
     animation-duration: var(--motion-quick);
     animation-delay: 0ms;
+  }
+
+  /* Cards don't move; they show with the page's own fade. */
+  .is-arriving {
+    animation: none;
   }
 
   .entry-sheet.is-closing {
