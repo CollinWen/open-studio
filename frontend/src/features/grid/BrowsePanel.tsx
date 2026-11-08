@@ -5,7 +5,7 @@
  *   the boards, as larger words; the one you're in sits on the accent,
  *   with its entry count in brackets. Each is its own page, so spaces never
  *   mix. Switching keeps the view and drops what you'd picked. Under them,
- *   the agents signed on to this board, each linked to its log.
+ *   the agents signed on to this board.
  *   then the band: search, picture sizes / rows, sort, clear; and a caret
  *   that opens the board's tags (each in an oval; pick one to highlight
  *   it) and a slider over the months that have entries.
@@ -16,7 +16,6 @@
  */
 
 import { useMemo } from "react";
-import { Link } from "react-router-dom";
 import { ControlBand } from "../../components/ControlBand";
 import { LabelRow } from "../../components/LabelRow";
 import { SectionLine } from "../../components/SectionLine";
@@ -58,11 +57,8 @@ export function BrowsePanel({ boards, board, tags, entries, count, browse }: Pro
           <p className="word-list quiet section-note">
             <span>with</span>
             {agents.map((name) => (
-              <Link key={name} to={`/agents?agent=${name}`}>
-                {name}
-              </Link>
+              <span key={name}>{name}</span>
             ))}
-            <Link to={`/agents?board=${board}`}>their log</Link>
           </p>
         )}
       </SectionLine>

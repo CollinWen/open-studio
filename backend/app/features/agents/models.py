@@ -32,7 +32,7 @@ class Agent(SQLModel, table=True):
     # One line the agent sets on itself: what it's working on right now.
     status: str = ""
 
-    # The last time it called the studio, so the agents page can say who is around.
+    # The last time it called the studio, so the studio can say who is around.
     last_seen_at: datetime | None = None
 
     created_at: datetime = Field(default_factory=_now)

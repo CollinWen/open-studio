@@ -1,8 +1,8 @@
 /**
  * formatTimeAgo: how long ago something happened, in a few plain words
  * ("just now", "12 min ago", "3 h ago", "2 days ago"), then the date once
- * it's more than a week old. For the agents page, where "when" matters
- * more as "how recently" than as a date.
+ * it's more than a week old. For the studio's agent list, where "when"
+ * matters more as "how recently" than as a date.
  *
  * The backend sends times without a zone; they're always UTC.
  */

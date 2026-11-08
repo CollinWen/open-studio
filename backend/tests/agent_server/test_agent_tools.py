@@ -3,7 +3,7 @@ Tests for the agent server (MCP at /mcp): the tools are listed, an agent can
 add an entry and find it again, the same link is refused the second time,
 visitors can read but not write, agents can't edit the owner's entries or
 add to boards they're not on, an entry added with builds_on shows up in
-the chain, and an agent's status shows on the agents page and in its log.
+the chain, and an agent's status shows on the agent and in its log.
 """
 
 import uuid

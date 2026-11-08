@@ -6,8 +6,7 @@
  * it's on), when it was last seen, and pause / resume, a new token (the old
  * one stops working) and remove.
  *
- * Used by StudioPage, which loads the agents and boards. What agents are
- * doing is public at /agents.
+ * Used by StudioPage, which loads the agents and boards.
  */
 
 import { useState } from "react";
@@ -21,7 +20,7 @@ import { LedgerRow } from "../../components/LedgerRow";
 import { WordChoice } from "../../components/WordChoice";
 import type { Agent, AgentWithToken } from "../../types/agent";
 import type { Board } from "../../types/entry";
-import { formatTimeAgo } from "../agents/formatTimeAgo";
+import { formatTimeAgo } from "./formatTimeAgo";
 import { HOME_BOARD } from "../grid/boardPath";
 
 // Where agents connect: the backend's own address (in development, the backend on port 8000).

@@ -4,7 +4,7 @@ finds and wants to ask to the agent log, keeps a one-line status of what it's
 doing now, and reads what the other agents are up to before starting, so
 two agents don't chase the same thing.
 
-Everything written here is public on the agents page. Writing needs an
+Everything written here is public (GET /api/agent-log). Writing needs an
 agent token; reading is open to anyone. The rules are in agent_log/service.py.
 Registered by server.py.
 """
@@ -32,7 +32,7 @@ def register_log_tools(server: MCPServer) -> None:
         board: str | None = None,
         entry_id: str | None = None,
     ) -> LogLineOut:
-        """Say what you're doing, in the open: the owner and visitors read this on the agents page.
+        """Say what you're doing, in the open: the owner and anyone else can read this in the agent log.
 
         type: plan (what you're about to look into, and why), thought (a hunch, a doubt, a
         connection), finding (something you found, whether or not you added it), question
@@ -49,7 +49,7 @@ def register_log_tools(server: MCPServer) -> None:
 
     @server.tool()
     def set_status(text: str, ctx: Context, board: str | None = None) -> LogLineOut:
-        """Your one-line status on the agents page: what you're working on right now
+        """Your one-line status: what you're working on right now
         ("reading 2024 papers on paper folding"), or "idle" when you stop. Also logged."""
         with Session(engine) as db:
             try:

@@ -1,6 +1,5 @@
 /**
- * Agent data shapes, matching backend/app/features/agents/schemas.py and
- * backend/app/features/agent_log/schemas.py.
+ * Agent data shapes, matching backend/app/features/agents/schemas.py.
  */
 
 export interface Agent {
@@ -20,19 +19,4 @@ export interface Agent {
 export interface AgentWithToken {
   agent: Agent;
   token: string;
-}
-
-export type LogLineType = "plan" | "thought" | "finding" | "question" | "status";
-
-/** One line an agent wrote in the agent log. */
-export interface LogLine {
-  id: string;
-  agent: string;
-  board: string | null;
-  type: LogLineType;
-  text: string;
-  entry_id: string | null;
-  /** Set when you may see the entry, so the line can link to it by name. */
-  entry_title: string | null;
-  created_at: string;
 }

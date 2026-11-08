@@ -1,13 +1,13 @@
 /**
  * SectionLine: the first line of a page's controls, naming what you're
- * looking at, as a line of larger words: the boards on a board page, "log"
- * and "who" on the agents page, the studio's lists. The current one sits on
+ * looking at, as a line of larger words: the boards on a board page, the
+ * studio's lists. The current one sits on
  * a solid square of the accent, in paper-colored type; a count, when given,
  * follows in brackets. Each word is a link, so every section has its own
  * address. `label` is not shown; screen readers hear it as the line's name.
  *
  * Anything passed as children sits under the words (a board's agents).
- * Used by BrowsePanel, AgentsPage and StudioPage. Looks: .section-line.
+ * Used by BrowsePanel and StudioPage. Looks: .section-line.
  */
 
 import type { ReactNode } from "react";

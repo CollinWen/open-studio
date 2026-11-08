@@ -11,7 +11,7 @@
  *
  * Whether it's open is remembered in this browser (`rememberAs`): it's how
  * you like the page, not what you're looking at, so it stays out of the URL.
- * Used by BrowsePanel, AgentsPage and StudioPage. Looks: .control-band
+ * Used by BrowsePanel and StudioPage. Looks: .control-band
  * (the extra filters arrive as .control-band-more).
  */
 
