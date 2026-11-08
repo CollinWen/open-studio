@@ -1,7 +1,8 @@
 /**
  * WordChoice: a row of plain words where you tap one to choose it, inside a
- * WordList so it wraps. The chosen word is in full ink, underlined in the
- * accent; the rest are soft ink. The phone's components/WordChoice.tsx.
+ * WordList so it wraps. The chosen word sits on a solid ink square in
+ * paper-colored type; the rest are soft ink. The phone's
+ * components/WordChoice.tsx (its "square" look).
  *
  * Used by ShareForm for "made by me / inspiration" and the visibility choice.
  */
@@ -18,8 +19,7 @@ struct WordChoice<Option: Hashable>: View {
             ForEach(options, id: \.self) { option in
                 let isPicked = option == selected
                 Button(label(option)) { selected = option }
-                    .foregroundStyle(isPicked ? StudioStyle.ink : StudioStyle.inkSoft)
-                    .underline(isPicked, color: StudioStyle.accent)
+                    .pickSquare(isPicked: isPicked)
                     .accessibilityAddTraits(isPicked ? .isSelected : [])
             }
         }

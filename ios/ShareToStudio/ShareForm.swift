@@ -1,8 +1,9 @@
 /**
  * ShareForm: what you see after choosing "Open Studio" in the share sheet,
  * built the same way as a page on the site: the site name with cancel and
- * save, a double rule, what's being added (its picture and title), the board
- * it goes on as a section line (with the agents signed on to it), one shaded
+ * save (on a solid ink square once there's something to save), a double rule,
+ * what's being added (its picture and title), the board it goes on as a
+ * section line (with the agents signed on to it), one shaded
  * control band (made by me / inspiration, private / unlisted / public, and
  * "builds on" behind the caret), then a note on why it's here.
  * Notes and photos show an editable title instead of a fixed one.
@@ -55,7 +56,7 @@ struct ShareForm: View {
                     focused = nil
                     Task { if await model.save() { onSaved() } }
                 }
-                .foregroundStyle(model.canSave ? StudioStyle.ink : StudioStyle.inkSoft)
+                .pickSquare(isPicked: model.canSave)
                 .disabled(!model.canSave)
             }
         }
@@ -126,13 +127,13 @@ struct ShareForm: View {
                     model.choices.buildsOn = isPicked ? nil : entry.id
                 } label: {
                     HStack(alignment: .firstTextBaseline) {
-                        Text(entry.title).lineLimit(1).underline(isPicked, color: StudioStyle.accent)
+                        Text(entry.title).lineLimit(1)
                         Spacer(minLength: StudioStyle.wordGap)
                         Text(entry.occurredAt.prefix(7)).font(StudioStyle.smallFont)
                     }
                     .contentShape(Rectangle())
                 }
-                .foregroundStyle(isPicked ? StudioStyle.ink : StudioStyle.inkSoft)
+                .pickSquare(isPicked: isPicked)
                 .accessibilityAddTraits(isPicked ? .isSelected : [])
             }
         }

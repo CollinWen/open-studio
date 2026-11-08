@@ -50,8 +50,7 @@ struct SetupView: View {
                 LabelRow(rule: .single) {
                     WordList {
                         Button(saved ? "saved" : "save") { Task { await saveAndCheck() } }
-                            .foregroundStyle(settings.isComplete ? StudioStyle.ink : StudioStyle.inkSoft)
-                            .underline(saved, color: StudioStyle.accent)
+                            .pickSquare(isPicked: settings.isComplete && !saved)
                             .disabled(!settings.isComplete || isChecking)
                         if isChecking {
                             LoadingWord(text: "checking the server…")

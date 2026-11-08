@@ -1,8 +1,8 @@
 /**
  * SectionLine: a line of larger words naming the spaces you can be in, with
- * the current one in the accent and underlined. The phone's
+ * the current one on a solid accent square in paper-colored type. The phone's
  * components/SectionLine.tsx; anything passed as `below` sits under the words
- * (a board's agents).
+ * (a board's agents). `label` isn't shown; VoiceOver reads it as the line's name.
  *
  * Used by ShareForm to pick the board an entry goes to.
  */
@@ -23,18 +23,20 @@ struct SectionLine<Below: View>: View {
     @ViewBuilder var below: () -> Below
 
     var body: some View {
-        LabelRow(label: label, rule: .single) {
+        LabelRow(rule: .single) {
             WordList {
                 ForEach(sections) { section in
                     let isCurrent = section.id == current
                     Button(section.label) { onPick(section.id) }
                         .font(StudioStyle.largeFont)
-                        .foregroundStyle(isCurrent ? StudioStyle.accent : StudioStyle.inkSoft)
-                        .underline(isCurrent, color: StudioStyle.accent)
+                        .padding(.vertical, StudioStyle.line / 4)
+                        .pickSquare(isPicked: isCurrent, fill: StudioStyle.accent)
                         .accessibilityAddTraits(isCurrent ? .isSelected : [])
                 }
             }
             .animation(StudioStyle.quick, value: current)
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel(label)
             below()
         }
     }
