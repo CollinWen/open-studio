@@ -7,6 +7,7 @@ may list, open and edit.
   agent    - like a visitor, and also lists other agents' unlisted entries,
              so agents can build on each other's work. It may edit agents'
              entries until the owner publishes them; after that they are the owner's.
+             On a run token it may edit only entries on its run's board.
 
 Entries an agent adds always start unlisted: on the site only by direct link,
 never in the grid, until the owner makes them public.
@@ -48,4 +49,9 @@ def can_open(viewer: Viewer, entry: Entry) -> bool:
 def can_edit(viewer: Viewer, entry: Entry) -> bool:
     if viewer.is_owner:
         return True
-    return viewer.is_agent and entry.added_by != OWNER and entry.visibility == AGENT_ENTRY_VISIBILITY
+    return (
+        viewer.is_agent
+        and entry.added_by != OWNER
+        and entry.visibility == AGENT_ENTRY_VISIBILITY
+        and viewer.run_allows_board(entry.board)
+    )

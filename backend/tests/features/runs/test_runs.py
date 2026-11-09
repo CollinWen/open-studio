@@ -1,7 +1,7 @@
 """
 Tests for runs: the owner starts a run and gets a kit (token, MCP address,
 prompt, command); the run's token adds only to its own board, records the
-run on what it adds, and stops working when the run is finished or its agent
+run on what it adds, can't edit or link entries on other boards, and stops working when the run is finished or its agent
 paused; a run can't be given outside tools the agent wasn't granted; an
 agent can start runs only for itself, and a run token can't start more.
 """
@@ -121,3 +121,30 @@ def test_only_the_owner_lists_runs_and_others_cannot_see_one(client):
     assert client.get(f"/api/runs/{kit['run']['id']}", headers=SCOUT_HEADERS).status_code == 404
     listed = client.get("/api/runs", params={"agent": name}, headers=OWNER_HEADERS).json()
     assert [run["id"] for run in listed] == [kit["run"]["id"]]
+
+
+
+def _entries_on_two_boards(client) -> tuple[dict, dict, dict]:
+    """A run on AGENT_BOARD, an agent entry on that board, and one on "second"."""
+    _second_board(client)
+    name, agent_headers = _add_agent(client, tools=["web"])
+    mine = client.post("/api/entries", json=_entry(), headers=agent_headers).json()
+    elsewhere = client.post("/api/entries", json=_entry("second"), headers=agent_headers).json()
+    return _start(client, name).json(), mine, elsewhere
+
+
+def test_a_run_cannot_edit_or_link_entries_on_other_boards(client):
+    kit, mine, elsewhere = _entries_on_two_boards(client)
+    edit = client.patch(f"/api/entries/{elsewhere['id']}", json={"title": "x"}, headers=_bearer(kit))
+    assert edit.status_code == 403
+    link = {"builds_on_id": mine["id"], "note": "n"}
+    assert client.post(f"/api/entries/{elsewhere['id']}/builds-on", json=link, headers=_bearer(kit)).status_code == 403
+
+
+def test_a_run_has_full_use_of_its_own_board(client):
+    kit, mine, elsewhere = _entries_on_two_boards(client)
+    assert client.patch(f"/api/entries/{mine['id']}", json={"title": "y"}, headers=_bearer(kit)).status_code == 200
+    # Its entries may point at entries on other boards; only changing those is out of reach.
+    back = {"builds_on_id": elsewhere["id"], "note": "n"}
+    assert client.post(f"/api/entries/{mine['id']}/builds-on", json=back, headers=_bearer(kit)).status_code == 200
+    assert client.get(f"/api/entries/{elsewhere['id']}", headers=_bearer(kit)).status_code == 200
