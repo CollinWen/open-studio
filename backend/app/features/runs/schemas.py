@@ -1,6 +1,7 @@
 """
 Run API shapes: what's sent to start a run, what anyone allowed gets back
-about one, and the kit: everything a harness needs to set an agent to work.
+about one, and the kit: everything any harness needs to set an agent to work,
+plus optional ready-made setups for particular harnesses.
 A run token only goes over the wire once, in the kit.
 """
 
@@ -49,15 +50,25 @@ class RunOut(BaseModel):
     added: list[str]
 
 
+class HarnessSetup(BaseModel):
+    """A ready way to run the kit in one particular harness."""
+
+    # A command that runs the whole task, start to finish.
+    command: str
+    # That harness's names for the tools the run may use.
+    allowed_tools: list[str]
+
+
 class RunKit(BaseModel):
-    """Returned once, when a run starts: hand it to Claude Code, a box, or any MCP client."""
+    """Returned once, when a run starts. Everything outside `setups` works with any
+    harness: send `token` as `Authorization: Bearer <token>` to `mcp_url` (MCP) or
+    `api_url` (plain HTTP), give the model `prompt`, and allow only the run's tools."""
 
     run: RunOut
     token: str
     mcp_url: str
+    api_url: str
     # The run's instructions: the task kind, the owner's brief, its limits.
     prompt: str
-    # Claude Code tools to allow (MCP tools, plus the outside tools it was given).
-    allowed_tools: list[str]
-    # A ready command that runs the whole thing in Claude Code, start to finish.
-    claude_command: str
+    # Optional, by harness name ("claude_code"): ready-made commands. Never needed.
+    setups: dict[str, HarnessSetup]

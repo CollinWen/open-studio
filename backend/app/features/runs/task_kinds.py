@@ -12,8 +12,8 @@ Task kinds (the offerings):
 
 Outside tools are what a run may use beyond the studio. The studio can't
 enforce them itself (it never runs them); they are written into the run's
-token and kit, and the harness that runs the agent (Claude Code, a box)
-allows only those. The studio's own tools are always there. What "github"
+token and kit, and whatever harness runs the agent allows only those
+(harness-specific setups, such as claude_code_setup.py, translate them). The studio's own tools are always there. What "github"
 can reach is really decided by the GitHub credentials the harness holds
 (best: a GitHub App allowed only on new repositories), since "code" gives a
 shell that can run git and gh too.
@@ -25,21 +25,11 @@ SOURCE_TESTS is its short form, for harnesses without skills. Keep them in step.
 
 from dataclasses import dataclass
 
-
-@dataclass(frozen=True)
-class OutsideTool:
-    description: str
-    # The Claude Code tools (permission rules) that give an agent this, for the kit's command.
-    claude_code_tools: tuple[str, ...]
-
-
-OUTSIDE_TOOLS: dict[str, OutsideTool] = {
-    "web": OutsideTool("search the web and read pages", ("WebSearch", "WebFetch")),
-    "code": OutsideTool("write and run code in its own sandbox", ("Bash", "Edit", "Write")),
-    "github": OutsideTool(
-        "create one new GitHub repository and push to it",
-        ("Bash(gh repo create:*)", "Bash(git:*)"),
-    ),
+# Each outside tool, and what it lets a run do.
+OUTSIDE_TOOLS: dict[str, str] = {
+    "web": "search the web and read pages",
+    "code": "write and run code in its own sandbox",
+    "github": "create one new GitHub repository and push to it",
 }
 
 

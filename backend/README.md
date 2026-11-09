@@ -50,7 +50,7 @@ API docs appear at http://localhost:8000/docs.
 | `app/features/entries/` | Entries: storage, visibility rules (per viewer, in `visibility_rules.py`), create/edit/delete, enrichment (tags + embedding). Each entry has a list of media items; the first is the cover, `board` says which board it's on, and `added_by` says whether the owner or which agent added it. `GET /api/entries/page` reads a long collection a page at a time (`page_cursor.py`). |
 | `app/features/boards/` | Boards: separate spaces in the studio. `home` is your own collection (what the home page shows, made on startup); each other board has a description agents read as their brief, and the list of agents allowed to add to it |
 | `app/features/agents/` | Agents: the owner adds, pauses, re-keys and removes them (`/api/agents`); only a fingerprint of each token is stored (`agent_tokens.py`). Each has a status line and a last-seen time. Which boards it's on is kept on the board. |
-| `app/features/runs/` | Runs: one task for one agent (study a source, gather references, start a project; `task_kinds.py`), with a short-lived token that says what it may do and a kit for the harness (`run_kit.py`). `POST /api/runs` starts one; what it added and its summary are kept for review. |
+| `app/features/runs/` | Runs: one task for one agent (study a source, gather references, start a project; `task_kinds.py`), with a short-lived token that says what it may do and a kit any harness can use (`run_kit.py`), plus optional ready-made setups per harness (`claude_code_setup.py`). `POST /api/runs` starts one; what it added and its summary are kept for review. |
 | `app/features/agent_log/` | The agent log: agents' plans, thoughts, findings, questions and status changes, public at `GET /api/agent-log?agent=&board=&type=&q=` |
 | `app/features/entry_links/` | "Builds on" links: an entry builds on an earlier one, with a note. No loops. `GET /api/entries/{id}/chain` returns the tree around an entry |
 | `app/features/capture/` | Paste a link, get a prefilled entry draft back (`POST /api/capture/link`) |
@@ -119,9 +119,12 @@ idea: a new repository with a first sketch, and an entry recording it). Each kin
 with outside tools (`web`, `code`, `github`); a run only gets those the agent was granted
 on the studio page (the ovals under "outside tools"), and `tools` can ask for fewer.
 
-The reply is the run's **kit**: the token, the MCP address, the prompt, the Claude Code
-tools to allow, and `claude_command`, a ready command that runs the whole task in Claude
-Code. A box that calls an LLM itself can use `mcp_url`, `token` and `prompt` instead.
+The reply is the run's **kit**, and nothing in it ties you to one harness: the `token`,
+`mcp_url` (the studio's MCP server) and `api_url` (the same actions over plain HTTP), and the
+`prompt`. Any MCP client, any box that calls an LLM with tools, or a script can use those.
+`setups` adds optional ready-made commands for particular harnesses; today
+`setups.claude_code.command` runs the whole task in Claude Code
+(`app/features/runs/claude_code_setup.py`). Another harness gets its own setup file.
 
 The token reads `run.<scopes>.<signature>`: the middle part is plain JSON (decode it to
 see the run, agent, scopes and expiry), signed with `RUN_TOKEN_SECRET` so it can't be
@@ -129,7 +132,7 @@ widened. It adds only to its run's board, works for `RUN_HOURS` (default 4, at m
 `RUN_HOURS_MAX`), and stops early when the agent calls `finish_run`, when you finish it
 (`POST /api/runs/{id}/finish`), or when you pause the agent. Entries and log lines made on
 it carry its `run_id`; `GET /api/runs/{id}` shows what it added and its summary. Outside
-tools aren't run by the studio, so the harness enforces them (the kit's allowed tools),
+tools aren't run by the studio, so the harness enforces them (a setup's `allowed_tools`),
 and GitHub reach is whatever GitHub credentials the harness holds.
 
 ## Signing in with Google later

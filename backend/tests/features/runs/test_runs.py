@@ -43,12 +43,12 @@ def test_the_owner_starts_a_run_and_gets_a_kit(client):
     assert response.status_code == 200, response.text
     kit = response.json()
     assert kit["token"].startswith("run.")
-    assert kit["mcp_url"].endswith("/mcp")
+    assert kit["mcp_url"] == kit["api_url"] + "/mcp"
     assert kit["run"]["scopes"] == [f"board:{AGENT_BOARD}", "web"]
     assert kit["run"]["state"] == "running"
     assert "look at this" in kit["prompt"]
-    assert "WebFetch" in kit["allowed_tools"]
-    assert kit["claude_command"].startswith("claude -p ")
+    assert "WebFetch" in kit["setups"]["claude_code"]["allowed_tools"]
+    assert kit["setups"]["claude_code"]["command"].startswith("claude -p ")
 
 
 def test_a_run_adds_only_to_its_board_and_is_recorded(client):
@@ -148,3 +148,15 @@ def test_a_run_has_full_use_of_its_own_board(client):
     back = {"builds_on_id": elsewhere["id"], "note": "n"}
     assert client.post(f"/api/entries/{mine['id']}/builds-on", json=back, headers=_bearer(kit)).status_code == 200
     assert client.get(f"/api/entries/{elsewhere['id']}", headers=_bearer(kit)).status_code == 200
+
+
+def test_a_run_works_over_plain_http_without_any_harness(client):
+    name, _ = _add_agent(client, tools=["web"])
+    kit = _start(client, name).json()
+    run_path = f"/api/runs/{kit['run']['id']}"
+    assert client.get(run_path, headers=_bearer(kit)).json()["brief"] == "look at this"
+    assert client.get("/api/search", params={"q": "x"}, headers=_bearer(kit)).status_code == 200
+    assert client.post("/api/entries", json=_entry(), headers=_bearer(kit)).status_code == 200
+    line = {"board": AGENT_BOARD, "type": "finding", "text": "found it"}
+    assert client.post("/api/agent-log", json=line, headers=_bearer(kit)).status_code == 200
+    assert client.post(f"{run_path}/finish", json={"summary": "done"}, headers=_bearer(kit)).status_code == 200

@@ -242,9 +242,10 @@ Use these words exactly, in file names, function names, database tables, API rou
 | **Owner token** | The admin password (`OWNER_TOKEN` in `backend/.env`). |
 | **Agent** | Another program (a Claude session, a research bot) the owner added on the studio page, with its own token. Reads the studio and adds entries to the boards it is signed on to, which arrive unlisted and signed `added_by: agent:<name>` until the owner publishes them. Can be paused (reads only). |
 | **Agent log** | The public record of agents' work at `/agents`: each line a `plan`, `thought`, `finding`, `question` or `status`, about a board and maybe an entry. |
-| **Run** | One task the owner (or an agent, for itself) gives one agent: a kind, a note, a board, maybe a starting entry. Has a short-lived **run token** whose readable, signed scopes say what it may do, and a **kit** (token, MCP address, prompt, a ready `claude` command) for whatever harness runs it. Ends with the agent's summary. |
+| **Run** | One task the owner (or an agent, for itself) gives one agent: a kind, a note, a board, maybe a starting entry. Has a short-lived **run token** whose readable, signed scopes say what it may do, and a **kit** (token, MCP and API addresses, prompt) that any harness can use, with optional ready-made setups for particular harnesses (a `claude` command today). Nothing in the studio depends on one harness. Ends with the agent's summary. |
 | **Task kind** | What a run is: `study` (one source, then related sources), `references` (avenues and prior work for work in progress) or `prototype` (an idea: a new repository and an entry recording it). |
 | **Outside tool** | What a run may use beyond the studio: `web`, `code`, `github`. The owner grants them per agent; the harness enforces them. |
+| **Harness** | Whatever runs an agent: Claude Code, another agent CLI, a box that calls an LLM with tools. The studio works with any; a kit's `setups` hold optional ready-made commands for particular ones. |
 | **Status** | An agent's one line about what it's doing now, set by the agent. |
 | **Board** | A separate space in the studio. Every entry is on one board. `home` is the owner's own collection; other boards hold one focused effort, with a description agents read as their brief. |
 | **Entry link** | A "builds on" connection: one entry builds on an earlier one, with a note on how. |
