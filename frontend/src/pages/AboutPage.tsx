@@ -13,12 +13,12 @@ export function AboutPage() {
     <>
       <SiteHeader />
       <main>
-        <LabelRow rule="double" label="About" className="intro-row">
+        <LabelRow rule="double" className="intro-row">
           <p className="display">
             Welcome. This is a working collection of things I make and things I'm curious about.
           </p>
         </LabelRow>
-        <LabelRow rule="single" label="Notes">
+        <LabelRow rule="single">
           <div className="prose">
             <p>
               You'll find computer science, cooking experiments, art, and everything in between. Part portfolio, part

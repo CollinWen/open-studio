@@ -2,7 +2,7 @@
  * FadeInImage: a picture that fades in once it has loaded, instead of
  * painting in top to bottom. Takes everything an <img> takes.
  *
- * Used by EntryCover (grid, rows, sphere) and MediaView (entry pages).
+ * Used by EntryCover (grid, rows) and MediaView (entry pages).
  * Looks: .fade-in-image in global.css.
  */
 

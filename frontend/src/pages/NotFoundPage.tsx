@@ -3,8 +3,8 @@
  * here and links back to the index, so a mistyped or old link never lands
  * on a blank page.
  *
- * Used by App.tsx as the last route. Missing entries and boards are handled
- * by their own pages.
+ * Used by App.tsx as the last route, and by BoardPage for a board that
+ * doesn't exist. A missing entry is handled by EntryPage.
  */
 
 import { Link } from "react-router-dom";
@@ -17,7 +17,7 @@ export function NotFoundPage() {
     <>
       <SiteHeader />
       <main>
-        <LabelRow rule="double" label="Not found">
+        <LabelRow rule="double">
           <p className="quiet">
             Nothing here. <Link to="/">Back to the index.</Link>
           </p>

@@ -1,9 +1,10 @@
 /**
  * SectionLine: the first line of a page's controls, naming what you're
  * looking at, as a line of larger words: the boards on a board page, "log"
- * and "who" on the agents page, the studio's lists. The current one is
- * underlined in the accent; a count, when given, follows in brackets.
- * Each word is a link, so every section has its own address.
+ * and "who" on the agents page, the studio's lists. The current one sits on
+ * a solid square of the accent, in paper-colored type; a count, when given,
+ * follows in brackets. Each word is a link, so every section has its own
+ * address. `label` is not shown; screen readers hear it as the line's name.
  *
  * Anything passed as children sits under the words (a board's agents).
  * Used by BrowsePanel, AgentsPage and StudioPage. Looks: .section-line.
@@ -29,13 +30,13 @@ interface Props {
 
 export function SectionLine({ label, sections, current, children }: Props) {
   return (
-    <LabelRow rule="single" label={label} className="section-row">
+    <LabelRow rule="single" className="section-row">
       <nav className="word-list section-line" aria-label={label}>
         {sections.map((section) => (
           <Link
             key={section.key}
             to={section.to}
-            className={section.key === current ? "is-active" : "quiet"}
+            className={section.key === current ? "square is-current" : "square quiet"}
             aria-current={section.key === current ? "page" : undefined}
           >
             {section.label}

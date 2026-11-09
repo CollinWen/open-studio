@@ -1,12 +1,16 @@
 /**
- * LabelRow: one row of the 12-column page grid. A quiet label hangs in
- * columns 1–3 ("Tags", "Date"); whatever is passed as children fills columns
- * 4–12. A `wide` row puts its children across all twelve columns, under the
- * label (for the sphere and picture grid).
+ * LabelRow: one row of the 12-column page grid. Its content starts on the
+ * page's one left edge (column 1) and may run across all twelve columns.
+ * A `label`, when there is one ("Tags", "Related"), sits above the content
+ * as a small, quiet caption, like a heading on a Swiss poster; there is no
+ * column of labels hanging beside the content. Most rows need no label:
+ * the content says what it is.
  *
  * `rule` starts a new section with a line above the row: "double" for major
  * breaks (under the header, before the work, before the footer), "single"
- * for minor ones. The grid, spacing and rules live in global.css (.label-row).
+ * for minor ones. A `wide` row (the picture grid, a list) gets a line of
+ * space above its content. The grid, spacing and rules live in global.css
+ * (.label-row).
  */
 
 import type { ReactNode } from "react";
@@ -32,7 +36,7 @@ export function LabelRow({ label, rule, wide = false, className, children }: Pro
 
   return (
     <div className={classes}>
-      <div className="label-row-label">{label}</div>
+      {label && <div className="label-row-label">{label}</div>}
       <div className="label-row-content">{children}</div>
     </div>
   );

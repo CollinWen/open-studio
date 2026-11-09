@@ -3,7 +3,7 @@
  * ("Mar 2021 – Sep 2024", or "all time"), then a strip of thin bars, one
  * per month from the first entry to the last, each as tall as that month is
  * full; two handles pick a span of months. Entries inside it stand out in
- * every view and the sphere turns to face them; the bars outside it fade.
+ * every view; the bars outside it fade.
  * Years are marked underneath; "show all time" lets go of the span. While
  * a handle moves, its place is kept here (the URL catches up a moment later).
  *

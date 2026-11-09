@@ -1,10 +1,11 @@
 /**
- * EntryFormModal: the entry form as a sheet that drops over the current
- * page, so adding or editing never takes you away from what you were
- * looking at. Opens on `?add` or `?edit=<id>` (see useEntryFormParam);
- * Escape, "close" or "cancel" put it away. It drops in and lifts out
- * (.entry-sheet in global.css). While the entry to edit is on its way the
- * sheet says "loading".
+ * EntryFormModal: the entry form in a window in the middle of the screen,
+ * over the current page, so adding or editing never takes you away from
+ * what you were looking at. Opens on `?add` or `?edit=<id>` (see
+ * useEntryFormParam); Escape, the thin × in its top corner or "cancel" put
+ * it away. Drag its bottom-right corner to make it bigger or smaller. It
+ * rises in and sinks out (.entry-sheet in global.css). While the entry to
+ * edit is on its way it says "loading".
  *
  * A new entry goes into the board you were looking at (/b/<slug>, or home)
  * unless you pick another. Mounted once for the whole site in App.tsx, and
@@ -17,7 +18,7 @@ import { useLocation } from "react-router-dom";
 import { fetchBoards } from "../../api/boardsApi";
 import { fetchEntry } from "../../api/entriesApi";
 import { isOwnerSignedIn } from "../../api/ownerSignIn";
-import { LabelRow } from "../../components/LabelRow";
+import { Icon } from "../../components/Icon";
 import { LoadingWord } from "../../components/LoadingWord";
 import type { Board, Entry } from "../../types/entry";
 import { HOME_BOARD } from "../grid/boardPath";
@@ -78,34 +79,25 @@ export function EntryFormModal() {
         closeEntryForm();
       }}
     >
-      {isOpen && !shown && (
-        <LabelRow label="Edit">
-          <LoadingWord />
-        </LabelRow>
-      )}
+      <div className="entry-sheet-top">
+        <p className="entry-sheet-title">{shown?.entry || editId ? "Edit entry" : "Add an entry"}</p>
+        <button type="button" className="icon-button entry-sheet-close" aria-label="close" onClick={closeEntryForm}>
+          <Icon name="close" />
+        </button>
+      </div>
+      {isOpen && !shown && <LoadingWord />}
       {shown && (
-        <LabelRow
-          label={
-            <p className="word-list">
-              <span>{shown.entry ? "Edit" : "Add"}</span>
-              <button type="button" className="quiet" onClick={closeEntryForm}>
-                close
-              </button>
-            </p>
-          }
-        >
-          <EntryForm
-            key={shown.entry?.id ?? "new"}
-            editing={shown.entry}
-            boards={boards}
-            defaultBoard={pageBoard}
-            onSaved={() => {
-              announceEntrySaved();
-              closeEntryForm();
-            }}
-            onCancel={closeEntryForm}
-          />
-        </LabelRow>
+        <EntryForm
+          key={shown.entry?.id ?? "new"}
+          editing={shown.entry}
+          boards={boards}
+          defaultBoard={pageBoard}
+          onSaved={() => {
+            announceEntrySaved();
+            closeEntryForm();
+          }}
+          onCancel={closeEntryForm}
+        />
       )}
     </dialog>
   );

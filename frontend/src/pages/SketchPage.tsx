@@ -62,7 +62,7 @@ export function SketchPage() {
 
   return (
     <>
-      <SiteHeader>sketch</SiteHeader>
+      <SiteHeader />
       <div className="sketch-controls">
         <Choices options={SKETCHES} current={sketch} onPick={(value) => choose("sketch", value)} />
         <Choices options={Object.keys(ROW_HEIGHTS)} current={size} onPick={(value) => choose("size", value)} />

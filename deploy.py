@@ -7,6 +7,8 @@ Deploy: reads every setting from deploy.toml and ships the site.
   python deploy.py secrets    Fly secrets only: sends the settings now (restarts a running backend)
 
 Run by hand, or by .github/workflows/deploy.yml on every push to main.
+The site is built with its version (the git tag, e.g. v0.1.4) for the footer;
+a hand deploy between tags reads like v0.1.4-2-gabc1234.
 The backend's settings are listed in backend/app/config.py; the setup steps
 are in backend/README.md and frontend/README.md.
 """
@@ -94,8 +96,18 @@ def send_fly_secrets(config: dict, stage: bool) -> None:
 def deploy_frontend(config: dict) -> None:
     api_url = f"https://api.{config['site']['domain']}"
     # Vite bakes VITE_ variables from the environment into the build.
-    run(["npm", "run", "build"], cwd="frontend", env={"VITE_API_URL": api_url})
+    build_settings = {"VITE_API_URL": api_url, "VITE_STUDIO_VERSION": read_version()}
+    run(["npm", "run", "build"], cwd="frontend", env=build_settings)
     run(["firebase", "deploy", "--only", "hosting", "--project", config["firebase"]["project"]], cwd="frontend")
+
+
+def read_version() -> str:
+    """The version being deployed: the newest tag, plus how far past it this commit is."""
+    described = subprocess.run(
+        ["git", "describe", "--tags", "--match", "v*", "--always", "--dirty"],
+        cwd=ROOT, capture_output=True, text=True,
+    )
+    return described.stdout.strip() or "dev"
 
 
 def run(command: list[str], cwd: str, stdin: str | None = None, env: dict | None = None) -> None:

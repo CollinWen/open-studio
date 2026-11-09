@@ -1,22 +1,21 @@
 /**
- * SiteHeader: the top row of every page. My name sits in the label column;
- * the words of navigation (index, agents, about, owner) start the content
- * column. "owner" goes to the studio page, where the owner signs in; once
- * signed in it reads "studio". Anything passed as
- * children sits on the far right (an entry count, "loading").
+ * SiteHeader: the top line of every page. On the left, my name and the
+ * words of navigation (index, about); on the far right, the way into the
+ * studio: "owner" goes to the studio page, where the owner signs in; once
+ * signed in it reads "studio", with a plus beside it.
  *
- * When the owner is signed in (api/ownerSignIn.ts), a plus (add an entry) joins the
- * navigation words. It adds `?add` to the current address, which opens the entry form
- * over whatever page you're on (see features/studio/EntryFormModal.tsx).
+ * The plus (add an entry) adds `?add` to the current address, which opens
+ * the entry form over whatever page you're on
+ * (see features/studio/EntryFormModal.tsx).
+ * Not here: counts and loading. A board's count sits beside its name in the
+ * section line; a view on its way shows the studio mark where it will be.
  */
 
-import type { ReactNode } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { isOwnerSignedIn } from "../api/ownerSignIn";
 import { Icon } from "./Icon";
-import { LabelRow } from "./LabelRow";
 
-export function SiteHeader({ children }: { children?: ReactNode }) {
+export function SiteHeader() {
   const isOwner = isOwnerSignedIn();
   const location = useLocation();
   const withAdd = new URLSearchParams(location.search);
@@ -25,22 +24,23 @@ export function SiteHeader({ children }: { children?: ReactNode }) {
 
   return (
     <header className="site-header">
-      <LabelRow label={<Link to="/">Collin Wen</Link>}>
-        <nav className="site-nav">
-          <NavLink to="/" end>
-            index
-          </NavLink>
-          <NavLink to="/agents">agents</NavLink>
-          <NavLink to="/about">about</NavLink>
-          <NavLink to="/studio">{isOwner ? "studio" : "owner"}</NavLink>
-          {isOwner && (
-            <Link to={{ search: withAdd.toString() }} className="icon-button" aria-label="add an entry">
-              <Icon name="plus" />
-            </Link>
-          )}
-        </nav>
-        <span className="site-header-extra">{children}</span>
-      </LabelRow>
+      <nav className="site-nav">
+        <Link to="/" className="site-name">
+          Collin Wen
+        </Link>
+        <NavLink to="/" end>
+          index
+        </NavLink>
+        <NavLink to="/about">about</NavLink>
+      </nav>
+      <nav className="site-nav" aria-label="studio">
+        <NavLink to="/studio">{isOwner ? "studio" : "owner"}</NavLink>
+        {isOwner && (
+          <Link to={{ search: withAdd.toString() }} className="icon-button" aria-label="add an entry">
+            <Icon name="plus" />
+          </Link>
+        )}
+      </nav>
     </header>
   );
 }
