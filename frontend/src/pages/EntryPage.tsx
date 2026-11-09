@@ -10,7 +10,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { fetchEntry, fetchRelatedEntries } from "../api/entriesApi";
-import { readOwnerToken } from "../api/ownerToken";
+import { isOwnerSignedIn } from "../api/ownerSignIn";
 import { LabelRow } from "../components/LabelRow";
 import { LoadingMark } from "../components/LoadingMark";
 import { LoadingWord } from "../components/LoadingWord";
@@ -62,7 +62,7 @@ export function EntryPage() {
             <WallLabel
               entry={entry}
               ownerActions={
-                readOwnerToken() && (
+                isOwnerSignedIn() && (
                   <p className="word-list">
                     <Link to={`?edit=${entry.id}`}>edit</Link>
                     <span className="quiet">{entry.visibility}</span>

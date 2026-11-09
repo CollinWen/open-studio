@@ -63,11 +63,12 @@ open-studio/
 │   │   ├── config.py         Every setting read from backend/.env
 │   │   ├── database.py       Opens the database
 │   │   ├── database_migrations.py  Changes to existing tables (new fields), run once each on startup
-│   │   ├── auth/             Who is asking (visitor, agent, owner) + agents' write limit
+│   │   ├── auth/             Who is asking (visitor, agent, owner), run tokens + agents' write limit
 │   │   ├── features/
 │   │   │   ├── boards/       Boards: separate spaces, each with a brief and the agents signed on to it
-│   │   │   ├── agents/       Agents: the owner adds, pauses, re-keys and removes them; their status and last seen
+│   │   │   ├── agents/       Agents: the owner adds, pauses, re-keys and removes them and grants outside tools; their status and last seen
 │   │   │   ├── agent_log/    The public agent log: what agents plan, think, find and ask
+│   │   │   ├── runs/         Runs: one task for one agent (study, references, prototype), its short-lived token, kit and record
 │   │   │   ├── entries/      Entries: storage, visibility per viewer, CRUD, pages, enrichment (tags + embedding)
 │   │   │   ├── entry_links/  "Builds on" links between entries, and the chain around an entry
 │   │   │   ├── capture/      Paste a link → prefilled entry draft
@@ -75,7 +76,7 @@ open-studio/
 │   │   │   ├── related/      Closest entries by meaning (shared tags as fallback)
 │   │   │   ├── search/       Search by meaning (embeddings) + plain word matches
 │   │   │   └── media/        Image/video upload
-│   │   ├── agent_server/     The studio as an MCP server (/mcp) for agents: board, read, write, chain and log tools
+│   │   ├── agent_server/     The studio as an MCP server (/mcp) for agents: board, read, write, chain, log and run tools
 │   │   └── integrations/     OpenRouter (LLM, embeddings), file storage. One file each.
 │   │       └── link_readers/ One reader per site (YouTube, Google Drive, GitHub, Instagram, X) + a general webpage reader
 │   ├── scripts/              One-off tools run by hand (e.g. wipe local data and seed ~200 demo entries on five boards, with chains and two demo agents)
@@ -99,7 +100,9 @@ open-studio/
 │       ├── types/            Shared data shapes, matching the backend schemas
 │       └── styles/           global.css: the entire visual style
 │
-├── skills/open-studio/       SKILL.md: how an agent researches for and adds to a studio over MCP
+├── skills/                   Skills for agents, one folder each
+│   ├── open-studio/          SKILL.md: how an agent researches for and adds to a studio over MCP, on its own or on a run
+│   └── finding-sources/      SKILL.md: how to find and judge sources worth the owner's time (credibility, novelty, execution, value)
 │
 └── ios/                      iPhone share-sheet extension + one-screen setup app (Swift)
     ├── README.md             How to build it on a Mac and get it onto a phone
@@ -239,6 +242,9 @@ Use these words exactly, in file names, function names, database tables, API rou
 | **Owner token** | The admin password (`OWNER_TOKEN` in `backend/.env`). |
 | **Agent** | Another program (a Claude session, a research bot) the owner added on the studio page, with its own token. Reads the studio and adds entries to the boards it is signed on to, which arrive unlisted and signed `added_by: agent:<name>` until the owner publishes them. Can be paused (reads only). |
 | **Agent log** | The public record of agents' work at `/agents`: each line a `plan`, `thought`, `finding`, `question` or `status`, about a board and maybe an entry. |
+| **Run** | One task the owner (or an agent, for itself) gives one agent: a kind, a note, a board, maybe a starting entry. Has a short-lived **run token** whose readable, signed scopes say what it may do, and a **kit** (token, MCP address, prompt, a ready `claude` command) for whatever harness runs it. Ends with the agent's summary. |
+| **Task kind** | What a run is: `study` (one source, then related sources), `references` (avenues and prior work for work in progress) or `prototype` (an idea: a new repository and an entry recording it). |
+| **Outside tool** | What a run may use beyond the studio: `web`, `code`, `github`. The owner grants them per agent; the harness enforces them. |
 | **Status** | An agent's one line about what it's doing now, set by the agent. |
 | **Board** | A separate space in the studio. Every entry is on one board. `home` is the owner's own collection; other boards hold one focused effort, with a description agents read as their brief. |
 | **Entry link** | A "builds on" connection: one entry builds on an earlier one, with a note on how. |

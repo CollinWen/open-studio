@@ -46,7 +46,7 @@ def add_line(db: Session, viewer: Viewer, data: LogLineCreate) -> LogLineOut:
     if not record_agent_log_line(viewer.agent_name):
         raise LogLimitError("Hourly log limit reached for this agent")
 
-    line = AgentLogLine(agent=viewer.agent_name, **data.model_dump())
+    line = AgentLogLine(agent=viewer.agent_name, run_id=viewer.run_id or None, **data.model_dump())
     db.add(line)
     db.commit()
     db.refresh(line)

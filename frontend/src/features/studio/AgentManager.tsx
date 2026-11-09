@@ -3,7 +3,8 @@
  * what it's for, a plus); its token is then shown once in the band, with
  * the line that connects a Claude session, and never again. Below, a Ledger
  * of every agent: the boards it may add to (an oval per board, filled when
- * it's on), when it was last seen, and pause / resume, a new token (the old
+ * it's on), the outside tools its runs may be given (web, code, github; an
+ * oval each, filled when granted), when it was last seen, and pause / resume, a new token (the old
  * one stops working) and remove.
  *
  * Used by StudioPage, which loads the agents and boards. What agents are
@@ -19,7 +20,7 @@ import { LabelRow } from "../../components/LabelRow";
 import { Ledger } from "../../components/Ledger";
 import { LedgerRow } from "../../components/LedgerRow";
 import { WordChoice } from "../../components/WordChoice";
-import type { Agent, AgentWithToken } from "../../types/agent";
+import { OUTSIDE_TOOLS, type Agent, type AgentWithToken, type OutsideTool } from "../../types/agent";
 import type { Board } from "../../types/entry";
 import { formatTimeAgo } from "../agents/formatTimeAgo";
 import { HOME_BOARD } from "../grid/boardPath";
@@ -35,7 +36,8 @@ interface Props {
 
 const COLUMNS = [
   { label: "agent", span: 3 },
-  { label: "boards it may add to", span: 5 },
+  { label: "boards it may add to", span: 3 },
+  { label: "outside tools", span: 2 },
   { label: "last seen", span: 2 },
   { label: "manage", span: 2 },
 ];
@@ -57,6 +59,11 @@ export function AgentManager({ agents, boards, onChanged }: Props) {
     const on = board.agents.includes(agent.name);
     const next = on ? board.agents.filter((one) => one !== agent.name) : [...board.agents, agent.name];
     act(() => setBoardAgents(board.slug, next));
+  };
+
+  const toggleTool = (agent: Agent, tool: OutsideTool) => {
+    const next = agent.tools.includes(tool) ? agent.tools.filter((one) => one !== tool) : [...agent.tools, tool];
+    act(() => updateAgent(agent.name, { tools: next }));
   };
 
   const otherBoards = boards.filter((board) => board.slug !== HOME_BOARD);
@@ -118,6 +125,17 @@ export function AgentManager({ agents, boards, onChanged }: Props) {
                       look="oval"
                       active={board.agents.includes(agent.name)}
                       onPick={() => toggleBoard(agent, board)}
+                    />
+                  ))}
+                </span>,
+                <span className="word-list is-ovals">
+                  {OUTSIDE_TOOLS.map((tool) => (
+                    <WordChoice
+                      key={tool}
+                      label={tool}
+                      look="oval"
+                      active={agent.tools.includes(tool)}
+                      onPick={() => toggleTool(agent, tool)}
                     />
                   ))}
                 </span>,

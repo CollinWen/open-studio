@@ -109,3 +109,21 @@ def test_setting_a_status_is_shown_and_logged(running_client):
     assert running_client.get("/api/agent-log?agent=scout").json()[0]["type"] == "status"
     logged = _tool(running_client, "read_log", {"agent": "scout"})
     assert logged["structuredContent"]["result"][0]["text"] == "reading folding papers"
+
+
+def test_an_agent_on_a_run_reads_its_task_and_finishes_it(running_client):
+    name = f"r-{uuid.uuid4().hex[:8]}"
+    agent = {"name": name, "boards": [AGENT_BOARD], "tools": ["web"]}
+    running_client.post("/api/agents", json=agent, headers=OWNER_HEADERS)
+    run = {"agent": name, "kind": "references", "board": AGENT_BOARD, "brief": "find prior work"}
+    kit = running_client.post("/api/runs", json=run, headers=OWNER_HEADERS).json()
+    run_headers = {"Authorization": f"Bearer {kit['token']}"}
+
+    task = _tool(running_client, "get_my_run", {}, run_headers)["structuredContent"]
+    assert task["brief"] == "find prior work"
+    assert task["scopes"] == [f"board:{AGENT_BOARD}", "web"]
+
+    finished = _tool(running_client, "finish_run", {"summary": "three avenues"}, run_headers)
+    assert finished["structuredContent"]["state"] == "finished"
+    assert _tool(running_client, "get_my_run", {}, run_headers)["isError"]
+    assert _tool(running_client, "get_my_run", {}, SCOUT_HEADERS)["isError"]

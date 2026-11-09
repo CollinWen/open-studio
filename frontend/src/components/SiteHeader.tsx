@@ -5,19 +5,19 @@
  * signed in it reads "studio". Anything passed as
  * children sits on the far right (an entry count, "loading").
  *
- * When this browser holds the owner token, a plus (add an entry) joins the
+ * When the owner is signed in (api/ownerSignIn.ts), a plus (add an entry) joins the
  * navigation words. It adds `?add` to the current address, which opens the entry form
  * over whatever page you're on (see features/studio/EntryFormModal.tsx).
  */
 
 import type { ReactNode } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
-import { readOwnerToken } from "../api/ownerToken";
+import { isOwnerSignedIn } from "../api/ownerSignIn";
 import { Icon } from "./Icon";
 import { LabelRow } from "./LabelRow";
 
 export function SiteHeader({ children }: { children?: ReactNode }) {
-  const isOwner = Boolean(readOwnerToken());
+  const isOwner = isOwnerSignedIn();
   const location = useLocation();
   const withAdd = new URLSearchParams(location.search);
   withAdd.delete("edit");

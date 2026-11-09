@@ -42,7 +42,7 @@ Requests to `/api` and `/media` are passed through to the backend on port 8000
 | `src/features/studio/` | The owner's entry form, shown as a sheet over any page (`EntryFormModal`, opened by `?add` / `?edit=<id>`; `entrySavedEvent` tells the page to reload): paste-a-link capture, the essentials first with the rest behind "more", the media list (cover, captions, uploads); plus the boards list (`BoardManager`), the entry list, tag notes (description + importance) and the agents list (`AgentManager`) |
 | `src/components/` | Site-wide pieces that know nothing of our data. The shape every page shares: `LabelRow` (one row of the page grid), `SectionLine` (what you're looking at), `ControlBand` (the shaded controls, with a caret for more), `Ledger` + `LedgerRow` (every list), `SearchField`. Controls: `WordChoice` (a word you pick), `DotChoice` (a size dot), `Icon` (caret, plus), `ThemeChoice` (auto · light · dark in the footer, kept in the browser). The studio mark: `StudioMark` (the logo), `LoadingWord` (the mark sweeping beside a word, in the header and forms), `LoadingMark` (the large mark where a view will appear). Header and footer. |
 | `public/` | Files served as they are: `favicon.svg` (the studio mark) |
-| `src/api/` | Every call to the backend, and the stored owner token |
+| `src/api/` | Every call to the backend, and the owner's sign-in (`ownerSignIn.ts`: the password today, the one file to change for Google sign-in) |
 | `src/types/` | Data shapes, matching the backend's `schemas.py` files |
 | `src/styles/global.css` | The entire visual style; tokens (colors, type sizes, line unit, gutter, margins) at the top. The typeface comes from `@fontsource-variable/inter`, loaded in `main.tsx` |
 

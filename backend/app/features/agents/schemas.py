@@ -7,6 +7,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
+from app.features.runs.schemas import OutsideToolName
+
 # Lowercase letters, digits and dashes, like a board's slug.
 NAME_PATTERN = r"^[a-z0-9][a-z0-9-]{0,39}$"
 
@@ -16,6 +18,8 @@ class AgentCreate(BaseModel):
     description: str = ""
     # Boards it may add to from the start; changed later on each board.
     boards: list[str] = []
+    # Outside tools its runs may be given.
+    tools: list[OutsideToolName] = []
 
 
 class AgentUpdate(BaseModel):
@@ -23,6 +27,7 @@ class AgentUpdate(BaseModel):
 
     description: str | None = None
     active: bool | None = None
+    tools: list[OutsideToolName] | None = None
 
 
 class AgentOut(BaseModel):
@@ -30,6 +35,8 @@ class AgentOut(BaseModel):
     description: str
     active: bool
     status: str
+    # Outside tools its runs may be given.
+    tools: list[str]
     last_seen_at: datetime | None
     created_at: datetime
     # Boards it's signed on to (from each board's agents list).

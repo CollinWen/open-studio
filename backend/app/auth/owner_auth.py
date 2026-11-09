@@ -2,8 +2,14 @@
 Owner auth: decides whether a request comes from the site's owner.
 
 This is a single-owner site. The owner proves who they are by sending the
-OWNER_TOKEN from backend/.env as a Bearer token. Visitors never need to sign in.
-Agents have their own tokens; see auth/viewer.py.
+OWNER_TOKEN from backend/.env (the admin password) as a Bearer token.
+Visitors never need to sign in. Agents have their own tokens; see auth/viewer.py.
+
+Every part of the backend asks is_owner, so this is the one place to change
+to sign in with Google instead: have is_owner also accept a Firebase ID token
+for the owner's Google account (checked against Google's public keys, e.g.
+with the firebase-admin package), and keep the password for scripts, deploys
+and the iOS app. The browser side is frontend/src/api/ownerSignIn.ts.
 """
 
 import secrets

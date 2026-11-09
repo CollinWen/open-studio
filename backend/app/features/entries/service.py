@@ -5,11 +5,11 @@ for each kind of viewer (visitor, agent, owner).
 Who can see and edit what lives in entries/visibility_rules.py. Every entry is
 on one board; an agent may only add to (or move entries onto) boards it is
 signed on to (boards/service.py). Entries added by an agent are recorded with
-its name and start unlisted. An agent can't add a second entry for a link
+its name (and the run it was on, if any) and start unlisted. An agent can't add a second entry for a link
 that is already in the studio; it gets the existing one back instead.
 
 Long collections can be read a page at a time (list_entry_page). Other
-features (related, search, tags, entry_links, agent_server) read entries
+features (related, search, tags, entry_links, runs, agent_server) read entries
 through this file, never through the database directly.
 """
 
@@ -95,7 +95,7 @@ def get_entry(db: Session, entry_id: str, viewer: Viewer) -> Entry | None:
 
 def create_entry(db: Session, data: EntryCreate, viewer: Viewer) -> Entry:
     _check_can_add_to_board(db, viewer, data.board)
-    entry = Entry(**data.model_dump(exclude_none=True), added_by=viewer.added_by)
+    entry = Entry(**data.model_dump(exclude_none=True), added_by=viewer.added_by, run_id=viewer.run_id or None)
     if viewer.is_agent:
         entry.visibility = AGENT_ENTRY_VISIBILITY
         existing = _find_by_source_url(db, entry.source_url)
@@ -106,6 +106,12 @@ def create_entry(db: Session, data: EntryCreate, viewer: Viewer) -> Entry:
     db.commit()
     db.refresh(entry)
     return entry
+
+
+def list_entry_ids_added_in_run(db: Session, run_id: str) -> list[str]:
+    """The entries a run added, oldest first (for the run's record)."""
+    query = select(Entry.id).where(Entry.run_id == run_id).order_by(Entry.created_at)
+    return list(db.exec(query))
 
 
 def update_entry(db: Session, entry: Entry, changes: EntryUpdate, viewer: Viewer) -> Entry:

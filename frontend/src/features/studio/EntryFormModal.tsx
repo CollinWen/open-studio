@@ -16,7 +16,7 @@ import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { fetchBoards } from "../../api/boardsApi";
 import { fetchEntry } from "../../api/entriesApi";
-import { readOwnerToken } from "../../api/ownerToken";
+import { isOwnerSignedIn } from "../../api/ownerSignIn";
 import { LabelRow } from "../../components/LabelRow";
 import { LoadingWord } from "../../components/LoadingWord";
 import type { Board, Entry } from "../../types/entry";
@@ -30,7 +30,7 @@ export function EntryFormModal() {
   // What the sheet shows. Kept while it lifts away, so it doesn't go blank mid-animation.
   const [shown, setShown] = useState<{ entry: Entry | null } | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
-  const isOpen = Boolean(readOwnerToken()) && (isAdding || editId !== null);
+  const isOpen = isOwnerSignedIn() && (isAdding || editId !== null);
   const [boards, setBoards] = useState<Board[]>([]);
   const pageBoard = useLocation().pathname.match(/^\/b\/([^/]+)/)?.[1] ?? HOME_BOARD;
 

@@ -5,6 +5,7 @@ Values come from backend/.env (see .env.example) or the shell. Nothing else
 in the backend reads environment variables directly.
 """
 
+import hashlib
 import os
 from dataclasses import dataclass
 from pathlib import Path
@@ -43,6 +44,17 @@ class Settings:
     # How many lines one agent may write to the agent log per hour (plans, thoughts, findings).
     agent_log_lines_per_hour: int = int(os.environ.get("AGENT_LOG_LINES_PER_HOUR", "120"))
 
+    # Runs: one task given to one agent, with a short-lived token that says what it may do
+    # (features/runs/). Tokens are signed with RUN_TOKEN_SECRET; left empty, a secret is
+    # made from OWNER_TOKEN, so changing the password also ends every run.
+    run_token_secret_setting: str = os.environ.get("RUN_TOKEN_SECRET", "")
+    # How long a run's token works unless asked otherwise, and the most it may be given.
+    run_hours: int = int(os.environ.get("RUN_HOURS", "4"))
+    run_hours_max: int = int(os.environ.get("RUN_HOURS_MAX", "24"))
+    # This API's public address, put in each run's kit so the agent knows where to connect
+    # (e.g. https://api.yourdomain.com). Empty: the address the request came in on.
+    public_api_url: str = os.environ.get("PUBLIC_API_URL", "")
+
     # OpenRouter: one key covers both the tag model and the embedding model.
     openrouter_api_key: str = os.environ.get("OPENROUTER_API_KEY", "")
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
@@ -73,6 +85,15 @@ class Settings:
         """Each agent's token mapped to its name."""
         pairs = (pair.split("=", 1) for pair in self.agent_tokens_setting.split(",") if "=" in pair)
         return {token.strip(): name.strip() for name, token in pairs if name.strip() and token.strip()}
+
+    @property
+    def run_token_secret(self) -> bytes:
+        """The key run tokens are signed with; empty when there is neither setting."""
+        if self.run_token_secret_setting:
+            return self.run_token_secret_setting.encode()
+        if self.owner_token:
+            return hashlib.sha256(f"open-studio run tokens:{self.owner_token}".encode()).digest()
+        return b""
 
     @property
     def r2_enabled(self) -> bool:

@@ -4,12 +4,13 @@ a research bot), whether it may work right now, and what it says it's doing.
 
 Its token is never stored, only a fingerprint of it (agent_tokens.py), so a
 copy of the database can't be used to act as an agent. Which boards an agent
-may add to is kept on the board (boards/models.py, Board.agents).
+may add to is kept on the board (boards/models.py, Board.agents); which
+outside tools its runs may use (web, code, github) is kept here.
 """
 
 from datetime import datetime, timezone
 
-from sqlmodel import Field, SQLModel
+from sqlmodel import JSON, Column, Field, SQLModel
 
 
 def _now() -> datetime:
@@ -25,6 +26,10 @@ class Agent(SQLModel, table=True):
 
     # A fingerprint of the agent's token (see agent_tokens.py), never the token itself.
     token_hash: str = Field(index=True)
+
+    # Outside tools its runs may be given (runs/task_kinds.py: web, code, github).
+    # The owner grants these; a run gets at most these.
+    tools: list[str] = Field(default_factory=list, sa_column=Column(JSON))
 
     # A paused agent can still read, like any visitor, but can't add or log anything.
     active: bool = True
