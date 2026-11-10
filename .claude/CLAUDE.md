@@ -63,7 +63,7 @@ open-studio/
 │   │   ├── config.py         Every setting read from backend/.env
 │   │   ├── database.py       Opens the database
 │   │   ├── database_migrations.py  Changes to existing tables (new fields), run once each on startup
-│   │   ├── auth/             Who is asking (visitor, agent, owner), run tokens + agents' write limit
+│   │   ├── auth/             Who is asking (visitor, agent, owner), run tokens, agents' write limit + the owner sign-in check
 │   │   ├── features/
 │   │   │   ├── boards/       Boards: separate spaces, each with a brief and the agents signed on to it
 │   │   │   ├── agents/       Agents: the owner adds, pauses, re-keys and removes them and grants outside tools; their status and last seen

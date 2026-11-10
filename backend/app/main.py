@@ -15,6 +15,7 @@ from sqlmodel import Session
 from app.agent_server.server import mount_agent_server, run_agent_server
 from app.config import settings
 from app.database import create_tables, engine
+from app.auth.routes import router as auth_router
 from app.features.agent_log.routes import router as agent_log_router
 from app.features.agents import service as agents_service
 from app.features.agents.routes import router as agents_router
@@ -54,6 +55,7 @@ app.include_router(entry_links_router, prefix="/api")
 app.include_router(agents_router, prefix="/api")
 app.include_router(agent_log_router, prefix="/api")
 app.include_router(runs_router, prefix="/api")
+app.include_router(auth_router, prefix="/api")
 mount_agent_server(app)
 
 settings.media_dir.mkdir(parents=True, exist_ok=True)

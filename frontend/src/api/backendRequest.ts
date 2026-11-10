@@ -9,7 +9,7 @@
 
 import { ownerAuthorization } from "./ownerSignIn";
 
-const API_URL = import.meta.env.VITE_API_URL ?? "";
+export const API_URL = import.meta.env.VITE_API_URL ?? "";
 
 export async function backendRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers);
