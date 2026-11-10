@@ -55,7 +55,6 @@ open-studio/
 ├── README.md                 How to run it; map of the top-level folders
 ├── deploy.py                 Ships backend (Fly.io) and frontend (Firebase) using deploy.toml
 ├── deploy.toml.example       Every deploy setting and key in one file (copy to deploy.toml)
-├── .mcp.json                 Connects Claude Code sessions on this repo to the live studio's MCP server (token from OPEN_STUDIO_AGENT_TOKEN)
 │
 ├── backend/                  Python API (FastAPI + SQLite)
 │   ├── README.md
