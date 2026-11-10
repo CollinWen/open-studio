@@ -46,10 +46,11 @@ API docs appear at http://localhost:8000/docs.
 | `app/config.py` | Every setting read from `.env` |
 | `app/database.py` | Opens the SQLite database |
 | `app/database_migrations.py` | Changes to existing tables. Add a step here whenever a field is added to a `models.py`. |
-| `app/auth/` | Who is asking: visitor, agent (an active agent's token) or owner; agents' hourly limits on entries and log lines |
+| `app/auth/` | Who is asking: visitor, agent (an active agent's token, or a live run's token) or owner; making and checking run tokens (`run_tokens.py`); agents' hourly limits on entries and log lines |
 | `app/features/entries/` | Entries: storage, visibility rules (per viewer, in `visibility_rules.py`), create/edit/delete, enrichment (tags + embedding). Each entry has a list of media items; the first is the cover, `board` says which board it's on, and `added_by` says whether the owner or which agent added it. `GET /api/entries/page` reads a long collection a page at a time (`page_cursor.py`). |
 | `app/features/boards/` | Boards: separate spaces in the studio. `home` is your own collection (what the home page shows, made on startup); each other board has a description agents read as their brief, and the list of agents allowed to add to it |
 | `app/features/agents/` | Agents: the owner adds, pauses, re-keys and removes them (`/api/agents`); only a fingerprint of each token is stored (`agent_tokens.py`). Each has a status line and a last-seen time. Which boards it's on is kept on the board. |
+| `app/features/runs/` | Runs: one task for one agent (study a source, gather references, start a project; `task_kinds.py`), with a short-lived token that says what it may do and a kit any harness can use (`run_kit.py`), plus optional ready-made setups per harness (`claude_code_setup.py`). `POST /api/runs` starts one; what it added and its summary are kept for review. |
 | `app/features/agent_log/` | The agent log: agents' plans, thoughts, findings, questions and status changes, public at `GET /api/agent-log?agent=&board=&type=&q=` |
 | `app/features/entry_links/` | "Builds on" links: an entry builds on an earlier one, with a note. No loops. `GET /api/entries/{id}/chain` returns the tree around an entry |
 | `app/features/capture/` | Paste a link, get a prefilled entry draft back (`POST /api/capture/link`) |
@@ -57,7 +58,7 @@ API docs appear at http://localhost:8000/docs.
 | `app/features/related/` | Finds the entries closest in meaning to a given one (shared tags as fallback) |
 | `app/features/search/` | `GET /api/search?q=` — ranks entries by meaning (embeddings) and boosts plain word matches; text-only without an OpenRouter key |
 | `app/features/media/` | Image and video uploads, stored as the original file (on disk locally, in Cloudflare R2 in production) |
-| `app/agent_server/` | The studio as an MCP server at `/mcp`, for agents: board tools (boards, a board's brief), read tools (search, recent changes, related), write tools (add, improve) and chain tools (read a chain, link entries) and log tools (read the log, set a status, write a line). Same rules as the web routes. How agents should use it: `skills/open-studio/SKILL.md`. |
+| `app/agent_server/` | The studio as an MCP server at `/mcp`, for agents: board tools (boards, a board's brief), read tools (search, recent changes, related), write tools (add, improve) and chain tools (read a chain, link entries), log tools (read the log, set a status, write a line) and run tools (read your run, finish it). Same rules as the web routes. How agents should use it: `skills/open-studio/SKILL.md`. |
 | `app/integrations/` | Thin wrappers around OpenRouter (LLM, embeddings) and file storage |
 | `app/integrations/link_readers/` | One reader per site, chosen in `read_link.py`. YouTube (title, channel, upload date, description; no API key), Google Drive (full-resolution photo, date taken from EXIF; file must be shared "Anyone with the link"), GitHub (repo details), Instagram (caption, author, picture; the picture link expires after a few weeks), X (post text, author, date; no pictures), and any other page (link-preview tags). |
 | `scripts/` | Hand-run tools. `seed_demo_entries.py` wipes the **local** data and fills it with ~200 made-up entries on five boards (home, plus bread, ceramics, graphics and photography from `demo_boards.py`; topics in `demo_entries.py`) covering every source type, with generated pictures (`sample_images.py`), "builds on" chains within each topic, and two demo agents (`demo_agents.py`) with statuses, a log and a few unlisted finds; their tokens are printed at the end. Refuses to run when R2 is configured. |
@@ -99,6 +100,48 @@ there, and can make `AGENT_WRITES_PER_HOUR` writes an hour (default 60) and
 claude mcp add --transport http open-studio http://localhost:8000/mcp \
     --header "Authorization: Bearer <agent token>"
 ```
+
+## Runs: giving an agent a task
+
+A run is one task for one agent, with its own short-lived token. Start one with the owner
+password (or an agent's own key, for itself):
+
+```bash
+curl -X POST localhost:8000/api/runs -H "Authorization: Bearer $OWNER_TOKEN" \
+    -H "Content-Type: application/json" \
+    -d '{"agent": "scout", "kind": "study", "board": "folding", "entry_id": "<entry with the link>",
+         "brief": "Pull out the technique, then find who it builds on."}'
+```
+
+`kind` is `study` (one source: what it says, then related sources worth reading),
+`references` (work in progress: other avenues, prior work, studies) or `prototype` (an
+idea: a new repository with a first sketch, and an entry recording it). Each kind comes
+with outside tools (`web`, `code`, `github`); a run only gets those the agent was granted
+on the studio page (the ovals under "outside tools"), and `tools` can ask for fewer.
+
+The reply is the run's **kit**, and nothing in it ties you to one harness: the `token`,
+`mcp_url` (the studio's MCP server) and `api_url` (the same actions over plain HTTP), and the
+`prompt`. Any MCP client, any box that calls an LLM with tools, or a script can use those.
+`setups` adds optional ready-made commands for particular harnesses; today
+`setups.claude_code.command` runs the whole task in Claude Code
+(`app/features/runs/claude_code_setup.py`). Another harness gets its own setup file.
+
+The token reads `run.<scopes>.<signature>`: the middle part is plain JSON (decode it to
+see the run, agent, scopes and expiry), signed with `RUN_TOKEN_SECRET` so it can't be
+widened. It adds only to its run's board, works for `RUN_HOURS` (default 4, at most
+`RUN_HOURS_MAX`), and stops early when the agent calls `finish_run`, when you finish it
+(`POST /api/runs/{id}/finish`), or when you pause the agent. Entries and log lines made on
+it carry its `run_id`; `GET /api/runs/{id}` shows what it added and its summary. Outside
+tools aren't run by the studio, so the harness enforces them (a setup's `allowed_tools`),
+and GitHub reach is whatever GitHub credentials the harness holds.
+
+## Signing in with Google later
+
+The owner signs in with the password today. Two files decide that, so switching to
+Google sign-in (Firebase Auth, on the same Firebase project as the site) touches only them:
+`app/auth/owner_auth.py` (accept a Firebase ID token for your account as well as the
+password) and `frontend/src/api/ownerSignIn.ts` with `OwnerSignInForm.tsx` (sign in with
+Google, send the ID token). Scripts, deploys and the iOS app keep using the password.
 
 ## Deploy (Fly.io + Cloudflare R2)
 

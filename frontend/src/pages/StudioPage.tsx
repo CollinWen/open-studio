@@ -1,17 +1,18 @@
 /**
  * StudioPage ( /studio, /studio/<section> ): the owner's back room, laid
  * out like every page: an intro, a section line, controls, then one list.
- * Asks for the owner token once. The sections, each with its count:
+ * Asks the owner to sign in once (OwnerSignInForm). The sections, each with its count:
  *
  *   entries  ( /studio )         every entry, to edit or delete; the plus
  *                                opens the entry form (?add)
  *   boards   ( /studio/boards )  add a board, change its name or brief
  *   tags     ( /studio/tags )    describe and rank each tag
  *   agents   ( /studio/agents )  add, pause, re-key, remove; which boards
+ *                                and outside tools each may use
  *
  * This page loads all four lists (for the counts) and reloads them after
  * any change; the large studio mark holds the section until its own list
- * is in. "leave" (under the section words) forgets the owner token. ?q=
+ * is in. "leave" (under the section words) signs the owner out. ?q=
  * searches entries or tags. Adding and editing an entry happen in the form
  * that opens over the page (features/studio/EntryFormModal.tsx). Linked as "owner" ("studio" once signed in) in the header.
  */
@@ -21,7 +22,7 @@ import { useParams, useSearchParams } from "react-router-dom";
 import { fetchAgents } from "../api/agentsApi";
 import { fetchBoards } from "../api/boardsApi";
 import { fetchEntries } from "../api/entriesApi";
-import { forgetOwnerToken, readOwnerToken } from "../api/ownerToken";
+import { isOwnerSignedIn, signOwnerOut } from "../api/ownerSignIn";
 import { fetchTags } from "../api/tagsApi";
 import { LabelRow } from "../components/LabelRow";
 import { LoadingMark } from "../components/LoadingMark";
@@ -31,7 +32,7 @@ import { SiteHeader } from "../components/SiteHeader";
 import { AgentManager } from "../features/studio/AgentManager";
 import { BoardManager } from "../features/studio/BoardManager";
 import { EntryIndex } from "../features/studio/EntryIndex";
-import { OwnerTokenForm } from "../features/studio/OwnerTokenForm";
+import { OwnerSignInForm } from "../features/studio/OwnerSignInForm";
 import { TagNotesEditor } from "../features/studio/TagNotesEditor";
 import { useOnEntrySaved } from "../features/studio/entrySavedEvent";
 import { useEntryFormParam } from "../features/studio/useEntryFormParam";
@@ -46,7 +47,7 @@ export function StudioPage() {
   const section: Section = asked && SECTIONS.includes(asked) ? asked : "entries";
   const [params, setParams] = useSearchParams();
   const query = params.get("q") ?? "";
-  const [hasToken, setHasToken] = useState(Boolean(readOwnerToken()));
+  const [signedIn, setSignedIn] = useState(isOwnerSignedIn());
   // null until loaded, so a section's count only shows once it's known.
   const [entries, setEntries] = useState<Entry[] | null>(null);
   const [boards, setBoards] = useState<Board[] | null>(null);
@@ -62,8 +63,8 @@ export function StudioPage() {
   }, []);
 
   useEffect(() => {
-    if (hasToken) reload();
-  }, [hasToken, reload]);
+    if (signedIn) reload();
+  }, [signedIn, reload]);
   useOnEntrySaved(reload);
 
   const search = (words: string) => setParams(words ? { q: words } : {}, { replace: true });
@@ -87,20 +88,20 @@ export function StudioPage() {
         <LabelRow rule="double" className="intro-row">
           <p className="display">The back room.</p>
         </LabelRow>
-        {!hasToken && (
+        {!signedIn && (
           <LabelRow rule="single" label="Owner token">
-            <OwnerTokenForm onSaved={() => setHasToken(true)} />
+            <OwnerSignInForm onSignedIn={() => setSignedIn(true)} />
           </LabelRow>
         )}
-        {hasToken && (
+        {signedIn && (
           <>
             <SectionLine label="Studio" sections={sections} current={section}>
               <p className="word-list quiet section-note">
                 <button
                   type="button"
                   onClick={() => {
-                    forgetOwnerToken();
-                    setHasToken(false);
+                    signOwnerOut();
+                    setSignedIn(false);
                   }}
                 >
                   leave the studio

@@ -12,11 +12,11 @@
  */
 
 import { Link, NavLink, useLocation } from "react-router-dom";
-import { readOwnerToken } from "../api/ownerToken";
+import { isOwnerSignedIn } from "../api/ownerSignIn";
 import { Icon } from "./Icon";
 
 export function SiteHeader() {
-  const isOwner = Boolean(readOwnerToken());
+  const isOwner = isOwnerSignedIn();
   const location = useLocation();
   const withAdd = new URLSearchParams(location.search);
   withAdd.delete("edit");

@@ -4,7 +4,7 @@ Agent endpoints:
   GET    /api/agents                every agent: status, boards, last seen (anyone)
   GET    /api/agents/{name}         one agent (anyone)
   POST   /api/agents                add an agent; its token comes back once (owner only)
-  PATCH  /api/agents/{name}         change its description, or pause it (owner only)
+  PATCH  /api/agents/{name}         change its description or outside tools, or pause it (owner only)
   POST   /api/agents/{name}/token   give it a new token; the old one stops working (owner only)
   DELETE /api/agents/{name}         remove it (owner only)
 

@@ -17,6 +17,11 @@ MIGRATIONS: list[str] = [
     "ALTER TABLE entry ADD COLUMN added_by VARCHAR NOT NULL DEFAULT 'owner'",
     "ALTER TABLE entry ADD COLUMN board VARCHAR NOT NULL DEFAULT 'home'",
     "CREATE INDEX IF NOT EXISTS ix_entry_board ON entry (board)",
+    "ALTER TABLE agent ADD COLUMN tools JSON NOT NULL DEFAULT '[]'",
+    "ALTER TABLE entry ADD COLUMN run_id VARCHAR",
+    "CREATE INDEX IF NOT EXISTS ix_entry_run_id ON entry (run_id)",
+    "ALTER TABLE agent_log_line ADD COLUMN run_id VARCHAR",
+    "CREATE INDEX IF NOT EXISTS ix_agent_log_line_run_id ON agent_log_line (run_id)",
 ]
 
 

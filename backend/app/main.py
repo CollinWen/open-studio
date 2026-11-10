@@ -25,6 +25,7 @@ from app.features.entries.routes import router as entries_router
 from app.features.entry_links.routes import router as entry_links_router
 from app.features.media.routes import router as media_router
 from app.features.related.routes import router as related_router
+from app.features.runs.routes import router as runs_router
 from app.features.search.routes import router as search_router
 from app.features.tags.routes import router as tags_router
 
@@ -52,6 +53,7 @@ app.include_router(boards_router, prefix="/api")
 app.include_router(entry_links_router, prefix="/api")
 app.include_router(agents_router, prefix="/api")
 app.include_router(agent_log_router, prefix="/api")
+app.include_router(runs_router, prefix="/api")
 mount_agent_server(app)
 
 settings.media_dir.mkdir(parents=True, exist_ok=True)

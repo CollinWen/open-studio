@@ -4,6 +4,7 @@ to which board.
 
 The owner may add to any board. An agent may add only to boards that list its
 name; that keeps each agent's work inside the effort it was signed on to.
+An agent on a run token may add only to the board its run is for.
 Used by boards/routes.py, entries/service.py and agent_server/.
 """
 
@@ -55,4 +56,7 @@ def update_board(db: Session, board: Board, changes: BoardUpdate) -> Board:
 
 
 def can_add_to_board(viewer: Viewer, board: Board) -> bool:
-    return viewer.is_owner or (viewer.is_agent and viewer.agent_name in board.agents)
+    """The owner, or an agent signed on to the board (and, on a run token, one the run allows)."""
+    if viewer.is_owner:
+        return True
+    return viewer.is_agent and viewer.agent_name in board.agents and viewer.run_allows_board(board.slug)

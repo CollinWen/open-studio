@@ -77,7 +77,12 @@ def send_fly_secrets(config: dict, stage: bool) -> None:
         "R2_SECRET_ACCESS_KEY": r2["secret_access_key"],
         "R2_BUCKET": r2["bucket"],
         "MEDIA_PUBLIC_URL": f"https://media.{domain}",
+        # Written into each run's kit, so agents know where to connect.
+        "PUBLIC_API_URL": f"https://api.{domain}",
     }
+    # Optional: the key run tokens are signed with. Without it one is made from owner_token.
+    if secrets.get("run_token_secret"):
+        settings["RUN_TOKEN_SECRET"] = secrets["run_token_secret"]
     # Optional [agents] section: name = token for each agent allowed to add entries.
     # To cut off every agent, leave one line with an empty token rather than deleting the section.
     if "agents" in config:

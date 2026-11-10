@@ -45,6 +45,8 @@ class Entry(SQLModel, table=True):
 
     # Who added it: "owner", or "agent:<name>" for an agent (see auth/viewer.py).
     added_by: str = "owner"
+    # The run it was added in (runs/models.py), when an agent added it on a run token.
+    run_id: str | None = Field(default=None, index=True)
 
     # Short, plain labels. Suggested by an LLM, editable afterwards.
     tags: list[str] = Field(default_factory=list, sa_column=Column(JSON))

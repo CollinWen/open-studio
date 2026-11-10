@@ -29,4 +29,6 @@ class AgentLogLine(SQLModel, table=True):
     type: str
     text: str
     entry_id: str | None = Field(default=None, foreign_key="entry.id", ondelete="SET NULL")
+    # The run it was written in (runs/models.py), when the agent was on a run token.
+    run_id: str | None = Field(default=None, index=True)
     created_at: datetime = Field(default_factory=_now, index=True)

@@ -1,6 +1,6 @@
 """
-Agent service: the owner adding, pausing, re-keying and removing agents, and
-an agent setting its own status line.
+Agent service: the owner adding, pausing, re-keying and removing agents and
+granting them outside tools, and an agent setting its own status line.
 
 Which boards an agent may add to is kept on each board, so adding an agent
 with boards, and removing one, go through boards/service.py. AGENT_TOKENS in
@@ -55,7 +55,7 @@ def create_agent(db: Session, data: AgentCreate) -> tuple[Agent, str]:
     if db.get(Agent, data.name) is not None:
         raise AgentExistsError(f"Agent {data.name} already exists")
     token = make_token()
-    agent = Agent(name=data.name, description=data.description, token_hash=fingerprint(token))
+    agent = Agent(name=data.name, description=data.description, tools=data.tools, token_hash=fingerprint(token))
     db.add(agent)
     db.commit()
     for slug in data.boards:

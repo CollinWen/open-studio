@@ -3,7 +3,8 @@ Agent tokens: making a new token, and finding which agent a token belongs to.
 
 Only a fingerprint (SHA-256) of each token is stored, so the token itself is
 shown to the owner once, when it's made, and never again. Finding an agent
-also notes when it was last seen (at most once a minute, so reads stay cheap).
+(by its token, or by the name in a run token) also notes when it was last
+seen (at most once a minute, so reads stay cheap).
 
 Used by auth/viewer.py on every request and by agents/service.py. Kept apart
 from service.py so auth can use it without pulling in the boards feature.
@@ -32,6 +33,15 @@ def fingerprint(token: str) -> str:
 def find_active_agent(db: Session, token: str) -> Agent | None:
     """The active agent this token belongs to, or None. Notes that it was seen."""
     agent = db.exec(select(Agent).where(Agent.token_hash == fingerprint(token))).first()
+    if agent is None or not agent.active:
+        return None
+    _note_seen(db, agent)
+    return agent
+
+
+def find_active_agent_by_name(db: Session, name: str) -> Agent | None:
+    """The agent a run token names, if it's still there and not paused. Notes that it was seen."""
+    agent = db.get(Agent, name)
     if agent is None or not agent.active:
         return None
     _note_seen(db, agent)
