@@ -100,9 +100,13 @@ open-studio/
 │       ├── types/            Shared data shapes, matching the backend schemas
 │       └── styles/           global.css: the entire visual style
 │
-├── skills/                   Skills for agents, one folder each
-│   ├── open-studio/          SKILL.md: how an agent researches for and adds to a studio over MCP, on its own or on a run
-│   └── finding-sources/      SKILL.md: how to find and judge sources worth the owner's time (credibility, novelty, execution, value)
+├── skills/                   Skills for agents, one folder each: the product, how to collaborate, then one per kind of work
+│   ├── open-studio/          SKILL.md: the product: what boards, entries, chains, the log and runs are, getting around, the MCP tools
+│   ├── studio-collaborator/  SKILL.md: working as a team, with the owner as principal investigator and agents as coworkers; which role skill to load
+│   ├── gathering-sources/    SKILL.md: finding and judging material by the visible marks of careful thinking, against open questions, under a budget
+│   ├── studying-sources/     SKILL.md: reading one source closely and handing it over so the owner reads actively
+│   ├── brainstorming/        SKILL.md: responding to ideas and suggesting directions, diverge then converge
+│   └── building/             SKILL.md: writing code for the owner: prototypes and asked-for features, scoped, shown working, reported
 │
 └── ios/                      iPhone share-sheet extension + one-screen setup app (Swift)
     ├── README.md             How to build it on a Mac and get it onto a phone

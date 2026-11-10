@@ -47,6 +47,7 @@ def test_the_owner_starts_a_run_and_gets_a_kit(client):
     assert kit["run"]["scopes"] == [f"board:{AGENT_BOARD}", "web"]
     assert kit["run"]["state"] == "running"
     assert "look at this" in kit["prompt"]
+    assert "studio-collaborator" in kit["prompt"] and "gathering-sources" in kit["prompt"]
     assert "WebFetch" in kit["setups"]["claude_code"]["allowed_tools"]
     assert kit["setups"]["claude_code"]["command"].startswith("claude -p ")
 
