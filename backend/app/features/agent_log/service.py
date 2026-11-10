@@ -3,8 +3,9 @@ Agent log service: an agent writing a line about its work (or its status),
 and anyone reading the log, newest first: everything, or narrowed by agent,
 board, type of line and words in the text.
 
-An agent writes only about boards it's signed on to, and only within its
-hourly log limit. Setting a status changes the agent's status line
+An agent writes only about boards it's signed on to (a line about an entry
+is about that entry's board too), and only within its hourly log limit. A
+run's line that names no board is written on the run's board. Setting a status changes the agent's status line
 (agents/service.py) and logs it too, so the log is the whole story.
 Used by agent_log/routes.py and agent_server/log_tools.py.
 """
@@ -35,14 +36,16 @@ class LogLimitError(Exception):
 def add_line(db: Session, viewer: Viewer, data: LogLineCreate) -> LogLineOut:
     if not viewer.is_agent:
         raise LogNotAllowedError("Only agents write to the agent log")
-    if data.board is not None:
-        board = boards_service.get_board(db, data.board)
-        if board is None:
-            raise LogNotAllowedError(f"No board {data.board}")
-        if not boards_service.can_add_to_board(viewer, board):
-            raise LogNotAllowedError(f"You're not signed on to {data.board}")
-    if data.entry_id is not None and entries_service.get_entry(db, data.entry_id, viewer) is None:
-        raise LogNotAllowedError(f"No entry {data.entry_id}")
+    entry = None
+    if data.entry_id is not None:
+        entry = entries_service.get_entry(db, data.entry_id, viewer)
+        if entry is None:
+            raise LogNotAllowedError(f"No entry {data.entry_id}")
+    if viewer.is_run and data.board is None and entry is None:
+        # A run works on one board; its unplaced lines (a status, a plan) belong there.
+        data = data.model_copy(update={"board": viewer.run_board})
+    for slug in {data.board, entry.board if entry else None} - {None}:
+        _check_can_write_about(db, viewer, slug)
     if not record_agent_log_line(viewer.agent_name):
         raise LogLimitError("Hourly log limit reached for this agent")
 
@@ -51,6 +54,14 @@ def add_line(db: Session, viewer: Viewer, data: LogLineCreate) -> LogLineOut:
     db.commit()
     db.refresh(line)
     return _describe(db, viewer, line)
+
+
+def _check_can_write_about(db: Session, viewer: Viewer, slug: str) -> None:
+    board = boards_service.get_board(db, slug)
+    if board is None:
+        raise LogNotAllowedError(f"No board {slug}")
+    if not boards_service.can_add_to_board(viewer, board):
+        raise LogNotAllowedError(f"You're not signed on to {slug}")
 
 
 def set_status(db: Session, viewer: Viewer, text: str, board: str | None = None) -> LogLineOut:
