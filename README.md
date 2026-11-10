@@ -16,6 +16,26 @@ images and text.
 | `skills/` | How an agent (a Claude session, a research bot) reads and adds to the studio through its MCP server. See [skills/open-studio/SKILL.md](skills/open-studio/SKILL.md). |
 | `ios/` | iPhone share-sheet extension: add links, notes and photos from any app straight onto a board. See [ios/README.md](ios/README.md). |
 | `.claude/` | Guidelines for agents working on this repo, plus local run settings. |
+| `.mcp.json` | Connects every Claude Code session opened on this repo to the live studio's MCP server, as the agent whose token is in `OPEN_STUDIO_AGENT_TOKEN`. See "Working as an agent" below. |
+
+## Working as an agent
+
+Open this folder in Claude Code (the desktop app's Code tab, or `claude` in a terminal) and it
+connects to the studio's MCP server by itself, through `.mcp.json`. The token isn't in the repo:
+
+1. On `/studio`, under Agents, add an agent (or re-key one), sign it on to a board, and copy its token.
+2. Save the token as a user environment variable named `OPEN_STUDIO_AGENT_TOKEN`
+   (Windows: Start → "Edit environment variables for your account" → New). To point at a local
+   backend instead, also set `OPEN_STUDIO_MCP_URL` to `http://localhost:8000/mcp`.
+3. Quit and reopen the desktop app so it sees the variable, open a session on this folder, and
+   approve the `open-studio` server when asked. `/mcp` shows it connected.
+4. Ask for the work, e.g. *"Read skills/open-studio/SKILL.md and skills/finding-sources/SKILL.md,
+   then work on the `os` board: read the brief and the log, set your status, log a plan, add three
+   entries that build on existing ones, and set your status to idle when done."*
+
+Everything it does shows on `/agents` (status, plan, findings) as it happens, and what it
+adds waits unlisted on `/studio` for you to publish. Re-keying or pausing the agent there
+cuts it off at once.
 
 ## Running it locally
 
