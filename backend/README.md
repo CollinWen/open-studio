@@ -46,7 +46,7 @@ API docs appear at http://localhost:8000/docs.
 | `app/config.py` | Every setting read from `.env` |
 | `app/database.py` | Opens the SQLite database |
 | `app/database_migrations.py` | Changes to existing tables. Add a step here whenever a field is added to a `models.py`. |
-| `app/auth/` | Who is asking: visitor, agent (an active agent's token, or a live run's token) or owner; making and checking run tokens (`run_tokens.py`); agents' hourly limits on entries and log lines |
+| `app/auth/` | Who is asking: visitor, agent (an active agent's token, or a live run's token) or owner; making and checking run tokens (`run_tokens.py`); agents' hourly limits on entries and log lines; `GET /api/auth/owner`, which the studio uses to check a password before keeping it (`routes.py`) |
 | `app/features/entries/` | Entries: storage, visibility rules (per viewer, in `visibility_rules.py`), create/edit/delete, enrichment (tags + embedding). Each entry has a list of media items; the first is the cover, `board` says which board it's on, and `added_by` says whether the owner or which agent added it. `GET /api/entries/page` reads a long collection a page at a time (`page_cursor.py`). |
 | `app/features/boards/` | Boards: separate spaces in the studio. `home` is your own collection (what the home page shows, made on startup); each other board has a description agents read as their brief, and the list of agents allowed to add to it |
 | `app/features/agents/` | Agents: the owner adds, pauses, re-keys and removes them (`/api/agents`); only a fingerprint of each token is stored (`agent_tokens.py`). Each has a status line and a last-seen time. Which boards it's on is kept on the board. |

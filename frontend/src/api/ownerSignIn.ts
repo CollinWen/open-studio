@@ -1,7 +1,8 @@
 /**
  * Owner sign-in: the one place that knows how the owner proves who they are.
- * Today that's the admin password (OWNER_TOKEN in backend/.env), typed once
- * and kept in this browser. Visitors never sign in.
+ * Today that's the admin password (OWNER_TOKEN in backend/.env), typed once,
+ * checked with the backend (GET /api/auth/owner) and kept in this browser only
+ * if it's right. Visitors never sign in.
  *
  * Everything else asks only isOwnerSignedIn() and ownerAuthorization(), so
  * moving to Google sign-in (Firebase Auth) means changing this file and
@@ -10,6 +11,8 @@
  * this reason), and sign out with Firebase's signOut. The backend side is
  * is_owner in backend/app/auth/owner_auth.py.
  */
+
+import { API_URL } from "./backendRequest";
 
 const STORAGE_KEY = "open-studio-owner-token";
 
@@ -23,12 +26,21 @@ export async function ownerAuthorization(): Promise<string> {
   return password ? `Bearer ${password}` : "";
 }
 
-export function signInWithPassword(password: string): void {
+/**
+ * Asks the backend whether this is the owner's password and keeps it only if
+ * so. Throws when the backend can't be reached, so a network problem is never
+ * mistaken for a wrong password.
+ */
+export async function signInWithPassword(password: string): Promise<"signed-in" | "wrong-password"> {
+  const response = await fetch(`${API_URL}/api/auth/owner`, { headers: { Authorization: `Bearer ${password}` } });
+  if (response.status === 401) return "wrong-password";
+  if (!response.ok) throw new Error(`The studio didn't answer (${response.status})`);
   try {
     localStorage.setItem(STORAGE_KEY, password);
   } catch {
     // Storage blocked (e.g. private window): the sign-in lasts until reload.
   }
+  return "signed-in";
 }
 
 export function signOwnerOut(): void {
