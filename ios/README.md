@@ -21,21 +21,36 @@ line for the boards with the current one in red, the shaded control band, plain 
 control. The look lives in `Shared/StudioStyle.swift`, copied from the tokens at the top of
 `frontend/src/styles/global.css`; change both together.
 
-iOS only allows share-sheet extensions inside an app, so there's a tiny app too.
-You open it once to enter the server address and owner token; it checks the server and lists the boards.
+## The app: the studio page
+
+Open the app and you're on the website's studio page, already signed in: add an entry with the plus
+(pictures and videos from the phone, or a link), edit, publish, and manage boards, tags and agents.
+It's the real site in a web view, so anything the site gains, the app has the same day. Links to other
+sites (a source, YouTube) open in Safari. Swipe back, pull down to reload. A line of words at the bottom:
+**back**, **studio** (return to the studio page) and **setup**.
+
+While the entry form is open, each file you add shows its size, so you can see when something is heavy
+enough to link to instead.
+
+The first time (and from **setup**) it asks for:
+- the **server address**: the backend, e.g. `https://api.yourdomain.com` (the share sheet uses this)
+- the **site address**: the website, e.g. `https://yourdomain.com` (the app opens this)
+- the **owner token**
+
+Saving checks the server and lists the boards; then **open the studio**.
 
 ## What's where
 
 | Path | What it does |
 |---|---|
 | `project.yml` | Describes the Xcode project (targets, bundle IDs, fonts, share-sheet rules). Edit this, not the generated `.xcodeproj`. |
-| `OpenStudio/` | The app: `OpenStudioApp.swift` starts it, `SetupView.swift` is its one screen (server address + owner token, and a check that lists the boards). |
+| `OpenStudio/` | The app: `OpenStudioApp.swift` starts it and picks the screen. `SetupView.swift` takes the server address, site address and owner token, and checks the server. `StudioSiteView.swift` is the website with the back · studio · setup line; `StudioWebView.swift` is the web view itself: it signs in by writing the owner token where the site keeps it (the key in `frontend/src/api/ownerSignIn.ts`; change both together) and sends other sites' links to Safari. |
 | `ShareToStudio/` | The share extension. `ShareViewController` is the entry point, `ShareForm` is what you see, `ShareFormModel` does the work: `SharedItems` reads what was shared (link, note, or photos), `PreparedMedia` + `PhotoDate` get photos/videos ready to upload, `EntryBuilder` turns it all into an entry. `ShareChoices` holds the answers. |
 | `Shared/` | Used by both. Talking to the backend: `StudioApi` (every call), `EntryShapes` (data shapes matching the backend), `StudioSettings` + `SharedKeychain` (where the address, token and last board are kept), `MultipartBody` (file upload format). The look: `StudioStyle` (colors, type, space, motion), `Fonts/` (Inter, with its license), and the phone versions of the site's page pieces: `LabelRow`, `SectionLine`, `ControlBand`, `WordList`, `WordChoice`, `CaretIcon`, `StudioMark` (the logo's panel of squares, which sweeps while waiting), `LoadingWord` (the mark beside a soft word). |
 
 ## How it uses the backend
 
-No new endpoints. The phone calls the same API as the site:
+No new endpoints. The app shows the site itself; the share sheet calls the same API as the site:
 
 1. `GET /api/boards` for the boards and their agents, then `GET /api/entries/page?board=` for the
    picked board's newest entries (what it could build on).
@@ -57,7 +72,7 @@ a Mac whenever `ios/` changes, `.github/workflows/ios-build.yml`, to catch code 
 3. In this folder: `xcodegen`. Open `OpenStudio.xcodeproj`.
 4. Plug in your iPhone, pick it as the run destination, press Run. The first time, the phone asks you to
    trust the developer (Settings > General > VPN & Device Management) and to turn on Developer Mode.
-5. Open the app, enter the server address and owner token, save. It should say `connected · 5 boards: home, …`.
+5. Open the app, enter the server address, site address and owner token, save. It should say `connected · 5 boards: home, …`. Tap **open the studio**.
 6. In any app, tap share. If "Open Studio" isn't in the row of apps, scroll to the end, tap **More**, and add it.
 
 ## Getting it onto your phone for good
@@ -74,4 +89,5 @@ It never needs to go on the App Store: it's for one person.
 
 `localhost` on your computer isn't reachable from the phone. While testing, start the backend with
 `--host 0.0.0.0` and use your computer's address on the same Wi-Fi (e.g. `http://192.168.1.20:8000`).
-For everyday use, the backend needs to be hosted (with https) somewhere the phone can reach.
+For the app, also start the frontend with `npm run dev -- --host` and use `http://192.168.1.20:5173` as the
+site address. For everyday use, the site and backend need to be hosted (with https) somewhere the phone can reach.
