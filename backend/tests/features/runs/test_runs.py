@@ -1,8 +1,9 @@
 """
 Tests for runs: the owner starts a run and gets a kit (token, MCP address,
 prompt, command); the run's token adds only to its own board, records the
-run on what it adds, can't edit or link entries on other boards, and stops working when the run is finished or its agent
-paused; a run can't be given outside tools the agent wasn't granted; an
+run on what it adds, can't edit or link entries on other boards, logs only
+on its own board (a line that names none lands there), and stops working
+when the run is finished or its agent paused; a run can't be given outside tools the agent wasn't granted; an
 agent can start runs only for itself, and a run token can't start more.
 """
 
@@ -160,3 +161,16 @@ def test_a_run_works_over_plain_http_without_any_harness(client):
     line = {"board": AGENT_BOARD, "type": "finding", "text": "found it"}
     assert client.post("/api/agent-log", json=line, headers=_bearer(kit)).status_code == 200
     assert client.post(f"{run_path}/finish", json={"summary": "done"}, headers=_bearer(kit)).status_code == 200
+
+
+def test_a_runs_log_lines_stay_on_its_board(client):
+    _second_board(client)
+    name, agent_headers = _add_agent(client, tools=["web"])
+    kit = _start(client, name).json()
+    elsewhere = client.post("/api/entries", json=_entry("second"), headers=agent_headers).json()
+
+    unnamed = client.post("/api/agent-log", json={"type": "status", "text": "starting"}, headers=_bearer(kit))
+    assert unnamed.status_code == 200, unnamed.text
+    assert unnamed.json()["board"] == AGENT_BOARD
+    about_elsewhere = {"type": "finding", "text": "seen", "entry_id": elsewhere["id"]}
+    assert client.post("/api/agent-log", json=about_elsewhere, headers=_bearer(kit)).status_code == 403

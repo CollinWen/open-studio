@@ -62,6 +62,12 @@ class Viewer:
         signed on to the board at all is a separate check (boards/service.py)."""
         return self.scopes is None or f"board:{board}" in self.scopes
 
+    @property
+    def run_board(self) -> str | None:
+        """The board a run token is for; None off a run."""
+        boards = [scope.removeprefix("board:") for scope in self.scopes or () if scope.startswith("board:")]
+        return boards[0] if len(boards) == 1 else None
+
 
 def identify_viewer(authorization: str | None) -> Viewer:
     """Owner, then a live run's token, then an active agent's token; anything else is a visitor."""

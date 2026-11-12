@@ -1,8 +1,9 @@
 """
 Tests for the agent log: an agent writes lines about boards it's on and
 anyone can read them, newest first and narrowed by agent, board, type or
-words in the text; agents can't write about boards they're not on,
-visitors and the owner can't write at all, and a line may name an entry.
+words in the text; agents can't write about boards they're not on (nor
+about an entry on one), visitors and the owner can't write at all, and a
+line may name an entry.
 (Setting a status through the agent server is tested in
 tests/agent_server/test_agent_tools.py.)
 """
@@ -54,3 +55,13 @@ def test_the_log_narrows_by_type_and_words(client):
     assert [line["type"] for line in questions] == ["question"]
     assert len(client.get(f"/api/agent-log?q={word}").json()) == 2
     assert client.get("/api/agent-log?type=nonsense").status_code == 422
+
+
+def test_a_line_about_an_entry_is_about_its_board_too(client):
+    slug = f"b-{uuid.uuid4().hex[:8]}"
+    client.post("/api/boards", json={"slug": slug, "name": slug}, headers=OWNER_HEADERS)
+    elsewhere = {"board": slug, "title": f"t {uuid.uuid4().hex}", "visibility": "public"}
+    entry_id = client.post("/api/entries", json=elsewhere, headers=OWNER_HEADERS).json()["id"]
+
+    assert _write(client, SCOUT_HEADERS, board=None, entry_id=entry_id).status_code == 403
+    assert _write(client, SCOUT_HEADERS, entry_id=entry_id).status_code == 403
