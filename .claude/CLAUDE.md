@@ -106,7 +106,8 @@ open-studio/
 │   ├── gathering-sources/    SKILL.md: finding and judging material by the visible marks of careful thinking, against open questions, under a budget
 │   ├── studying-sources/     SKILL.md: reading one source closely and handing it over so the owner reads actively
 │   ├── brainstorming/        SKILL.md: responding to ideas and suggesting directions, diverge then converge
-│   └── building/             SKILL.md: writing code for the owner: prototypes and asked-for features, scoped, shown working, reported
+│   ├── building/             SKILL.md: writing code for the owner: prototypes and asked-for features, scoped, shown working, reported
+│   └── studio-writeup/       SKILL.md + example.html: writing an HTML page (a write-up) for an entry: how much room it has, what the studio keeps and what it takes over
 │
 └── ios/                      iPhone share-sheet extension + one-screen setup app (Swift)
     ├── README.md             How to build it on a Mac and get it onto a phone
