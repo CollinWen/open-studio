@@ -104,12 +104,12 @@ open-studio/
 │   ├── open-studio/          SKILL.md: how an agent researches for and adds to a studio over MCP, on its own or on a run
 │   └── finding-sources/      SKILL.md: how to find and judge sources worth the owner's time (credibility, novelty, execution, value)
 │
-└── ios/                      iPhone app (Swift): the website's studio page in a web view, signed in, plus a share-sheet extension
+└── ios/                      iPhone app (Swift): a native studio for your entries (add, edit, publish, delete), plus a share-sheet extension
     ├── README.md             How to build it on a Mac and get it onto a phone
     ├── project.yml           Xcode project description (XcodeGen); the .xcodeproj is generated
-    ├── OpenStudio/           The app: setup (server address, site address, owner token), then the site's studio page in a web view
-    ├── ShareToStudio/        The share extension: link, note or photos → board, made by me / inspiration, visibility, builds on, note → entry
-    └── Shared/               Used by both: backend calls, data shapes, settings storage, the site's look (StudioStyle, Inter in Fonts/), its page pieces and the studio mark
+    ├── OpenStudio/           The app: setup (server address, owner token), then the studio: entry list, entry editing, the plus, the photo picker
+    ├── ShareToStudio/        The share extension's entry point: shows the add form for what was shared
+    └── Shared/               Used by both: the add form (link, note or photos → board, made by me / inspiration, visibility, builds on, note → entry), backend calls, data shapes, settings storage, the site's look (StudioStyle, light and dark, Inter in Fonts/), its page pieces and the studio mark
 ```
 
 **Adding a new top-level folder, a new feature folder, or a new dependency is a structural decision. Propose it to the owner first.** Adding files inside existing folders doesn't need approval.

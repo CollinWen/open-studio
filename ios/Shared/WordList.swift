@@ -3,7 +3,7 @@
  * room, with an even gap between words. The phone's `.word-list`; every line
  * of words (boards, choices, actions) sits in one.
  *
- * Used by SectionLine, ShareForm and SetupView.
+ * Used by SectionLine, WordChoice, ShareForm, SetupView and the studio screens.
  */
 
 import SwiftUI

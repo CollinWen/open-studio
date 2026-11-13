@@ -14,7 +14,7 @@ images and text.
 | `backend/` | Python API: stores entries, asks an LLM for tags, computes embeddings for "Related". See [backend/README.md](backend/README.md). |
 | `frontend/` | React site: the home grid, entry pages, and the owner's `/studio` page. See [frontend/README.md](frontend/README.md). |
 | `skills/` | How an agent (a Claude session, a research bot) reads and adds to the studio through its MCP server. See [skills/open-studio/SKILL.md](skills/open-studio/SKILL.md). |
-| `ios/` | iPhone app: the studio page, signed in, plus a share-sheet extension that adds links, notes and photos from any app straight onto a board. See [ios/README.md](ios/README.md). |
+| `ios/` | iPhone app: a native studio for your entries (add, edit, publish, delete), plus a share-sheet extension that adds links, notes and photos from any app straight onto a board. See [ios/README.md](ios/README.md). |
 | `.claude/` | Guidelines for agents working on this repo, plus local run settings. |
 
 ## Running it locally

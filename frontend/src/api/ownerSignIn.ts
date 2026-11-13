@@ -16,7 +16,6 @@
 
 import { API_URL } from "./backendRequest";
 
-// The iPhone app signs in by writing to this key (ios/OpenStudio/StudioWebView.swift); change both together.
 const STORAGE_KEY = "open-studio-owner-token";
 // How long the start-up check may take before the site shows anyway, still signed in.
 const START_CHECK_TIMEOUT_MS = 3000;

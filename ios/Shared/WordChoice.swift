@@ -3,7 +3,8 @@
  * WordList so it wraps. The chosen word is in full ink, underlined in the
  * accent; the rest are soft ink. The phone's components/WordChoice.tsx.
  *
- * Used by ShareForm for "made by me / inspiration" and the visibility choice.
+ * Used by ShareForm for "made by me / inspiration" and the visibility choice,
+ * and by the studio for who sees an entry.
  */
 
 import SwiftUI

@@ -3,7 +3,7 @@
  * suggesting tags…"): the studio mark sweeping beside a soft word, like the
  * site's components/LoadingWord.tsx. With reduced motion the mark holds still.
  *
- * Used by ShareForm and SetupView. The mark itself is StudioMark.
+ * Used by ShareForm, SetupView and the studio screens. The mark itself is StudioMark.
  */
 
 import SwiftUI
