@@ -101,10 +101,14 @@ open-studio/
 │       ├── types/            Shared data shapes, matching the backend schemas
 │       └── styles/           The entire visual style: tokens.css (every color, size, space, motion), global.css (the site), writeup.css (write-ups, on the same tokens)
 │
-├── skills/                   Skills for agents, one folder each
-│   ├── open-studio/          SKILL.md: how an agent researches for and adds to a studio over MCP, on its own or on a run
-│   ├── finding-sources/      SKILL.md: how to find and judge sources worth the owner's time (credibility, novelty, execution, value)
-│   └── studio-writeup/       SKILL.md + example.html: how to write a write-up (plain HTML the studio shows in its own style)
+├── skills/                   Skills for agents, one folder each: the product, how to collaborate, then one per kind of work
+│   ├── open-studio/          SKILL.md: the product: what boards, entries, chains, the log and runs are, getting around, the MCP tools
+│   ├── studio-collaborator/  SKILL.md: working as a team, with the owner as principal investigator and agents as coworkers; which role skill to load
+│   ├── gathering-sources/    SKILL.md: finding and judging material by the visible marks of careful thinking, against open questions, under a budget
+│   ├── studying-sources/     SKILL.md: reading one source closely and handing it over so the owner reads actively
+│   ├── brainstorming/        SKILL.md: responding to ideas and suggesting directions, diverge then converge
+│   ├── building/             SKILL.md: writing code for the owner: prototypes and asked-for features, scoped, shown working, reported
+│   └── studio-writeup/       SKILL.md + example.html: writing an HTML page (a write-up) for an entry: how much room it has, what the studio keeps and what it takes over
 │
 └── ios/                      iPhone share-sheet extension + one-screen setup app (Swift)
     ├── README.md             How to build it on a Mac and get it onto a phone
