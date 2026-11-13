@@ -70,6 +70,8 @@ a Mac whenever `ios/` changes, `.github/workflows/ios-build.yml`, to catch code 
 1. Install Xcode (App Store) and XcodeGen: `brew install xcodegen`.
 2. In `project.yml`, set `DEVELOPMENT_TEAM` (your Apple team ID) and `BASE_BUNDLE_ID` (e.g. `com.collinwen.openstudio`).
 3. In this folder: `xcodegen`. Open `OpenStudio.xcodeproj`.
+   Run `xcodegen` again after every pull that adds or removes Swift files: the project lists the files
+   that existed when it was made, so a stale one fails with errors like "Cannot find 'StudioMark' in scope".
 4. Plug in your iPhone, pick it as the run destination, press Run. The first time, the phone asks you to
    trust the developer (Settings > General > VPN & Device Management) and to turn on Developer Mode.
 5. Open the app, enter the server address, site address and owner token, save. It should say `connected · 5 boards: home, …`. Tap **open the studio**.
