@@ -3,39 +3,45 @@
  * Each one shows as a small preview with "cover" (move to first), "remove"
  * and a caption. "add file" uploads from this device: pictures and videos
  * are stored untouched; a write-up (.html) is made safe first, and what was
- * removed from it is listed here.
+ * removed from it is listed here. Each upload keeps its size (shown here and
+ * on the entry page), and the uploading line shows the total.
  */
 
 import { useState } from "react";
 import { uploadMedia } from "../../api/mediaApi";
 import { LoadingWord } from "../../components/LoadingWord";
 import type { MediaItem } from "../../types/entry";
+import { formatFileSize } from "../entries/formatFileSize";
 
 interface Props {
   media: MediaItem[];
   onChange: (media: MediaItem[]) => void;
 }
 
-const UPLOADING = "uploading…";
-
 export function MediaListEditor({ media, onChange }: Props) {
   const [status, setStatus] = useState("");
+  const [uploading, setUploading] = useState(false);
 
   async function addFiles(files: FileList | null) {
     if (!files?.length) return;
-    setStatus(UPLOADING);
+    const picked = Array.from(files);
+    const total = picked.reduce((sum, file) => sum + file.size, 0);
+    setUploading(true);
+    setStatus(`uploading ${picked.length === 1 ? "1 file" : `${picked.length} files`} · ${formatFileSize(total)}…`);
     try {
       const added: MediaItem[] = [];
       const removed: string[] = [];
-      for (const file of Array.from(files)) {
+      for (const file of picked) {
         const uploaded = await uploadMedia(file);
-        added.push({ type: mediaTypeOf(file), url: uploaded.url, thumbnail_url: "", caption: "" });
+        added.push({ type: mediaTypeOf(file), url: uploaded.url, thumbnail_url: "", caption: "", size_bytes: file.size });
         removed.push(...(uploaded.removed ?? []));
       }
       onChange([...media, ...added]);
       setStatus(removed.length ? `removed from the write-up: ${removed.join(", ")}` : "");
     } catch (error) {
       setStatus(`upload failed: ${error instanceof Error ? error.message : error}`);
+    } finally {
+      setUploading(false);
     }
   }
 
@@ -55,6 +61,7 @@ export function MediaListEditor({ media, onChange }: Props) {
           )}
           <div className="word-list">
             <span className="quiet">{index === 0 ? "cover" : item.type}</span>
+            {item.size_bytes > 0 && <span className="quiet">{formatFileSize(item.size_bytes)}</span>}
             <input placeholder="caption" value={item.caption} onChange={(e) => setCaption(index, e.target.value)} />
             {index > 0 && (
               <button type="button" className="quiet" onClick={() => makeCover(index)}>
@@ -71,8 +78,8 @@ export function MediaListEditor({ media, onChange }: Props) {
         add file
         <input type="file" accept="image/*,video/*,.html" multiple hidden onChange={(e) => addFiles(e.target.files)} />
       </label>
-      {status === UPLOADING && <LoadingWord> {status}</LoadingWord>}
-      {status && status !== UPLOADING && <span className="quiet"> {status}</span>}
+      {uploading && <LoadingWord> {status}</LoadingWord>}
+      {status && !uploading && <span className="quiet"> {status}</span>}
     </div>
   );
 }

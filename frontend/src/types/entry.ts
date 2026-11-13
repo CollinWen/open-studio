@@ -16,6 +16,8 @@ export interface MediaItem {
   url: string;
   thumbnail_url: string;
   caption: string;
+  /** An uploaded file's size; 0 when unknown (linked media, older uploads). */
+  size_bytes: number;
 }
 
 export interface Entry {

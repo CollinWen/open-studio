@@ -5,7 +5,7 @@
  *      that board's newest entries (to pick one this builds on)
  *   2. for a link, ask the backend to capture it, in the background;
  *      for a note or photos, fill in the title and text so they can be edited
- *   3. on "save": upload any photos/videos, create the entry on the picked
+ *   3. on "save": upload any photos/videos (keeping each one's size), create the entry on the picked
  *      board, then link it to the entry it builds on
  *
  * ShareForm shows this model; ShareViewController creates it.
@@ -157,11 +157,13 @@ final class ShareFormModel {
         case .media(let providers, _, _):
             var uploaded: [UploadedMedia] = []
             for (index, provider) in providers.enumerated() {
-                message = "uploading \(index + 1) of \(providers.count)…"
+                message = "preparing \(index + 1) of \(providers.count)…"
                 let prepared = try await PreparedMedia.prepare(provider)
+                let size = ByteCountFormatter.string(fromByteCount: Int64(prepared.sizeBytes), countStyle: .file)
+                message = "uploading \(index + 1) of \(providers.count) · \(size)…"
                 defer { try? FileManager.default.removeItem(at: prepared.file) }
                 let url = try await api.uploadMedia(fileAt: prepared.file)
-                let item = MediaItem(type: prepared.isVideo ? "video" : "image", url: url)
+                let item = MediaItem(type: prepared.isVideo ? "video" : "image", url: url, sizeBytes: prepared.sizeBytes)
                 uploaded.append(UploadedMedia(item: item, takenAt: prepared.takenAt))
             }
             message = "saving, suggesting tags…"

@@ -110,10 +110,10 @@ open-studio/
 │   ├── building/             SKILL.md: writing code for the owner: prototypes and asked-for features, scoped, shown working, reported
 │   └── studio-writeup/       SKILL.md + example.html: writing an HTML page (a write-up) for an entry: how much room it has, what the studio keeps and what it takes over
 │
-└── ios/                      iPhone share-sheet extension + one-screen setup app (Swift)
+└── ios/                      iPhone app (Swift): the website's studio page in a web view, signed in, plus a share-sheet extension
     ├── README.md             How to build it on a Mac and get it onto a phone
     ├── project.yml           Xcode project description (XcodeGen); the .xcodeproj is generated
-    ├── OpenStudio/           The app: enter server address + owner token
+    ├── OpenStudio/           The app: setup (server address, site address, owner token), then the site's studio page in a web view
     ├── ShareToStudio/        The share extension: link, note or photos → board, made by me / inspiration, visibility, builds on, note → entry
     └── Shared/               Used by both: backend calls, data shapes, settings storage, the site's look (StudioStyle, Inter in Fonts/), its page pieces and the studio mark
 ```
