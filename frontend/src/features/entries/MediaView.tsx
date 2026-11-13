@@ -1,15 +1,18 @@
 /**
- * MediaView: one picture or video at full size on an entry page.
+ * MediaView: one picture, video or write-up at full size on an entry page.
  * Images show the original file; embeds (YouTube, Drive video) show the
- * site's own player at 16:9. Pictures fade in as they load. Underneath, in
- * one quiet line: the caption, if any, and an upload's file size, if known.
+ * site's own player at 16:9; a write-up is read in the studio's own style
+ * (WriteupView). Pictures fade in as they load. Underneath, in one quiet
+ * line: the caption, if any, and an upload's file size, if known.
  */
 
 import { FadeInImage } from "../../components/FadeInImage";
 import type { MediaItem } from "../../types/entry";
 import { formatFileSize } from "./formatFileSize";
+import { WriteupView } from "./WriteupView";
 
 export function MediaView({ item, title }: { item: MediaItem; title: string }) {
+  if (item.type === "html") return <WriteupView item={item} title={title} />;
   return (
     <figure className="media-view">
       {item.type === "image" && <FadeInImage src={item.url} alt={item.caption || title} loading="lazy" />}

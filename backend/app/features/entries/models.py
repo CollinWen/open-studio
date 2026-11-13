@@ -31,7 +31,7 @@ class Entry(SQLModel, table=True):
     source_url: str = ""
 
     # Pictures and videos, in display order. The first one is the cover in the grid.
-    # Each item: {type: image | video | embed, url, thumbnail_url, caption}. See schemas.MediaItem.
+    # Each item: {type: image | video | embed | html, url, thumbnail_url, caption}. See schemas.MediaItem.
     # Uploaded files are stored untouched (full resolution); linked ones (YouTube, Drive) are not copied.
     media: list[dict] = Field(default_factory=list, sa_column=Column(JSON))
 
@@ -47,6 +47,10 @@ class Entry(SQLModel, table=True):
     added_by: str = "owner"
     # The run it was added in (runs/models.py), when an agent added it on a run token.
     run_id: str | None = Field(default=None, index=True)
+
+    # The words in its write-ups (html media items), read when the media changes, so tags,
+    # Related and search know what they say. Never sent to the browser.
+    writeup_text: str = ""
 
     # Short, plain labels. Suggested by an LLM, editable afterwards.
     tags: list[str] = Field(default_factory=list, sa_column=Column(JSON))

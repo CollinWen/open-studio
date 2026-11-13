@@ -1,0 +1,105 @@
+/*
+ * Tokens: every color, size, space and motion value the studio's look is
+ * built from, for light and dark paper. The one source of truth for them.
+ *
+ * Imported by global.css (the site) and writeup.css (write-ups, shown
+ * inside their own frame), so a change here reaches both at once. Change
+ * the look by changing these, never with one-off values elsewhere.
+ */
+
+:root {
+  color-scheme: light;
+  --paper: #f3f1ec;
+  --ink: #141414;
+  --ink-soft: rgba(20, 20, 20, 0.52);
+  --ink-faint: rgba(20, 20, 20, 0.18);
+  --rule: 1px solid var(--ink);
+  --rule-faint: 1px solid var(--ink-faint);
+  /* Keyboard focus: a thin ink outline, the weight of a rule, just off the
+     control. Shown only when moving with the keyboard, never for the mouse. */
+  --focus-ring: 1px solid var(--ink);
+  --focus-offset: 2px;
+
+  /* The controls' two small accents: a Swiss red for where you are, and a
+     slightly shaded paper under the view and filter lines. */
+  --accent: #c43a22;
+  --paper-shade: #ebe8e1;
+
+  --font: "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+  /* Type sizes. Small is for labels and captions; large for the site name.
+     The display size's leading is a whole number of lines. */
+  --size-small: 12px;
+  --leading-small: 18px;
+  --size-body: 15px;
+  --size-large: 20px;
+  --size-display: 64px;
+  --leading-display: calc(3 * var(--line));
+
+  /* The grid: the line unit, the gutter between columns, the page margin. */
+  --line: 22px;
+  --gutter: 22px;
+  --margin: 44px;
+
+  /* Motion: one quiet, controlled personality, no overshoot. Things arrive
+     decelerating and leave accelerating; leaving takes about 70% as long.
+     Three durations; staggers stay under half a second in total. */
+  --ease-enter: cubic-bezier(0.2, 0, 0, 1);
+  --ease-exit: cubic-bezier(0.3, 0, 1, 1);
+  --motion-quick: 200ms;
+  --motion-standard: 350ms;
+  --motion-exit: 250ms;
+  --motion-ambient: 1600ms;
+  --stagger: 30ms;
+  --arrive-distance: 12px;
+  --sheet-drop: 24px;
+
+  /* Picked squares, tag ovals, view marks and the time slider. */
+  --square-padding: 0.4em;
+  --oval-padding: 0.55em;
+  --oval-gap: 0.4em;
+  --mark-choice: calc(var(--line) + 4px);
+  --dot-small: 6px;
+  --dot-medium: 10px;
+  --dot-large: 15px;
+  --time-bar-height: calc(1.5 * var(--line));
+  --time-handle: 11px;
+  /* The studio mark (components/StudioMark.tsx), by its height: beside a
+     word, and standing in for a view still on its way. */
+  --mark-small: calc(0.6 * var(--line));
+  --mark-large: calc(3 * var(--line));
+  /* The entry form's window: how wide it opens, and the smallest it can be dragged to. */
+  --sheet-width: 720px;
+  --sheet-min-width: 360px;
+  --sheet-min-height: 240px;
+}
+
+/* Dark: the same page at night. Only the paper, inks and the two accents
+   change; the work is never altered. Applied when <html data-theme="dark">,
+   which components/ThemeChoice.tsx sets from the visitor's pick ("auto"
+   follows the system), and index.html sets before the first paint. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --paper: #151412;
+  --ink: #ebe8e1;
+  --ink-soft: rgba(235, 232, 225, 0.55);
+  --ink-faint: rgba(235, 232, 225, 0.2);
+  --accent: #e2593d;
+  --paper-shade: #1f1d1a;
+}
+
+@media (max-width: 1100px) {
+  :root {
+    --size-display: 42px;
+    --leading-display: calc(2 * var(--line));
+  }
+}
+
+@media (max-width: 720px) {
+  :root {
+    --size-display: 30px;
+    --leading-display: calc(1.5 * var(--line));
+    --gutter: 16px;
+    --margin: 16px;
+  }
+}

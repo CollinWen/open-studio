@@ -1,12 +1,16 @@
 """
 Entry API shapes: what the frontend sends to create or edit an entry,
 and what it gets back. The embedding is never sent to the browser.
+An entry's media may include a write-up (type html) only if the studio
+stored it, so it was made safe on the way in (media/service.py).
 """
 
 from datetime import datetime, timezone
 from typing import Annotated, Literal
 
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field
+
+from app.integrations.media_storage import is_stored_writeup_url
 
 Visibility = Literal["private", "unlisted", "public"]
 
@@ -20,20 +24,31 @@ UtcDatetime = Annotated[datetime, AfterValidator(_assume_utc)]
 
 
 class MediaItem(BaseModel):
-    """One picture or video in an entry.
+    """One picture, video or write-up in an entry.
 
     image: shown with <img>.  video: a video file.  embed: a player page in an
-    iframe (YouTube, Drive video). thumbnail_url is the still used as a cover.
+    iframe (YouTube, Drive video).  html: a write-up, shown in the site's own
+    style. thumbnail_url is the still used as a cover.
     size_bytes is an uploaded file's size, sent by whoever uploaded it (the
     entry form, the iPhone share sheet) and shown on the entry page; 0 when
     unknown (linked media, uploads from before it was kept).
     """
 
-    type: Literal["image", "video", "embed"]
+    type: Literal["image", "video", "embed", "html"]
     url: str
     thumbnail_url: str = ""
     caption: str = ""
     size_bytes: int = Field(default=0, ge=0)
+
+
+def _only_stored_writeups(media: list[MediaItem] | None) -> list[MediaItem] | None:
+    for item in media or []:
+        if item.type == "html" and not is_stored_writeup_url(item.url):
+            raise ValueError("A write-up must be stored by the studio first (attach_writeup, or upload the .html)")
+    return media
+
+
+SentMedia = Annotated[list[MediaItem], AfterValidator(_only_stored_writeups)]
 
 
 class EntryCreate(BaseModel):
@@ -44,7 +59,7 @@ class EntryCreate(BaseModel):
     kind: str = "note"
     source_name: str = ""
     source_url: str = ""
-    media: list[MediaItem] = []
+    media: SentMedia = []
     occurred_at: UtcDatetime | None = None
     visibility: Visibility = "private"
     board: str = "home"
@@ -60,7 +75,7 @@ class EntryUpdate(BaseModel):
     kind: str | None = None
     source_name: str | None = None
     source_url: str | None = None
-    media: list[MediaItem] | None = None
+    media: SentMedia | None = None
     occurred_at: UtcDatetime | None = None
     visibility: Visibility | None = None
     tags: list[str] | None = None

@@ -36,7 +36,7 @@ Requests to `/api` and `/media` are passed through to the backend on port 8000
 |---|---|
 | `src/pages/` | One file per URL |
 | `src/features/grid/` | Browsing a board. `BrowsePanel` holds every way to move around, built from the shared SectionLine and ControlBand: the spaces, `BrowseControls` (search, size dots / rows, sort, clear), and behind the caret `TagFilter` (tags in ovals) and `TimeRangeFilter` (the month slider, with `monthRange` for months); `PickedFilters` shows a picked tag or span while they're closed. The views: the grid and rows, cards. `entryHighlight` (which entries fade when a tag or span of months is picked), `useBrowseParams` (all of it kept in the URL), `boardPath` (a board's address), and `useEntryPages` (loads a board a page at a time; new cards rise in as pages arrive) |
-| `src/features/entries/` | Pieces of the entry page (wall label, the full series of pictures and videos, tags, related) |
+| `src/features/entries/` | Pieces of the entry page (wall label, the full series of pictures, videos and write-ups, tags, related). A write-up is shown by `WriteupView` in a sandboxed frame that grows to fit, wrapped by `writeupPage.ts` in `styles/writeup.css` and the visitor's paper (`usePageTheme`) |
 | `src/features/sketches/` | The sketch page's experiments: a justified contact sheet (`justifyRows`), threads between related entries (`LinkLines`, `relatedLinks`) |
 | `src/features/agents/` | The agents page's pieces: the list of agents (`AgentList`), the log's control band (`AgentLogBand`: search, then agent, board, type behind the caret) with its URL state (`useLogFilters`), the log (`AgentLog`), and `formatTimeAgo` |
 | `src/features/studio/` | The owner's entry form, shown in a window over any page (`EntryFormModal`, opened by `?add` / `?edit=<id>`; `entrySavedEvent` tells the page to reload): paste-a-link capture, the essentials first with the rest behind "more", the media list (cover, captions, uploads); plus the boards list (`BoardManager`), the entry list, tag notes (description + importance) and the agents list (`AgentManager`) |
@@ -44,7 +44,7 @@ Requests to `/api` and `/media` are passed through to the backend on port 8000
 | `public/` | Files served as they are: `favicon.svg` (the studio mark on pure white, with a one-square empty border so the ink never touches the edge) |
 | `src/api/` | Every call to the backend, and the owner's sign-in (`ownerSignIn.ts`: the password today, the one file to change for Google sign-in) |
 | `src/types/` | Data shapes, matching the backend's `schemas.py` files |
-| `src/styles/global.css` | The entire visual style; tokens (colors, type sizes, line unit, gutter, margins) at the top. The typeface comes from `@fontsource-variable/inter`, loaded in `main.tsx` |
+| `src/styles/` | The entire visual style. `tokens.css`: every color, type size, line unit, gutter, margin and motion value, light and dark. `global.css`: the site, built on them. `writeup.css`: write-ups (an entry's HTML), built on the same tokens and loaded only inside a write-up's frame; when the site's text, tables, captions or rules change, change it too. The typeface comes from `@fontsource-variable/inter`, loaded in `main.tsx` (and imported by `writeup.css`) |
 
 ## The studio mark
 

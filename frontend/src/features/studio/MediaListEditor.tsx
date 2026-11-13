@@ -1,9 +1,10 @@
 /**
- * MediaListEditor: the pictures and videos in the entry being edited.
+ * MediaListEditor: the pictures, videos and write-ups in the entry being edited.
  * Each one shows as a small preview with "cover" (move to first), "remove"
- * and a caption. "add file" uploads from this device, stored untouched; each
- * upload keeps its size (shown here and on the entry page), and the uploading
- * line shows the total.
+ * and a caption. "add file" uploads from this device: pictures and videos
+ * are stored untouched; a write-up (.html) is made safe first, and what was
+ * removed from it is listed here. Each upload keeps its size (shown here and
+ * on the entry page), and the uploading line shows the total.
  */
 
 import { useState } from "react";
@@ -29,13 +30,14 @@ export function MediaListEditor({ media, onChange }: Props) {
     setStatus(`uploading ${picked.length === 1 ? "1 file" : `${picked.length} files`} · ${formatFileSize(total)}…`);
     try {
       const added: MediaItem[] = [];
+      const removed: string[] = [];
       for (const file of picked) {
-        const url = await uploadMedia(file);
-        const type = file.type.startsWith("video/") ? "video" : "image";
-        added.push({ type, url, thumbnail_url: "", caption: "", size_bytes: file.size });
+        const uploaded = await uploadMedia(file);
+        added.push({ type: mediaTypeOf(file), url: uploaded.url, thumbnail_url: "", caption: "", size_bytes: file.size });
+        removed.push(...(uploaded.removed ?? []));
       }
       onChange([...media, ...added]);
-      setStatus("");
+      setStatus(removed.length ? `removed from the write-up: ${removed.join(", ")}` : "");
     } catch (error) {
       setStatus(`upload failed: ${error instanceof Error ? error.message : error}`);
     } finally {
@@ -52,7 +54,11 @@ export function MediaListEditor({ media, onChange }: Props) {
     <div className="media-editor">
       {media.map((item, index) => (
         <div key={`${item.url}-${index}`} className="media-editor-item">
-          <img src={item.thumbnail_url || item.url} alt="" />
+          {item.type === "html" ? (
+            <span className="media-editor-writeup quiet">write-up</span>
+          ) : (
+            <img src={item.thumbnail_url || item.url} alt="" />
+          )}
           <div className="word-list">
             <span className="quiet">{index === 0 ? "cover" : item.type}</span>
             {item.size_bytes > 0 && <span className="quiet">{formatFileSize(item.size_bytes)}</span>}
@@ -70,10 +76,15 @@ export function MediaListEditor({ media, onChange }: Props) {
       ))}
       <label className="quiet">
         add file
-        <input type="file" accept="image/*,video/*" multiple hidden onChange={(e) => addFiles(e.target.files)} />
+        <input type="file" accept="image/*,video/*,.html" multiple hidden onChange={(e) => addFiles(e.target.files)} />
       </label>
       {uploading && <LoadingWord> {status}</LoadingWord>}
       {status && !uploading && <span className="quiet"> {status}</span>}
     </div>
   );
+}
+
+function mediaTypeOf(file: File): MediaItem["type"] {
+  if (file.name.toLowerCase().endsWith(".html")) return "html";
+  return file.type.startsWith("video/") ? "video" : "image";
 }

@@ -1,0 +1,272 @@
+/*
+ * Write-up styles: the whole look of a write-up (an entry's illustrated
+ * text, in HTML), built on the same tokens as the site (tokens.css), so a
+ * write-up always reads as a page of the studio, whoever wrote it.
+ *
+ * Loaded only inside a write-up's frame (features/entries/writeupPage.ts).
+ * The line: a write-up may arrange itself (its own layout rules survive:
+ * grids, columns, widths, gaps), but everything about how it looks comes
+ * from here; the backend removes its fonts, sizes, colors and spacing
+ * (features/media/writeup_css_filter.py). The class names with a look here
+ * are lead, soft, faint and wide, as in skills/studio-writeup/SKILL.md.
+ * When the site's text, tables, captions or rules change in global.css,
+ * change them here too.
+ */
+
+@import "@fontsource-variable/inter";
+@import "./tokens.css";
+
+* {
+  box-sizing: border-box;
+}
+
+/* The frame grows to fit the write-up, so it never scrolls on its own. */
+html {
+  overflow: hidden;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: var(--size-body);
+  line-height: var(--line);
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Keeps the first and last margins inside, so the measured height is the real one. */
+body {
+  display: flow-root;
+}
+
+body > :first-child {
+  margin-top: 0;
+}
+
+body > :last-child {
+  margin-bottom: 0;
+}
+
+/* The first thing in a column or box of the writer's layout starts at its top. */
+:is(div, section, article, aside, header, footer) > :first-child {
+  margin-top: 0;
+}
+
+/* Running text keeps a readable measure (about 60 characters); figures,
+   tables and drawings marked wide use the whole width. */
+p,
+ul,
+ol,
+dl,
+blockquote,
+h1,
+h2,
+h3,
+h4,
+figure,
+table,
+pre,
+details {
+  max-width: 34em;
+  margin: 0 0 var(--line);
+}
+
+.wide {
+  max-width: none;
+}
+
+/* Hierarchy from size, weight and space, as on the site: never extra colors. */
+h1 {
+  font-size: var(--size-large);
+  line-height: calc(1.5 * var(--line));
+  font-weight: 560;
+  letter-spacing: -0.01em;
+}
+
+/* A new section starts like a ruled row: a blank line, a hairline, half a line, then the heading. */
+h2 {
+  margin-top: calc(2 * var(--line));
+  padding-top: calc(var(--line) / 2);
+  border-top: var(--rule);
+  font-size: inherit;
+  font-weight: 600;
+}
+
+h3 {
+  margin-top: calc(2 * var(--line));
+  font-size: inherit;
+  font-weight: 500;
+}
+
+/* The small label size, in the soft ink: like a caption over a row. */
+h4 {
+  font-size: var(--size-small);
+  line-height: var(--leading-small);
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
+.lead {
+  font-size: var(--size-large);
+  line-height: calc(1.5 * var(--line));
+}
+
+.soft {
+  color: var(--ink-soft);
+}
+
+.faint {
+  color: var(--ink-faint);
+}
+
+a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  text-decoration-thickness: 1px;
+}
+
+ul,
+ol {
+  padding-left: var(--gutter);
+}
+
+dt {
+  font-weight: 500;
+}
+
+dd {
+  margin: 0 0 calc(var(--line) / 2);
+}
+
+blockquote {
+  padding-left: var(--gutter);
+  color: var(--ink-soft);
+}
+
+hr {
+  max-width: none;
+  margin: var(--line) 0;
+  border: 0;
+  border-top: var(--rule-faint);
+}
+
+strong,
+b {
+  font-weight: 600;
+}
+
+small,
+figcaption,
+caption {
+  font-size: var(--size-small);
+  line-height: var(--leading-small);
+  color: var(--ink-soft);
+}
+
+/* Pictures start on the left edge and never run past the frame. */
+img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+figcaption {
+  margin-top: calc(var(--line) / 4);
+}
+
+/* Tables read like the site's ledger: small column names, hairline rows. */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+caption {
+  text-align: left;
+  padding-bottom: calc(var(--line) / 4);
+}
+
+th,
+td {
+  padding: calc(var(--line) / 4) var(--gutter) calc(var(--line) / 4) 0;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: var(--rule-faint);
+}
+
+th {
+  font-size: var(--size-small);
+  line-height: var(--leading-small);
+  font-weight: 400;
+  color: var(--ink-soft);
+  border-bottom: var(--rule);
+}
+
+/* One typeface everywhere, code included; set apart by size and hairlines, not a box. */
+code,
+kbd,
+pre {
+  font-family: var(--font);
+}
+
+code,
+kbd {
+  font-size: 0.92em;
+  font-weight: 500;
+}
+
+pre {
+  max-width: none;
+  padding: calc(var(--line) / 2) 0;
+  border-top: var(--rule-faint);
+  border-bottom: var(--rule-faint);
+  font-size: var(--size-small);
+  line-height: var(--leading-small);
+  white-space: pre-wrap;
+}
+
+pre code {
+  font-size: inherit;
+  font-weight: 400;
+}
+
+mark {
+  background: none;
+  color: inherit;
+  font-weight: 600;
+}
+
+summary {
+  cursor: pointer;
+  font-weight: 500;
+}
+
+/* Drawings are lines in the ink, the weight of a rule. A shape can fill with
+   fill="currentColor"; .soft and .faint give it the lighter inks. A drawing
+   shows at the width it gives itself, shrinking only to fit the frame. */
+svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 0 var(--line);
+  color: var(--ink);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1;
+  overflow: visible;
+}
+
+/* Lines stay the weight of a rule however large the drawing is shown. */
+svg * {
+  vector-effect: non-scaling-stroke;
+}
+
+svg text {
+  fill: currentColor;
+  stroke: none;
+  font-family: var(--font);
+  font-size: var(--size-small);
+}

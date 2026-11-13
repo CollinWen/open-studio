@@ -5,7 +5,9 @@ for each kind of viewer (visitor, agent, owner).
 Who can see and edit what lives in entries/visibility_rules.py. Every entry is
 on one board; an agent may only add to (or move entries onto) boards it is
 signed on to (boards/service.py). Entries added by an agent are recorded with
-its name (and the run it was on, if any) and start unlisted. An agent can't add a second entry for a link
+its name (and the run it was on, if any) and start unlisted. When an entry's
+media changes, the words of its write-ups are read back (media/service.py),
+so tags, Related and search know what they say. An agent can't add a second entry for a link
 that is already in the studio; it gets the existing one back instead.
 
 Long collections can be read a page at a time (list_entry_page). Other
@@ -25,9 +27,10 @@ from app.features.entries.models import Entry
 from app.features.entries.page_cursor import make_cursor, read_cursor
 from app.features.entries.schemas import EntryCreate, EntryUpdate
 from app.features.entries.visibility_rules import AGENT_ENTRY_VISIBILITY, can_open, listing_condition
+from app.features.media import service as media_service
 
 # Edits to these fields change an entry's meaning, so its embedding is recomputed.
-MEANING_FIELDS = {"title", "description", "kind", "source_name", "tags"}
+MEANING_FIELDS = {"title", "description", "kind", "source_name", "tags", "writeup_text"}
 MAX_PAGE_SIZE = 200
 
 
@@ -101,6 +104,7 @@ def create_entry(db: Session, data: EntryCreate, viewer: Viewer) -> Entry:
         existing = _find_by_source_url(db, entry.source_url)
         if existing is not None:
             raise DuplicateLinkError(existing if can_open(viewer, existing) else None)
+    entry.writeup_text = media_service.read_writeup_text(entry.media)
     enrich_entry(entry, existing_tags=_all_tags(db))
     db.add(entry)
     db.commit()
@@ -125,6 +129,10 @@ def update_entry(db: Session, entry: Entry, changes: EntryUpdate, viewer: Viewer
         raise AgentCannotPublishError("Only the owner can change an entry's visibility")
     if "board" in changed:
         _check_can_add_to_board(db, viewer, changed["board"])
+    if "media" in changed:
+        writeup_text = media_service.read_writeup_text(changed["media"])
+        if writeup_text != entry.writeup_text:
+            changed["writeup_text"] = writeup_text
     for field, value in changed.items():
         setattr(entry, field, value)
     entry.updated_at = datetime.now(timezone.utc)

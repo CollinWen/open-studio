@@ -6,12 +6,13 @@
 export type Visibility = "private" | "unlisted" | "public";
 
 /**
- * One picture or video in an entry. The first item in an entry's list is its cover.
+ * One picture, video or write-up in an entry. The first item in an entry's list is its cover.
  * image: shown with <img>.  video: a video file.  embed: a player in an iframe (YouTube, Drive video).
+ * html: a write-up (illustrated text the studio made safe), shown in the site's own style.
  * thumbnail_url: a still picture for the grid (needed for embeds; optional otherwise).
  */
 export interface MediaItem {
-  type: "image" | "video" | "embed";
+  type: "image" | "video" | "embed" | "html";
   url: string;
   thumbnail_url: string;
   caption: string;
