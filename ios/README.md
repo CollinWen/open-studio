@@ -29,8 +29,8 @@ It's the real site in a web view, so anything the site gains, the app has the sa
 sites (a source, YouTube) open in Safari. Swipe back, pull down to reload. A line of words at the bottom:
 **back**, **studio** (return to the studio page) and **setup**.
 
-While the entry form is open, each file you add shows its size, so you can see when something is heavy
-enough to link to instead.
+Every uploaded picture or video keeps its file size (in the entry form, on the entry page under the
+picture, and while the share sheet uploads), so you can see when something is heavy enough to link to instead.
 
 The first time (and from **setup**) it asks for:
 - the **server address**: the backend, e.g. `https://api.yourdomain.com` (the share sheet uses this)

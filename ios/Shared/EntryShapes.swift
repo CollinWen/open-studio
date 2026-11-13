@@ -15,6 +15,8 @@ struct MediaItem: Codable {
     var url: String
     var thumbnailUrl: String = ""
     var caption: String = ""
+    /// An uploaded file's size, shown on the entry page; 0 when unknown.
+    var sizeBytes: Int = 0
 }
 
 /// What POST /api/capture/link returns: suggested values for a new entry from a link.

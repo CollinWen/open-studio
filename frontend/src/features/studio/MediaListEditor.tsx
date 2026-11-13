@@ -1,16 +1,16 @@
 /**
  * MediaListEditor: the pictures and videos in the entry being edited.
  * Each one shows as a small preview with "cover" (move to first), "remove"
- * and a caption. "add file" uploads from this device, stored untouched; while
- * the form is open, each file added shows its size (formatFileSize.ts), and
- * the uploading line shows the total.
+ * and a caption. "add file" uploads from this device, stored untouched; each
+ * upload keeps its size (shown here and on the entry page), and the uploading
+ * line shows the total.
  */
 
 import { useState } from "react";
 import { uploadMedia } from "../../api/mediaApi";
 import { LoadingWord } from "../../components/LoadingWord";
 import type { MediaItem } from "../../types/entry";
-import { formatFileSize } from "./formatFileSize";
+import { formatFileSize } from "../entries/formatFileSize";
 
 interface Props {
   media: MediaItem[];
@@ -20,8 +20,6 @@ interface Props {
 export function MediaListEditor({ media, onChange }: Props) {
   const [status, setStatus] = useState("");
   const [uploading, setUploading] = useState(false);
-  // Sizes of the files uploaded since the form opened, by their stored address.
-  const [sizes, setSizes] = useState<Record<string, number>>({});
 
   async function addFiles(files: FileList | null) {
     if (!files?.length) return;
@@ -34,8 +32,7 @@ export function MediaListEditor({ media, onChange }: Props) {
       for (const file of picked) {
         const url = await uploadMedia(file);
         const type = file.type.startsWith("video/") ? "video" : "image";
-        added.push({ type, url, thumbnail_url: "", caption: "" });
-        setSizes((known) => ({ ...known, [url]: file.size }));
+        added.push({ type, url, thumbnail_url: "", caption: "", size_bytes: file.size });
       }
       onChange([...media, ...added]);
       setStatus("");
@@ -58,7 +55,7 @@ export function MediaListEditor({ media, onChange }: Props) {
           <img src={item.thumbnail_url || item.url} alt="" />
           <div className="word-list">
             <span className="quiet">{index === 0 ? "cover" : item.type}</span>
-            {sizes[item.url] !== undefined && <span className="quiet">{formatFileSize(sizes[item.url])}</span>}
+            {item.size_bytes > 0 && <span className="quiet">{formatFileSize(item.size_bytes)}</span>}
             <input placeholder="caption" value={item.caption} onChange={(e) => setCaption(index, e.target.value)} />
             {index > 0 && (
               <button type="button" className="quiet" onClick={() => makeCover(index)}>

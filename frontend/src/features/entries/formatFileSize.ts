@@ -1,9 +1,9 @@
 /**
- * formatFileSize: a file's size in the words the entry form shows beside an
- * upload ("840 KB", "14.2 MB"), so the owner can see when something is heavy
+ * formatFileSize: a file's size in the words shown beside an uploaded
+ * picture or video ("840 KB", "14.2 MB"), so the owner can see when something is heavy
  * enough to link to instead.
  *
- * Used by MediaListEditor.
+ * Used by MediaView (the entry page) and studio/MediaListEditor (the entry form).
  */
 
 const UNITS = ["bytes", "KB", "MB", "GB"];
