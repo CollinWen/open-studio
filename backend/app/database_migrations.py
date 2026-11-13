@@ -22,6 +22,7 @@ MIGRATIONS: list[str] = [
     "CREATE INDEX IF NOT EXISTS ix_entry_run_id ON entry (run_id)",
     "ALTER TABLE agent_log_line ADD COLUMN run_id VARCHAR",
     "CREATE INDEX IF NOT EXISTS ix_agent_log_line_run_id ON agent_log_line (run_id)",
+    "ALTER TABLE entry ADD COLUMN writeup_text VARCHAR NOT NULL DEFAULT ''",
 ]
 
 

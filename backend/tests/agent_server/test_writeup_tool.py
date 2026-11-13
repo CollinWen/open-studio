@@ -32,7 +32,7 @@ def test_an_agent_attaches_a_safe_write_up(running_client):
 
     assert not attached["isError"], attached
     result = attached["structuredContent"]
-    assert result["removed"] == ["style attributes: 1"]
+    assert result["removed"] == ["font-family (the studio sets how things look): 1"]
     writeup = result["entry"]["media"][-1]
     assert writeup["type"] == "html"
     assert running_client.get(writeup["url"]).text == "<h1>Findings</h1><p>Plain words.</p>"

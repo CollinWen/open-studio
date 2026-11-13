@@ -4,6 +4,9 @@ Enrichment: the automatic work done after an entry is saved or edited.
   1. Suggest tags with an LLM (only if the entry has none).
   2. Compute an embedding from the entry's text.
 
+Both read the start of its write-ups' words too (writeup_text), after the
+description, so a write-up shapes its tags and its Related entries.
+
 If OpenRouter isn't configured or a call fails, the entry is still saved;
 it just goes without tags or an embedding until the next edit.
 """
@@ -33,6 +36,7 @@ def enrich_entry(entry: Entry, existing_tags: list[str]) -> None:
                 kind=entry.kind,
                 source_name=entry.source_name,
                 existing_tags=existing_tags,
+                writeup_text=entry.writeup_text[: settings.writeup_text_for_meaning],
             )
         except Exception:
             log.exception("Tag suggestion failed for entry %s", entry.id)
@@ -52,5 +56,6 @@ def build_embedding_text(entry: Entry) -> str:
         f"Kind: {entry.kind}",
         f"Source: {entry.source_name}" if entry.source_name else "",
         f"Tags: {', '.join(entry.tags)}" if entry.tags else "",
+        f"Write-up: {entry.writeup_text[: settings.writeup_text_for_meaning]}" if entry.writeup_text else "",
     ]
     return "\n".join(part for part in parts if part)

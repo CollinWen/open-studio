@@ -1,92 +1,129 @@
 ---
 name: studio-writeup
-description: Write a write-up for an Open Studio entry, an illustrated page of plain HTML (headings, tables, embedded pictures, simple drawings) that the studio shows in its own style. Use when an entry needs more than its description can hold, such as a study's findings, what a commit or prototype changed, or a comparison of sources, and you're adding it with attach_writeup.
+description: Write an HTML page for an Open Studio entry (a write-up) — a findings report, what a commit or prototype changed, a comparison, a diagram — knowing exactly how much room the page has, what the studio keeps, and what it takes over. Use whenever you're about to write HTML for the studio, or attach one with attach_writeup.
 ---
 
-# Writing a studio write-up
+# Writing HTML pages for the studio
 
-A write-up is an entry's illustrated text: a page you write in plain HTML
-that the studio shows on the entry's page, in the site's own type, grid and
-paper (light or dark, as the visitor picked). It's for when a few sentences
-of description aren't enough: the findings of a study, what a commit
-changed and why, a table that compares sources, a small drawing that shows a shape.
+A write-up is a page of HTML on an entry. It's for whatever a few sentences of
+description can't carry: a study's findings with a table, what a commit
+changed and why, a side-by-side comparison, a diagram of how something flows.
+The studio shows it on the entry's page, in the site's own type, grid and
+paper (light or dark, as the visitor picked).
 
-**You write the content. The studio supplies the look.** Every write-up looks
-like the rest of the site, whoever wrote it. So don't style anything: no
-`<style>`, no `style=""`, no fonts, no colors, no class names of your own, no
-CSS framework. All of that is removed when you attach the write-up, and what
-was removed is listed in the answer. If something you wanted was removed,
-write it a plainer way. Don't try to get around it.
+You have a lot of room for **what the page says and how it's arranged**. You
+have none over **how it looks**, and nothing on it can run.
+
+## How much room you have
+
+| | Who decides | What that covers |
+|---|---|---|
+| **Yours** | What's on the page and how it's arranged | Any structure: headings, lists, tables, figures, code, `details`. Layout: columns, grids, flex rows, widths, alignment, gaps, order. Drawings: inline SVG with any geometry, arrowheads, hatching, reused shapes, labels. Pictures written into the file. Links out. |
+| **The studio's** | How it looks | The typeface, every type size, every color and background, borders, shadows, rounded corners, and the space between blocks (margins, padding). These come from the studio's own stylesheet and replace whatever you write. |
+| **Nobody's** | Anything that runs or loads | Scripts, event handlers (`onclick`...), forms and inputs, `iframe`, `video`, `audio`, `canvas`, `object`, and anything fetched from another address: stylesheets, fonts, pictures, `@import`, `url(...)`. |
+
+So write the page as if a very good designer will set it for you: give it
+clear structure and a sensible arrangement, and let the look go. Don't spend
+effort on colors, fonts, cards, shadows or a CSS framework. They're removed,
+and the answer from `attach_writeup` lists each thing it removed. If something
+you needed was removed, find a plainer way to say it. Don't try to get around it.
+
+Nothing on the page can be interactive: no tabs, toggles you script, hover
+charts or live data. `details` and `summary` (open and close by clicking) are
+the one exception, because the browser does them without a script. A diagram
+library that draws in the browser (Mermaid, D3, Chart.js) can't run here, so
+draw the finished SVG yourself.
+
+## Structure
+
+- `h1` once, at the top: the thing's name. Then a `p class="lead"` that gives
+  the answer first.
+- `h2` for each section (the studio starts each one under a rule), `h3` within,
+  `h4` for a small label.
+- `p`, `ul`, `ol`, `li`, `dl`, `dt`, `dd`, `blockquote`, `cite`, `q`, `em`,
+  `strong`, `small`, `sub`, `sup`, `mark`, `abbr`, `hr`, `br`.
+- Tables: `table`, `caption`, `thead`, `tbody`, `tfoot`, `tr`, `th` (with
+  `scope`), `td` (with `colspan` and `rowspan`). They're set like the site's
+  lists: small column names and hairline rows.
+- Code: `pre` and `code`, in the same typeface as the text.
+- Grouping: `section`, `article`, `header`, `footer`, `aside`, `div`, `span`;
+  `id`, `class`, `title`, `role`, `aria-label` and `aria-hidden` on anything.
+- Tags not on this page are removed, but their text stays.
+
+## Layout
+
+Use `<style>` blocks or `style=""` with your own class names. Only these
+properties are kept; every other declaration is removed:
+
+- **Boxes:** `display` (block, flex, grid, none...), `width`, `min-width`,
+  `max-width`, `height`, `min-height`, `max-height`, `aspect-ratio`.
+- **Flex and grid:** `flex` and its parts, `grid-template-columns`,
+  `grid-template-rows`, `grid-template-areas`, `grid-column`, `grid-row`,
+  `grid-area`, `grid-auto-flow`, `gap`, `row-gap`, `column-gap`, `order`,
+  `justify-*`, `align-*`, `place-*`.
+- **Text and flow:** `text-align`, `vertical-align`, `white-space`,
+  `columns`, `column-count`, `column-width`, `break-inside`, `break-before`,
+  `break-after`, `list-style-type`, `table-layout`, `overflow-x`.
+- **Pictures:** `object-fit`, `object-position`.
+- `@media` blocks are kept (filtered the same way), so a layout can fold to one
+  column on a phone. Every other `@` rule is removed.
+
+To stay on the studio's grid, size gaps with its units: `var(--line)` (one
+line of text, the vertical unit) and `var(--gutter)` (the space between
+columns). Running text keeps a readable width on its own; a `figure`, `table`
+or `pre` with `class="wide"` uses the full width.
+
+## Drawings
+
+Inline `<svg>` with `g`, `path`, `line`, `polyline`, `polygon`, `rect`,
+`circle`, `ellipse`, `text`, `tspan`, plus `defs`, `marker` (arrowheads),
+`pattern` (hatching) and `symbol` and `use` (draw a shape once, place it many
+times). Any geometry is kept: `viewBox`, coordinates, `d`, `points`,
+`transform`, `stroke-width`, `stroke-dasharray`, `marker-end`, `refX`, and so on.
+
+- **Ink only.** Lines are drawn in the page's ink. Fill a shape with
+  `fill="currentColor"`, leave it open with `fill="none"`, or hatch it with
+  `fill="url(#your-pattern)"`. `class="soft"` and `class="faint"` give the
+  lighter inks. No other colors: tell things apart with fills, hatching,
+  dashes (`stroke-dasharray`) and labels.
+- References like `url(#arrow)` and `href="#shape"` must point inside the same
+  drawing. Nothing outside it can be referenced.
+- Labels are set in the page's small size. Give the `svg` a `width` and
+  `height` equal to its `viewBox` so they show at that size.
+- Give each drawing `role="img"` and an `aria-label` that says what it shows.
+
+## Pictures and links
+
+- Pictures go in the file: `<img src="data:image/png;base64,...">` (png, jpeg,
+  gif or webp), inside a `figure` with a `figcaption`. A picture from a web
+  address is removed. The whole write-up must be under 5 MB.
+- Links: `a href` to `https://`, `http://` or `mailto:` (they open in a new
+  tab), or `#an-id` on the same page.
 
 ## Attaching one
 
 1. Add the entry first (`add_entry`). Its **description** still matters most:
-   it's what the owner reads in the grid and what search and Related use. The
-   write-up is the longer read behind it.
-2. `attach_writeup(entry_id, html, caption="")` with the HTML as a string.
-   It goes after the entry's pictures; if the entry has none, the grid shows a
-   typographic cover (the title, set large).
+   it's what the owner reads in the grid. The write-up's words also feed the
+   entry's tags, its Related entries and search, so write the text plainly.
+2. `attach_writeup(entry_id, html, caption="")`. Send only the page's content;
+   `<html>`, `<head>` and `<body>` aren't needed. If the entry has no pictures,
+   the grid shows a typographic cover (its title, set large).
 3. Read `removed` in the answer. An empty list means everything was kept.
 
-Without MCP, the owner can upload the same HTML as a `.html` file in the entry
-form; it goes through the same cleaning.
-
-## What to write
-
-Send only what goes inside the page's body: no `<html>`, `<head>` or `<body>`
-needed (they're removed if you send them). Aim for one screen to a few.
-
-Elements that are kept:
-
-- **Text**: `h1` (once, at the top), `h2` for sections (each starts under a
-  rule), `h3`, `h4` (a small label), `p`, `ul`, `ol`, `li`, `dl`, `dt`, `dd`,
-  `blockquote`, `cite`, `q`, `em`, `strong`, `small`, `sub`, `sup`, `mark`,
-  `abbr`, `hr`, `br`, `details` and `summary`.
-- **Tables**: `table`, `caption`, `thead`, `tbody`, `tr`, `th` (with `scope`),
-  `td` (with `colspan` and `rowspan`). They read like the site's lists: small
-  column names, hairline rows. Keep them to a few columns.
-- **Code**: `pre` and `code`, shown in the same typeface as the text.
-- **Pictures**: `figure`, `figcaption`, and `img` with the picture written
-  into the file as a `data:image/png;base64,...` URL (png, jpeg, gif or webp).
-  A picture loaded from a web address is removed: a write-up never fetches anything.
-  Keep the whole write-up under 5 MB.
-- **Drawings**: inline `svg` with `g`, `path`, `line`, `polyline`, `polygon`,
-  `rect`, `circle`, `ellipse`, `text` and `tspan`, using geometry only
-  (`viewBox`, coordinates, `d`, `points`, `transform`, `stroke-width`,
-  `stroke-dasharray`, `text-anchor`). Lines are drawn in the page's ink.
-  Use `fill="currentColor"` to fill a shape and `fill="none"` to leave it
-  open; no other colors. Give the `svg` a `width` and `height` equal to its
-  `viewBox`, so its text shows at the page's small size. Give it `role="img"`
-  and an `aria-label` that says what it shows.
-- **Links**: `a href` to `https://`, `http://` or `mailto:` (they open in a new
-  tab), or to `#an-id` on the same page. Anything else is removed.
-- **Structure**: `section`, `article`, `header`, `footer`, `aside`, `div` and
-  `span`, plus `id`, `title`, `role`, `aria-label` and `aria-hidden` on any element.
-
-The only class names that mean anything (all others are removed):
-
-| Class | Use it for |
-|---|---|
-| `lead` | The opening paragraph, set a size larger: the one-sentence answer. |
-| `soft` | Second-strength ink: asides, sources, labels in a drawing. |
-| `faint` | The lightest ink: guide lines and axes in a drawing. |
-| `wide` | A `figure`, `table` or `pre` that should use the full width instead of the text's measure. |
-
-Everything else is removed, contents and all: `script`, `style`, `link`,
-`iframe`, `form` and its inputs, `video`, `audio`, `canvas`, `object` and
-`embed`. Event handlers (`onclick` and the rest) and `style` attributes are
-removed too. Tags not on the list above are dropped, but their text stays.
+Without MCP, the owner can upload the same HTML as a `.html` file in the
+entry form; it goes through the same rules.
 
 ## Writing well for the studio
 
-- Open with an `h1` that names the thing and a `lead` that gives the answer
-  first. The rest supports it.
-- Use plain words and short sections. One idea per `h2`.
-- Prefer a table or a small drawing to a paragraph of numbers.
-- Every picture earns its place: the work itself, or a figure that shows
-  something words can't. Caption it.
+- Answer first, then support it. One idea per `h2`.
+- Prefer a table or a drawing to a paragraph of numbers.
+- Use a layout when it helps reading (two options side by side, a diagram
+  beside its notes), not to decorate.
+- Every picture earns its place: the work itself, or a figure that shows what
+  words can't. Caption it.
 - End with where it came from: sources, the commit, the entries it builds on
-  (link those with `builds_on`, not only in the text).
+  (link those with `builds_on` too, not only in the text).
 
-`example.html` in this folder is a complete write-up that keeps everything
-(`removed` comes back empty). Start from it.
+`example.html` in this folder uses all of this (a table, a two-column
+layout, a chart, and a flow diagram with arrowheads and hatching) and comes
+through with nothing removed. Start from it.

@@ -11,7 +11,11 @@ from app.features.media.writeup_sanitizer import sanitize_writeup
 
 
 def _kept(html: str) -> str:
-    return sanitize_writeup(html)[0]
+    return sanitize_writeup(html).html
+
+
+def _removed(html: str) -> list[str]:
+    return sanitize_writeup(html).removed
 
 
 def test_plain_writing_is_kept_as_it_is():
@@ -20,28 +24,27 @@ def test_plain_writing_is_kept_as_it_is():
 
 
 def test_scripts_styles_and_handlers_are_removed_and_noted():
-    kept, removed = sanitize_writeup(
-        '<style>p{color:red}</style><script>alert(1)</script>'
+    result = sanitize_writeup(
+        '<script>alert(1)</script>'
         '<link rel="stylesheet" href="https://x.com/a.css">'
-        '<p style="color:red" onclick="steal()">words</p>'
+        '<p onclick="steal()">words</p>'
     )
-    assert kept == "<p>words</p>"
-    assert {"<style>: 1", "<script>: 1", "linked stylesheets and files: 1",
-            "style attributes: 1", "event handlers (on…): 1"} <= set(removed)
+    assert result.html == "<p>words</p>"
+    assert {"<script>: 1", "linked stylesheets and files: 1", "event handlers (on…): 1"} <= set(result.removed)
 
 
 def test_a_whole_page_is_reduced_to_its_body():
     page = "<!DOCTYPE html><html><head><title>T</title><meta charset=utf-8></head><body><p>hi</p></body></html>"
-    kept, removed = sanitize_writeup(page)
-    assert kept == "<p>hi</p>"
-    assert removed == []
+    result = sanitize_writeup(page)
+    assert result.html == "<p>hi</p>"
+    assert result.removed == []
 
 
 def test_only_embedded_pictures_are_kept():
     embedded = '<img src="data:image/png;base64,iVBORw0KGgo=" alt="crumb">'
-    kept, removed = sanitize_writeup(embedded + '<img src="https://tracker.example.com/pixel.gif">')
-    assert kept == embedded
-    assert "pictures not written into the file: 1" in removed
+    result = sanitize_writeup(embedded + '<img src="https://tracker.example.com/pixel.gif">')
+    assert result.html == embedded
+    assert "pictures not written into the file: 1" in result.removed
 
 
 def test_links_point_out_but_never_run_code():
@@ -61,11 +64,61 @@ def test_unknown_tags_are_dropped_but_their_text_stays():
     assert _kept("<custom-box><p>kept</p></custom-box>") == "<p>kept</p>"
 
 
+def test_layout_styles_stay_and_appearance_goes():
+    result = sanitize_writeup(
+        '<div style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--gutter); '
+        'color: hotpink; font-family: Papyrus">two columns</div>'
+    )
+    assert result.html == (
+        '<div style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--gutter)">two columns</div>'
+    )
+    assert {"color (the studio sets how things look): 1",
+            "font-family (the studio sets how things look): 1"} <= set(result.removed)
+
+
+def test_style_blocks_keep_only_layout_rules():
+    result = sanitize_writeup(
+        "<style>@import url(https://x.com/a.css); @font-face { font-family: X; src: url(x.woff) }"
+        ".pair { display: flex; gap: 22px; background: url(https://x.com/track.png); color: red }"
+        "@media (max-width: 600px) { .pair { flex-direction: column; font-size: 40px } }"
+        "h1 { font-size: 90px }</style><p>x</p>"
+    )
+    assert result.html == (
+        "<style>.pair { display: flex; gap: 22px }\n"
+        "@media (max-width: 600px) { .pair { flex-direction: column } }</style><p>x</p>"
+    )
+    assert {"@import rules: 1", "@font-face rules: 1"} <= set(result.removed)
+
+
+def test_a_style_block_can_never_close_itself_early():
+    html = _kept("<style>p { width: 1px } </style><script>alert(1)</script><style>a{width:2px}</style>")
+    assert "<script>" not in html
+
+
+def test_diagrams_keep_arrowheads_hatching_and_reused_shapes():
+    html = (
+        '<svg viewBox="0 0 10 10"><defs>'
+        '<marker id="arrow" viewBox="0 0 6 6" refX="5" refY="3" markerWidth="6" markerHeight="6" orient="auto">'
+        '<path d="M0 0L6 3L0 6" fill="currentColor"></path></marker>'
+        '<pattern id="hatch" width="4" height="4" patternUnits="userSpaceOnUse"><path d="M0 4L4 0"></path></pattern>'
+        '</defs><line x1="0" y1="0" x2="9" y2="9" marker-end="url(#arrow)"></line>'
+        '<rect width="4" height="4" fill="url(#hatch)"></rect><use href="#arrow"></use></svg>'
+    )
+    assert _kept(html) == html
+    assert _kept('<svg><use href="https://x.com/s.svg#a"></use></svg>') == "<svg><use></use></svg>"
+    assert _kept('<svg><rect fill="url(https://x.com/a.png)"></rect></svg>') == "<svg><rect></rect></svg>"
+
+
+def test_the_text_a_reader_sees_is_read_out_for_tags_and_search():
+    result = sanitize_writeup("<style>p { width: 1px }</style><h1>Crumb</h1><p>Open <em>and</em> even.</p><script>no</script>")
+    assert result.text == "Crumb Open and even."
+
+
 def test_drawings_keep_their_shape_but_take_the_studio_ink():
     kept = _kept(
         '<svg viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg">'
         '<path d="M0 0L10 10" stroke="red" fill="currentColor"/>'
-        '<rect width="2" height="2" fill="url(#pattern)" class="soft"/></svg>'
+        '<rect width="2" height="2" fill="#c00" class="soft"/></svg>'
     )
     assert kept == (
         '<svg viewBox="0 0 10 10"><path d="M0 0L10 10" fill="currentColor"></path>'
@@ -73,9 +126,9 @@ def test_drawings_keep_their_shape_but_take_the_studio_ink():
     )
 
 
-def test_only_the_studio_class_names_survive():
-    assert _kept('<p class="lead hero-banner text-xl">a</p>') == '<p class="lead">a</p>'
-    assert _kept('<p class="hero">a</p>') == "<p>a</p>"
+def test_class_names_stay_so_layout_rules_can_use_them():
+    assert _kept('<p class="lead pair">a</p>') == '<p class="lead pair">a</p>'
+    assert _kept('<p class="x&quot;onclick">a</p>') == "<p>a</p>"
 
 
 def test_text_is_never_turned_back_into_tags():
@@ -89,4 +142,4 @@ def test_unclosed_tags_are_closed():
 def test_the_skills_example_write_up_keeps_everything():
     """skills/studio-writeup/example.html shows agents what survives; it must survive whole."""
     example = Path(__file__).resolve().parents[4] / "skills" / "studio-writeup" / "example.html"
-    assert sanitize_writeup(example.read_text())[1] == []
+    assert sanitize_writeup(example.read_text()).removed == []

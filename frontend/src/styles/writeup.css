@@ -3,11 +3,12 @@
  * text, in HTML), built on the same tokens as the site (tokens.css), so a
  * write-up always reads as a page of the studio, whoever wrote it.
  *
- * Loaded only inside a write-up's frame (features/entries/writeupPage.ts);
- * a write-up never brings styles of its own (the backend removes them).
- * Its content is plain HTML; the class names that mean something here are
- * lead, soft, faint and wide, the same list as the backend's
- * features/media/writeup_sanitizer.py and skills/studio-writeup/SKILL.md.
+ * Loaded only inside a write-up's frame (features/entries/writeupPage.ts).
+ * The line: a write-up may arrange itself (its own layout rules survive:
+ * grids, columns, widths, gaps), but everything about how it looks comes
+ * from here; the backend removes its fonts, sizes, colors and spacing
+ * (features/media/writeup_css_filter.py). The class names with a look here
+ * are lead, soft, faint and wide, as in skills/studio-writeup/SKILL.md.
  * When the site's text, tables, captions or rules change in global.css,
  * change them here too.
  */
@@ -47,6 +48,11 @@ body > :first-child {
 
 body > :last-child {
   margin-bottom: 0;
+}
+
+/* The first thing in a column or box of the writer's layout starts at its top. */
+:is(div, section, article, aside, header, footer) > :first-child {
+  margin-top: 0;
 }
 
 /* Running text keeps a readable measure (about 60 characters); figures,

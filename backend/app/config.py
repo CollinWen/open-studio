@@ -77,6 +77,8 @@ class Settings:
     media_public_url: str = os.environ.get("MEDIA_PUBLIC_URL", "")
     # The largest write-up (HTML, embedded pictures included) the studio will store.
     writeup_max_bytes: int = int(os.environ.get("WRITEUP_MAX_BYTES", 5_000_000))
+    # How much of an entry's write-up text goes into its tags and embedding (the start of it).
+    writeup_text_for_meaning: int = int(os.environ.get("WRITEUP_TEXT_FOR_MEANING", 6000))
 
     @property
     def frontend_origins(self) -> list[str]:

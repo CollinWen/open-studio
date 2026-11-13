@@ -45,6 +45,17 @@ def is_stored_writeup_url(url: str) -> bool:
     return stored_here and name.endswith(WRITEUP_EXTENSION) and name[: -len(WRITEUP_EXTENSION)].isalnum()
 
 
+def read_stored_writeup(url: str) -> str:
+    """The HTML of a write-up this studio stored (see is_stored_writeup_url)."""
+    if not is_stored_writeup_url(url):
+        raise ValueError(f"Not a write-up stored here: {url}")
+    stored_name = url.rsplit("/", 1)[-1]
+    if url.startswith("/media/"):
+        return (settings.media_dir / stored_name).read_text(encoding="utf-8")
+    reply = _r2_client().get_object(Bucket=settings.r2_bucket, Key=stored_name)
+    return reply["Body"].read().decode("utf-8")
+
+
 def _save(stored_name: str, content: bytes) -> str:
     if settings.r2_enabled:
         return _save_to_r2(stored_name, content)

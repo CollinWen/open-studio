@@ -27,8 +27,9 @@ def suggest_tags(
     kind: str,
     source_name: str,
     existing_tags: list[str],
+    writeup_text: str = "",
 ) -> list[str]:
-    """Return a short list of clean tags for one entry."""
+    """Return a short list of clean tags for one entry (writeup_text: the start of its write-up, if any)."""
     user_prompt = "\n".join(
         [
             f"Existing tags: {', '.join(existing_tags) or '(none yet)'}",
@@ -37,6 +38,7 @@ def suggest_tags(
             f"Kind: {kind}",
             f"Source: {source_name or '(my own work)'}",
             f"Description: {description or '(none)'}",
+            *([f"Write-up: {writeup_text}"] if writeup_text else []),
         ]
     )
     reply = extract_json(ask_llm(SYSTEM_PROMPT, user_prompt))

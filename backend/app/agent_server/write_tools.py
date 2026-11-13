@@ -114,12 +114,18 @@ def register_write_tools(server: MCPServer) -> None:
 
     @server.tool()
     def attach_writeup(entry_id: str, html: str, ctx: Context, caption: str = "") -> WriteupAttached:
-        """Add a write-up to an entry an agent added: illustrated text in plain HTML,
-        for when a description isn't enough (a study's findings, what a commit changed).
-        Write only content: headings, paragraphs, lists, tables, figures, code, pictures
-        embedded as data: URLs, simple <svg> drawings. Don't style it: the studio removes
-        every style, script, font and outside file and shows it in the site's own look.
-        See the studio-writeup skill. The answer lists anything that was removed."""
+        """Add a write-up to an entry an agent added: an illustrated page of HTML, for
+        when a description isn't enough (a study's findings, what a commit changed, a diagram).
+        You decide what's on the page and how it's arranged; the studio decides how it looks.
+        Kept: any structure (headings, lists, tables, figures, code, details); layout CSS in
+        style="" or <style> (display, grid/flex, gap, widths, alignment, order; var(--line)
+        and var(--gutter) keep you on the studio's grid); inline <svg> drawings with arrowheads
+        (marker), hatching (pattern) and reused shapes (defs, use), filled with currentColor
+        or none, lighter with class "soft" or "faint"; pictures as data: URLs; links out.
+        Removed: fonts, sizes, colors, backgrounds, borders, margins and padding (the studio
+        sets them), and everything that runs or loads (scripts, forms, iframes, outside files).
+        Nothing can be interactive. The answer lists what was removed; see the studio-writeup
+        skill for the full rules."""
         viewer = writer_for(ctx)
         with Session(engine) as db:
             entry = _entry_or_error(db, entry_id, viewer)

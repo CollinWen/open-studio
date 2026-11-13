@@ -3,7 +3,7 @@ Search service: finds entries for a typed query, by meaning as well as words.
 
   - semantic: the query is turned into an embedding and compared with every
     entry's embedding, so "bread" can find a sourdough entry that never says "bread"
-  - text: entries whose title, description, tags, kind or source contain the
+  - text: entries whose title, description, tags, kind, source or write-up contain the
     query get a boost, so exact matches come first
 
 Without an OpenRouter key (or before entries have embeddings), only the text
@@ -62,5 +62,5 @@ def _embed_query(query: str) -> list[float] | None:
 
 
 def _contains(entry: Entry, query: str) -> bool:
-    haystack = " ".join([entry.title, entry.description, entry.kind, entry.source_name, *entry.tags])
+    haystack = " ".join([entry.title, entry.description, entry.kind, entry.source_name, entry.writeup_text, *entry.tags])
     return query.lower() in haystack.lower()

@@ -2,7 +2,8 @@
  * writeupPage: wraps a write-up's HTML in the page its frame shows: the
  * studio's own write-up styles (styles/writeup.css), the visitor's light or
  * dark paper, and a content policy that lets nothing load from anywhere
- * except those styles and pictures written into the file.
+ * except those styles and pictures written into the file (the write-up's own
+ * layout rules are inline, so inline styles are allowed; they can't load anything).
  *
  * The backend already removed scripts, styles and outside files
  * (features/media/writeup_sanitizer.py); the policy here, and the frame's
@@ -15,7 +16,8 @@ export function buildWriteupPage(writeupHtml: string, theme: string): string {
   const stylesUrl = new URL(writeupStylesUrl, window.location.href);
   const policy = [
     "default-src 'none'",
-    `style-src ${stylesUrl.origin}`,
+    // A write-up's own layout rules are inline; they can't load anything, since nothing else is allowed.
+    `style-src ${stylesUrl.origin} 'unsafe-inline'`,
     `font-src ${stylesUrl.origin}`,
     "img-src data:",
   ].join("; ");
