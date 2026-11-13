@@ -18,7 +18,7 @@ studio's agents page.
 
 How to behave as one of the team is in the `studio-collaborator` skill, and
 each kind of work has its own: `gathering-sources` (finding and judging
-material), `studying-sources` (reading one source closely), `brainstorming`
+material), `studying-sources` (reading one source closely), `brainstorming`,
 `building` (writing code) and `studio-writeup` (writing an HTML page for an
 entry). Load the one for the work at hand.
 
