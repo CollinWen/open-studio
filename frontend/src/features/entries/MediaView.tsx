@@ -1,11 +1,13 @@
 /**
  * MediaView: one picture or video at full size on an entry page.
  * Images show the original file; embeds (YouTube, Drive video) show the
- * site's own player at 16:9. Pictures fade in as they load. A caption, if any, sits underneath.
+ * site's own player at 16:9. Pictures fade in as they load. Underneath, in
+ * one quiet line: the caption, if any, and an upload's file size, if known.
  */
 
 import { FadeInImage } from "../../components/FadeInImage";
 import type { MediaItem } from "../../types/entry";
+import { formatFileSize } from "./formatFileSize";
 
 export function MediaView({ item, title }: { item: MediaItem; title: string }) {
   return (
@@ -20,7 +22,12 @@ export function MediaView({ item, title }: { item: MediaItem; title: string }) {
           allowFullScreen
         />
       )}
-      {item.caption && <figcaption className="quiet">{item.caption}</figcaption>}
+      {(item.caption || item.size_bytes > 0) && (
+        <figcaption className="quiet word-list">
+          {item.caption && <span>{item.caption}</span>}
+          {item.size_bytes > 0 && <span>{formatFileSize(item.size_bytes)}</span>}
+        </figcaption>
+      )}
     </figure>
   );
 }

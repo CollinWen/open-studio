@@ -1,6 +1,6 @@
 """
 Tests for the entry endpoints: who can see what (public in the list, unlisted
-by direct link, private for the owner only), owner-only writes, and dates.
+by direct link, private for the owner only), owner-only writes, dates, and the file size kept on uploaded media.
 """
 
 from conftest import OWNER_HEADERS
@@ -43,3 +43,22 @@ def test_plain_date_is_accepted_for_occurred_at(client):
     )
     assert response.status_code == 200
     assert response.json()["occurred_at"].startswith("2024-05-01")
+
+
+def test_media_keeps_its_file_size(client):
+    media = [
+        {"type": "image", "url": "/media/a.jpg", "size_bytes": 840_000},
+        {"type": "embed", "url": "https://www.youtube.com/embed/x"},
+    ]
+    response = client.post(
+        "/api/entries", json={"title": "sized", "media": media, "tags": ["test"]}, headers=OWNER_HEADERS
+    )
+    assert response.status_code == 200
+    saved = client.get(f"/api/entries/{response.json()['id']}", headers=OWNER_HEADERS).json()["media"]
+    assert [item["size_bytes"] for item in saved] == [840_000, 0]
+
+
+def test_media_size_cannot_be_negative(client):
+    media = [{"type": "image", "url": "/media/a.jpg", "size_bytes": -1}]
+    response = client.post("/api/entries", json={"title": "bad", "media": media}, headers=OWNER_HEADERS)
+    assert response.status_code == 422
