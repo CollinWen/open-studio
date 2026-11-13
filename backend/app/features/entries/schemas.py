@@ -6,7 +6,7 @@ and what it gets back. The embedding is never sent to the browser.
 from datetime import datetime, timezone
 from typing import Annotated, Literal
 
-from pydantic import AfterValidator, BaseModel, ConfigDict
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field
 
 Visibility = Literal["private", "unlisted", "public"]
 
@@ -24,12 +24,16 @@ class MediaItem(BaseModel):
 
     image: shown with <img>.  video: a video file.  embed: a player page in an
     iframe (YouTube, Drive video). thumbnail_url is the still used as a cover.
+    size_bytes is an uploaded file's size, sent by whoever uploaded it (the
+    entry form, the iPhone share sheet) and shown on the entry page; 0 when
+    unknown (linked media, uploads from before it was kept).
     """
 
     type: Literal["image", "video", "embed"]
     url: str
     thumbnail_url: str = ""
     caption: str = ""
+    size_bytes: int = Field(default=0, ge=0)
 
 
 class EntryCreate(BaseModel):

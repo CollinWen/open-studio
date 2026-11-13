@@ -1,6 +1,6 @@
 /**
  * PreparedMedia: turns one shared photo or video into a file ready to upload,
- * plus the date it was taken.
+ * plus the date it was taken and its size in bytes.
  *
  * Files are sent untouched when browsers can show them (JPEG, PNG, GIF, WebP, MP4).
  * Two exceptions, because browsers can't show the iPhone's own formats:
@@ -16,6 +16,11 @@ struct PreparedMedia {
     let file: URL  // a temporary copy; delete it after uploading
     let isVideo: Bool
     let takenAt: Date?
+
+    /// The size of the file that will be uploaded, after any conversion; 0 if it can't be read.
+    var sizeBytes: Int {
+        (try? file.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
+    }
 
     static func prepare(_ provider: NSItemProvider) async throws -> PreparedMedia {
         if provider.hasItemConformingToTypeIdentifier(UTType.movie.identifier) {

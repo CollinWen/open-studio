@@ -21,7 +21,8 @@ settings:
     TARGETED_DEVICE_FAMILY: "1"
 
 targets:
-  # The app you open once to enter the server address and owner token.
+  # The app: a setup screen (server address, site address, owner token), then
+  # the website's studio page in a web view, signed in.
   OpenStudio:
     type: application
     platform: iOS
@@ -42,6 +43,9 @@ targets:
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
         NSLocalNetworkUsageDescription: Reaches your Open Studio server on this Wi-Fi network while testing.
+        # The site's "add file" can take a new photo or video, not only pick one.
+        NSCameraUsageDescription: Takes a photo or video to add to an entry.
+        NSMicrophoneUsageDescription: Records sound with a video you add to an entry.
     entitlements:
       path: OpenStudio/OpenStudio.entitlements
       properties:
