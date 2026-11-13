@@ -5,7 +5,7 @@
  * except those styles and pictures written into the file (the write-up's own
  * layout rules are inline, so inline styles are allowed; they can't load anything).
  *
- * The backend already removed scripts, styles and outside files
+ * The backend already removed scripts, outside files and every style but layout
  * (features/media/writeup_sanitizer.py); the policy here, and the frame's
  * sandbox in WriteupView, hold even if something slipped through.
  */
