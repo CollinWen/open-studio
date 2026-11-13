@@ -9,8 +9,11 @@
 
 import SwiftUI
 
+/// The line above a row: none, a single hairline, or the double rule for major breaks.
+enum PageRule { case none, single, double }
+
 struct LabelRow<Content: View>: View {
-    enum Rule { case none, single, double }
+    typealias Rule = PageRule
 
     var label = ""
     var rule = Rule.none

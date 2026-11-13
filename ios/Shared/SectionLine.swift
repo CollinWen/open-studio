@@ -4,7 +4,8 @@
  * components/SectionLine.tsx; anything passed as `below` sits under the words
  * (a board's agents).
  *
- * Used by ShareForm to pick the board an entry goes to.
+ * Used by ShareForm and the app's EntryEditView to pick the board an entry
+ * goes to, and by EntryListView to show one board's entries.
  */
 
 import SwiftUI
@@ -17,13 +18,15 @@ struct SectionWord: Identifiable {
 
 struct SectionLine<Below: View>: View {
     var label: String
+    /// The rule above: single inside a page, double right under the header.
+    var rule: PageRule = .single
     let sections: [SectionWord]
     let current: String
     let onPick: (String) -> Void
     @ViewBuilder var below: () -> Below
 
     var body: some View {
-        LabelRow(label: label, rule: .single) {
+        LabelRow(label: label, rule: rule) {
             WordList {
                 ForEach(sections) { section in
                     let isCurrent = section.id == current

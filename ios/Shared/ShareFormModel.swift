@@ -1,6 +1,7 @@
 /**
- * ShareFormModel: everything the share sheet does, step by step:
- *   1. read what was shared (SharedItems): a link, a note, or photos/videos;
+ * ShareFormModel: everything the add form does, step by step:
+ *   1. read what was shared (SharedItems), or take what was picked in the
+ *      app's studio (AddEntryView): a link, a note, or photos/videos;
  *      at the same time load the boards, starting on the last one used, and
  *      that board's newest entries (to pick one this builds on)
  *   2. for a link, ask the backend to capture it, in the background;
@@ -8,7 +9,8 @@
  *   3. on "save": upload any photos/videos (keeping each one's size), create the entry on the picked
  *      board, then link it to the entry it builds on
  *
- * ShareForm shows this model; ShareViewController creates it.
+ * ShareForm shows this model; ShareViewController (the share sheet) and the
+ * app's AddEntryView create it.
  */
 
 import Foundation
@@ -64,16 +66,33 @@ final class ShareFormModel {
     /// Saving doesn't wait for a link's capture: save waits for it instead.
     var canSave: Bool { hasRead && !isSaving && shared.isUsable }
 
+    /// The share sheet: read what another app handed over.
     func load(from context: NSExtensionContext?) async {
+        guard startLoading() else { return }
+        await use(await SharedItems.read(from: context))
+    }
+
+    /// The app's studio: what was picked there (a pasted link, photos, a new note).
+    func load(_ picked: SharedThing) async {
+        guard startLoading() else { return }
+        await use(picked)
+    }
+
+    /// Starts loading the boards; false if the app isn't set up yet.
+    private func startLoading() -> Bool {
         guard api.settings.isComplete else {
             isWaiting = false
             summary = "Not set up yet"
             message = "Open the Open Studio app and enter the server address and owner token."
-            return
+            return false
         }
         message = "reading…"
         Task { await loadBoards() }
-        shared = await SharedItems.read(from: context)
+        return true
+    }
+
+    private func use(_ shared: SharedThing) async {
+        self.shared = shared
         hasRead = true
         switch shared {
         case .link(let link, let pageTitle):
@@ -86,7 +105,7 @@ final class ShareFormModel {
             if let captured = await capture?.value {
                 summary = captured.title.isEmpty ? summary : captured.title
                 sourceLine = captured.sourceName.isEmpty ? sourceLine : captured.sourceName
-                cover = captured.media.first.flatMap(Self.pictureURL)
+                cover = captured.media.first.flatMap { api.pictureURL(of: $0) }
             }
         case .note(let title, let body):
             choices.title = title
@@ -194,11 +213,6 @@ final class ShareFormModel {
         let entries = (try? await api.fetchNewestEntries(onBoard: board, limit: Self.newestEntryCount)) ?? []
         // The board may have been changed again while these loaded.
         if board == choices.board { newestEntries = entries }
-    }
-
-    private static func pictureURL(_ item: MediaItem) -> URL? {
-        let picture = item.thumbnailUrl.isEmpty && item.type == "image" ? item.url : item.thumbnailUrl
-        return URL(string: picture)
     }
 
     private static func describe(_ providers: [NSItemProvider]) -> String {

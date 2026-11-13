@@ -1,29 +1,26 @@
 /**
- * OpenStudioApp: starts the app. Once the site address and owner token are
- * set, it opens the website on the studio page, signed in (StudioSiteView);
- * until then, and whenever you tap "setup", it shows SetupView. The share
- * sheet (ShareToStudio/) works on its own once the server address and token
- * are saved.
+ * OpenStudioApp: starts the app. Once the server address and owner token are
+ * saved, it opens the studio (EntryListView: your entries, to add, edit,
+ * publish and delete); until then, and whenever you tap "setup" there, it
+ * shows SetupView. The share sheet (ShareToStudio/) uses the same settings.
  */
 
 import SwiftUI
 
 @main
 struct OpenStudioApp: App {
-    @State private var settings = StudioSettings.load()
-    @State private var isSettingUp = !StudioSettings.load().canOpenSite
+    @State private var isSetUp = StudioSettings.load().isComplete
+    @State private var isChangingSetup = false
 
     var body: some Scene {
         WindowGroup {
-            if isSettingUp || !settings.canOpenSite {
-                SetupView(openSite: {
-                    settings = StudioSettings.load()
-                    isSettingUp = false
-                })
+            if isSetUp && !isChangingSetup {
+                EntryListView(openSetup: { isChangingSetup = true })
             } else {
-                StudioSiteView(settings: settings, openSetup: { isSettingUp = true })
-                    // A new address or token starts a fresh web view.
-                    .id("\(settings.siteAddress)|\(settings.ownerToken)")
+                SetupView(openStudio: {
+                    isSetUp = StudioSettings.load().isComplete
+                    isChangingSetup = false
+                })
             }
         }
     }

@@ -1,6 +1,7 @@
 /**
- * ShareForm: what you see after choosing "Open Studio" in the share sheet,
- * built the same way as a page on the site: the site name with cancel and
+ * ShareForm: the add form: what you see after choosing "Open Studio" in the
+ * share sheet, or after the plus in the app's studio. Built the same way as
+ * a page on the site: the site name with cancel and
  * save, a double rule, what's being added (its picture and title), the board
  * it goes on as a section line (with the agents signed on to it), one shaded
  * control band (made by me / inspiration, private / unlisted / public, and

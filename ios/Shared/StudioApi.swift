@@ -7,6 +7,9 @@
  *   POST /api/media                     upload one photo or video -> its URL
  *   POST /api/entries                   save a new entry on a board
  *   POST /api/entries/{id}/builds-on    say the new entry builds on an earlier one
+ *   GET  /api/entries                   every entry, for the app's studio
+ *   PATCH /api/entries/{id}             change an entry (title, note, board, visibility, tags, media)
+ *   DELETE /api/entries/{id}            delete an entry
  *
  * Every call carries the owner token. Nothing else on the phone talks to the network.
  */
@@ -61,6 +64,33 @@ struct StudioApi {
         var request = try makeRequest("api/entries/\(entryId)/builds-on")
         request.httpBody = try Self.encoder.encode(BuildsOn(buildsOnId: buildsOnId))
         _ = try await send(request)
+    }
+
+    func fetchEntries() async throws -> [StudioEntry] {
+        let data = try await send(try makeRequest("api/entries", method: "GET"))
+        return try Self.decoder.decode([StudioEntry].self, from: data)
+    }
+
+    func updateEntry(id: String, changes: EntryChanges) async throws -> StudioEntry {
+        var request = try makeRequest("api/entries/\(id)", method: "PATCH")
+        request.httpBody = try Self.encoder.encode(changes)
+        let data = try await send(request)
+        return try Self.decoder.decode(StudioEntry.self, from: data)
+    }
+
+    func deleteEntry(id: String) async throws {
+        _ = try await send(try makeRequest("api/entries/\(id)", method: "DELETE"))
+    }
+
+    /// Where a media item's picture can be loaded from: its thumbnail, or the
+    /// image itself. Uploads stored on the backend come back as paths ("/media/…").
+    func pictureURL(of item: MediaItem) -> URL? {
+        let picture = item.thumbnailUrl.isEmpty && item.type == "image" ? item.url : item.thumbnailUrl
+        guard !picture.isEmpty else { return nil }
+        if picture.hasPrefix("/"), let server = settings.serverURL {
+            return URL(string: picture, relativeTo: server)?.absoluteURL
+        }
+        return URL(string: picture)
     }
 
     // MARK: - Plumbing

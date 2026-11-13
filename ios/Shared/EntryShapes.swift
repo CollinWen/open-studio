@@ -10,7 +10,7 @@
 import Foundation
 
 /// One picture or video in an entry. type is "image", "video" or "embed".
-struct MediaItem: Codable {
+struct MediaItem: Codable, Equatable {
     var type: String
     var url: String
     var thumbnailUrl: String = ""
@@ -71,6 +71,38 @@ struct EntrySummary: Decodable, Identifiable {
 /// What GET /api/entries/page returns.
 struct EntrySummaryPage: Decodable {
     var entries: [EntrySummary]
+}
+
+/// A whole entry, as GET /api/entries returns it: what the app's studio lists and edits.
+struct StudioEntry: Decodable, Identifiable, Equatable {
+    var id: String
+    var title: String
+    var description: String
+    var kind: String
+    var sourceName: String
+    var sourceUrl: String
+    var media: [MediaItem]
+    /// ISO 8601, e.g. "2026-11-11T09:30:00Z"; its first ten characters are the date.
+    var occurredAt: String
+    var visibility: Visibility
+    var tags: [String]
+    /// "owner" or "agent:<name>".
+    var addedBy: String
+    var board: String
+}
+
+/// The body of PATCH /api/entries/{id}: only the fields that are set are changed.
+struct EntryChanges: Encodable {
+    var title: String?
+    var description: String?
+    var media: [MediaItem]?
+    var visibility: Visibility?
+    var tags: [String]?
+    var board: String?
+
+    var isEmpty: Bool {
+        title == nil && description == nil && media == nil && visibility == nil && tags == nil && board == nil
+    }
 }
 
 /// The body of POST /api/entries/{id}/builds-on.

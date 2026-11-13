@@ -4,7 +4,9 @@
  * extra ones (`more`). While closed, what's picked in there still shows beside
  * the caret (`picks`), so nothing is hidden.
  *
- * Used by ShareForm (made by me / inspiration and visibility; "builds on" behind the caret).
+ * Used by ShareForm (made by me / inspiration and visibility; "builds on"
+ * behind the caret), the app's EntryListView (search; who sees it behind the
+ * caret) and EntryEditView (board and visibility, with no caret).
  */
 
 import SwiftUI
@@ -21,21 +23,7 @@ struct ControlBand<Main: View, More: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: StudioStyle.line / 2) {
             main()
-            Button {
-                withAnimation(reduceMotion ? nil : (isOpen ? StudioStyle.leave : StudioStyle.arrive)) {
-                    isOpen.toggle()
-                }
-            } label: {
-                HStack(alignment: .firstTextBaseline, spacing: StudioStyle.wordGap / 2) {
-                    Text(moreLabel)
-                    CaretIcon(isOpen: isOpen)
-                    if !isOpen && !picks.isEmpty {
-                        Text(picks).foregroundStyle(StudioStyle.inkSoft).lineLimit(1)
-                    }
-                }
-                .contentShape(Rectangle())
-            }
-            .accessibilityHint(isOpen ? "closes \(moreLabel)" : "opens \(moreLabel)")
+            if !moreLabel.isEmpty { caretButton }
             if isOpen {
                 more().transition(reduceMotion ? AnyTransition.opacity : AnyTransition.opacity.combined(with: .offset(y: -12)))
             }
@@ -48,5 +36,30 @@ struct ControlBand<Main: View, More: View>: View {
             Rectangle().fill(StudioStyle.inkFaint).frame(height: 1)
         }
         .clipped()
+    }
+
+    private var caretButton: some View {
+        Button {
+            withAnimation(reduceMotion ? nil : (isOpen ? StudioStyle.leave : StudioStyle.arrive)) {
+                isOpen.toggle()
+            }
+        } label: {
+            HStack(alignment: .firstTextBaseline, spacing: StudioStyle.wordGap / 2) {
+                Text(moreLabel)
+                CaretIcon(isOpen: isOpen)
+                if !isOpen && !picks.isEmpty {
+                    Text(picks).foregroundStyle(StudioStyle.inkSoft).lineLimit(1)
+                }
+            }
+            .contentShape(Rectangle())
+        }
+        .accessibilityHint(isOpen ? "closes \(moreLabel)" : "opens \(moreLabel)")
+    }
+}
+
+extension ControlBand where More == EmptyView {
+    /// A band with only its main controls, and no caret.
+    init(@ViewBuilder main: @escaping () -> Main) {
+        self.init(moreLabel: "", picks: "", isOpen: .constant(false), main: main, more: { EmptyView() })
     }
 }
