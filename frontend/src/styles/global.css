@@ -21,107 +21,14 @@
  *   in: an accent square). Tags sit in thin flat ovals (filled when picked);
  *   picture sizes are three dots and rows three lines, each in a small
  *   square (MarkChoice); the few icons are thin strokes (Icon).
- * Change the look here, through the tokens below, not in components.
+ * Change the look here, through the tokens (tokens.css), not in components.
+ * Write-ups have their own sheet built on the same tokens (writeup.css);
+ * a change to how text, tables or figures look here belongs there too.
  * The paper is a warm off-white (a warm near-black in dark mode); the work
  * supplies the color.
  */
 
-:root {
-  color-scheme: light;
-  --paper: #f3f1ec;
-  --ink: #141414;
-  --ink-soft: rgba(20, 20, 20, 0.52);
-  --ink-faint: rgba(20, 20, 20, 0.18);
-  --rule: 1px solid var(--ink);
-  --rule-faint: 1px solid var(--ink-faint);
-  /* Keyboard focus: a thin ink outline, the weight of a rule, just off the
-     control. Shown only when moving with the keyboard, never for the mouse. */
-  --focus-ring: 1px solid var(--ink);
-  --focus-offset: 2px;
-
-  /* The controls' two small accents: a Swiss red for where you are, and a
-     slightly shaded paper under the view and filter lines. */
-  --accent: #c43a22;
-  --paper-shade: #ebe8e1;
-
-  --font: "Inter Variable", "Helvetica Neue", Helvetica, Arial, sans-serif;
-
-  /* Type sizes. Small is for labels and captions; large for the site name.
-     The display size's leading is a whole number of lines. */
-  --size-small: 12px;
-  --leading-small: 18px;
-  --size-body: 15px;
-  --size-large: 20px;
-  --size-display: 64px;
-  --leading-display: calc(3 * var(--line));
-
-  /* The grid: the line unit, the gutter between columns, the page margin. */
-  --line: 22px;
-  --gutter: 22px;
-  --margin: 44px;
-
-  /* Motion: one quiet, controlled personality, no overshoot. Things arrive
-     decelerating and leave accelerating; leaving takes about 70% as long.
-     Three durations; staggers stay under half a second in total. */
-  --ease-enter: cubic-bezier(0.2, 0, 0, 1);
-  --ease-exit: cubic-bezier(0.3, 0, 1, 1);
-  --motion-quick: 200ms;
-  --motion-standard: 350ms;
-  --motion-exit: 250ms;
-  --motion-ambient: 1600ms;
-  --stagger: 30ms;
-  --arrive-distance: 12px;
-  --sheet-drop: 24px;
-
-  /* Picked squares, tag ovals, view marks and the time slider. */
-  --square-padding: 0.4em;
-  --oval-padding: 0.55em;
-  --oval-gap: 0.4em;
-  --mark-choice: calc(var(--line) + 4px);
-  --dot-small: 6px;
-  --dot-medium: 10px;
-  --dot-large: 15px;
-  --time-bar-height: calc(1.5 * var(--line));
-  --time-handle: 11px;
-  /* The studio mark (components/StudioMark.tsx), by its height: beside a
-     word, and standing in for a view still on its way. */
-  --mark-small: calc(0.6 * var(--line));
-  --mark-large: calc(3 * var(--line));
-  /* The entry form's window: how wide it opens, and the smallest it can be dragged to. */
-  --sheet-width: 720px;
-  --sheet-min-width: 360px;
-  --sheet-min-height: 240px;
-}
-
-/* Dark: the same page at night. Only the paper, inks and the two accents
-   change; the work is never altered. Applied when <html data-theme="dark">,
-   which components/ThemeChoice.tsx sets from the visitor's pick ("auto"
-   follows the system), and index.html sets before the first paint. */
-:root[data-theme="dark"] {
-  color-scheme: dark;
-  --paper: #151412;
-  --ink: #ebe8e1;
-  --ink-soft: rgba(235, 232, 225, 0.55);
-  --ink-faint: rgba(235, 232, 225, 0.2);
-  --accent: #e2593d;
-  --paper-shade: #1f1d1a;
-}
-
-@media (max-width: 1100px) {
-  :root {
-    --size-display: 42px;
-    --leading-display: calc(2 * var(--line));
-  }
-}
-
-@media (max-width: 720px) {
-  :root {
-    --size-display: 30px;
-    --leading-display: calc(1.5 * var(--line));
-    --gutter: 16px;
-    --margin: 16px;
-  }
-}
+@import "./tokens.css";
 
 * {
   box-sizing: border-box;
@@ -826,6 +733,34 @@ button[type="submit"]:disabled {
   display: block;
 }
 
+/* A write-up's cover: no picture, so its title set large under a rule, on the bare paper.
+   (.entry-card makes it beat the plain block rule for the card's lines.) */
+.entry-card .writeup-cover {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  aspect-ratio: 4 / 3;
+  padding-top: calc(var(--line) / 2);
+  border-top: var(--rule);
+}
+
+.writeup-cover-title {
+  font-size: var(--size-large);
+  line-height: calc(1.5 * var(--line));
+  font-weight: 560;
+  letter-spacing: -0.01em;
+  overflow: hidden;
+}
+
+.entry-grid-small .writeup-cover-title {
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.entry-grid-small .writeup-cover .quiet {
+  display: none;
+}
+
 .entry-card .entry-card-title {
   font-weight: 500;
 }
@@ -1013,6 +948,12 @@ button[type="submit"]:disabled {
   aspect-ratio: 16 / 9;
 }
 
+/* A write-up's frame takes the height of what's in it (WriteupView), not 16:9. */
+.media-view .writeup-frame {
+  aspect-ratio: auto;
+  max-height: none;
+}
+
 .media-view figcaption {
   margin-top: calc(var(--line) / 4);
   font-size: var(--size-small);
@@ -1092,7 +1033,8 @@ button[type="submit"]:disabled {
   flex-basis: 100%;
 }
 
-.media-editor-item img {
+.media-editor-item img,
+.media-editor-writeup {
   width: 96px;
   height: auto;
   flex-shrink: 0;

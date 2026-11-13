@@ -57,7 +57,7 @@ API docs appear at http://localhost:8000/docs.
 | `app/features/tags/` | The LLM prompt that suggests tags; tag counts; the owner's tag descriptions and importance (key / normal / hidden) |
 | `app/features/related/` | Finds the entries closest in meaning to a given one (shared tags as fallback) |
 | `app/features/search/` | `GET /api/search?q=` — ranks entries by meaning (embeddings) and boosts plain word matches; text-only without an OpenRouter key |
-| `app/features/media/` | Image and video uploads, stored as the original file (on disk locally, in Cloudflare R2 in production) |
+| `app/features/media/` | Image and video uploads, stored as the original file (on disk locally, in Cloudflare R2 in production); write-ups (an entry's HTML), made safe first by `writeup_sanitizer.py` (no scripts, styles or outside files) and stored the same way (`service.py`) |
 | `app/agent_server/` | The studio as an MCP server at `/mcp`, for agents: board tools (boards, a board's brief), read tools (search, recent changes, related), write tools (add, improve) and chain tools (read a chain, link entries), log tools (read the log, set a status, write a line) and run tools (read your run, finish it). Same rules as the web routes. How agents should use it: `skills/open-studio/SKILL.md`. |
 | `app/integrations/` | Thin wrappers around OpenRouter (LLM, embeddings) and file storage |
 | `app/integrations/link_readers/` | One reader per site, chosen in `read_link.py`. YouTube (title, channel, upload date, description; no API key), Google Drive (full-resolution photo, date taken from EXIF; file must be shared "Anyone with the link"), GitHub (repo details), Instagram (caption, author, picture; the picture link expires after a few weeks), X (post text, author, date; no pictures), and any other page (link-preview tags). |
@@ -153,7 +153,7 @@ Files: `Dockerfile` (the container), `fly.toml` (Fly settings), `.dockerignore`.
 - R2 → Create bucket, e.g. `open-studio-media`.
 - Bucket → Settings → Custom domains → add `media.yourdomain.com`.
 - Bucket → Settings → CORS policy: allow `GET` from `https://yourdomain.com`
-  (lets the site read image pixels, e.g. for cover colors).
+  (lets the site read image pixels, e.g. for cover colors, and read write-ups to show them).
 - R2 → Manage API tokens → create a token with **Object Read & Write** on that bucket.
   Note the Access Key ID, Secret Access Key and your Account ID.
 

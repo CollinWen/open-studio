@@ -1,5 +1,5 @@
 /**
- * MediaSeries: every picture and video in an entry, one after another in a
+ * MediaSeries: every picture, video and write-up in an entry, one after another in a
  * single column, cover first. No carousel or arrows: you just scroll.
  */
 

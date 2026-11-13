@@ -75,6 +75,8 @@ class Settings:
     r2_bucket: str = os.environ.get("R2_BUCKET", "")
     # The bucket's public address, e.g. https://media.yourdomain.com
     media_public_url: str = os.environ.get("MEDIA_PUBLIC_URL", "")
+    # The largest write-up (HTML, embedded pictures included) the studio will store.
+    writeup_max_bytes: int = int(os.environ.get("WRITEUP_MAX_BYTES", 5_000_000))
 
     @property
     def frontend_origins(self) -> list[str]:

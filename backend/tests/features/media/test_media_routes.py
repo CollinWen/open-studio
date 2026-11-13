@@ -56,3 +56,22 @@ def test_two_uploads_with_the_same_name_keep_both(client):
     assert first != second
     assert client.get(first).content == b"first"
     assert client.get(second).content == b"second"
+
+
+def test_an_uploaded_write_up_is_made_safe_and_says_what_was_removed(client):
+    html = b'<p style="color:red">words</p><script>alert(1)</script>'
+
+    response = _upload(client, "Findings.html", content=html)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["url"].endswith(".html")
+    assert "<script>: 1" in body["removed"]
+    assert client.get(body["url"]).text == "<p>words</p>"
+
+
+def test_a_write_up_with_nothing_to_keep_is_refused(client):
+    response = _upload(client, "empty.html", content=b"<script>alert(1)</script>")
+
+    assert response.status_code == 400
+    assert response.json()["detail"]

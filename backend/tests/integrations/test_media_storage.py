@@ -44,3 +44,18 @@ def test_saves_to_r2_when_configured(monkeypatch):
 def test_rejects_unknown_file_types():
     with pytest.raises(ValueError):
         media_storage.save_media_file("notes.exe", b"")
+
+
+def test_raw_html_is_never_stored_as_an_upload():
+    with pytest.raises(ValueError):
+        media_storage.save_media_file("page.html", b"<script>alert(1)</script>")
+
+
+def test_write_ups_are_recognized_only_where_the_studio_stores_them(monkeypatch):
+    monkeypatch.setattr(media_storage, "settings", replace(settings, media_public_url="https://media.example.com"))
+
+    assert media_storage.is_stored_writeup_url("/media/0123abcd.html")
+    assert media_storage.is_stored_writeup_url("https://media.example.com/0123abcd.html")
+    assert not media_storage.is_stored_writeup_url("https://elsewhere.example.com/0123abcd.html")
+    assert not media_storage.is_stored_writeup_url("/media/0123abcd.jpg")
+    assert not media_storage.is_stored_writeup_url("/media/../secrets.html")
