@@ -98,7 +98,9 @@ times). Any geometry is kept: `viewBox`, coordinates, `d`, `points`,
   gif or webp), inside a `figure` with a `figcaption`. A picture from a web
   address is removed. The whole write-up must be under 5 MB.
 - Links: `a href` to `https://`, `http://` or `mailto:` (they open in a new
-  tab), or `#an-id` on the same page.
+  tab), `#an-id` on the same page, or `/entry/<id>` for another entry in the
+  studio (it opens on the studio's own page). Link what the page mentions to
+  the entries the studio has on it: how is in the `linking-entries` skill.
 
 ## Attaching one
 

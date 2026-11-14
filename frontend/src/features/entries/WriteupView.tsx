@@ -6,10 +6,13 @@
  *
  * The write-up is shown in a sandboxed frame that can't run anything
  * (no scripts, no forms, no reaching the page around it); writeupPage.ts
- * builds what goes inside. Used by MediaView.
+ * builds what goes inside. A link to another entry (/entry/<id>, see
+ * skills/linking-entries/) opens that entry on this page, like any link on
+ * the site; links out open in a new tab. Used by MediaView.
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { fetchWriteup } from "../../api/mediaApi";
 import { LoadingMark } from "../../components/LoadingMark";
 import type { MediaItem } from "../../types/entry";
@@ -17,7 +20,8 @@ import { buildWriteupPage } from "./writeupPage";
 import { usePageTheme } from "./usePageTheme";
 
 // No allow-scripts: nothing in a write-up can run. Same origin only so this
-// page can measure its height; popups so its links can open in a new tab.
+// page can measure its height and follow its links to other entries; popups
+// so its links out can open in a new tab.
 const SANDBOX = "allow-same-origin allow-popups allow-popups-to-escape-sandbox";
 
 export function WriteupView({ item, title }: { item: MediaItem; title: string }) {
@@ -26,6 +30,7 @@ export function WriteupView({ item, title }: { item: MediaItem; title: string })
   const [height, setHeight] = useState(0);
   const frame = useRef<HTMLIFrameElement>(null);
   const theme = usePageTheme();
+  const navigate = useNavigate();
 
   useEffect(() => {
     let current = true;
@@ -52,8 +57,16 @@ export function WriteupView({ item, title }: { item: MediaItem; title: string })
   }, [html, fitToContent]);
 
   const onLoad = () => {
+    const page = frame.current?.contentDocument;
     fitToContent();
-    frame.current?.contentDocument?.fonts?.ready.then(fitToContent);
+    page?.fonts?.ready.then(fitToContent);
+    page?.addEventListener("click", (event) => {
+      const path = entryLinkClicked(event);
+      if (path) {
+        event.preventDefault();
+        navigate(path);
+      }
+    });
   };
 
   if (failed) return <p className="quiet">This write-up couldn't be loaded.</p>;
@@ -72,4 +85,13 @@ export function WriteupView({ item, title }: { item: MediaItem; title: string })
       {item.caption && <figcaption className="quiet">{item.caption}</figcaption>}
     </figure>
   );
+}
+
+// The /entry/<id> a plain click on a link to another entry goes to; null for
+// anything else (links out, links within the page, a click meant for a new tab).
+function entryLinkClicked(event: MouseEvent): string | null {
+  if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return null;
+  const link = (event.target as Element | null)?.closest?.("a");
+  const href = link?.getAttribute("href") ?? "";
+  return href.startsWith("/entry/") ? href : null;
 }

@@ -77,6 +77,8 @@ INNER_REFERENCE = re.compile(r"^url\(#[A-Za-z][\w-]{0,63}\)$")
 DRAWING_COLORS = {"none", "currentcolor"}
 EMBEDDED_PICTURE = re.compile(r"^data:image/(png|jpeg|gif|webp);base64,[A-Za-z0-9+/=\s]+$")
 LINK_SCHEMES = ("http://", "https://", "mailto:")
+# A link to another entry in the studio, by its id: /entry/<id> (skills/linking-entries/).
+ENTRY_LINK = re.compile(r"^/entry/[A-Za-z0-9_-]{1,64}$")
 INVISIBLE = re.compile(r"[\x00-\x20\x7f]+")
 
 
@@ -107,7 +109,9 @@ def _check_href(tag: str, value: str) -> str | None:
     if tag == "use":
         return value if SAFE_ID.match(value.removeprefix("#")) and value.startswith("#") else None
     bare = INVISIBLE.sub("", value).lower()
-    return value if value.startswith("#") or bare.startswith(LINK_SCHEMES) else None
+    if value.startswith("#") or ENTRY_LINK.match(value) or bare.startswith(LINK_SCHEMES):
+        return value
+    return None
 
 
 def _check_src(tag: str, value: str) -> str | None:

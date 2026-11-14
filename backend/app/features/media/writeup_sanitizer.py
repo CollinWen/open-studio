@@ -8,7 +8,8 @@ looks (typeface, sizes, colors), from frontend/src/styles/writeup.css; and
 nothing can run or load from elsewhere. Scripts, forms, frames, event
 handlers and outside files are removed; styles keep only their layout
 (writeup_css_filter.py); pictures must be written into the file (data:
-URLs); links may point out, but only open, in a new tab, when clicked.
+URLs); links may point out, but only open, in a new tab, when clicked, and
+links to other entries (/entry/<id>) open on the studio's own page.
 Unknown tags are dropped but their text is kept. What may stay is listed in
 writeup_allow_lists.py.
 
@@ -75,7 +76,7 @@ class _WriteupParser(HTMLParser):
                 self.removed[f"<{tag}> (its text kept)"] += 1
             return
         kept = "".join(self._attribute(tag, name, value or "") for name, value in attrs)
-        if tag == "a" and ' href="' in kept and ' href="#' not in kept:
+        if tag == "a" and ' href="' in kept and not _links_inside_studio(kept):
             kept += ' target="_blank" rel="noopener noreferrer"'  # Links out open beside the studio.
         if tag == "img" and ' src="' not in kept:
             self.removed["pictures not written into the file"] += 1
@@ -158,6 +159,11 @@ class _WriteupParser(HTMLParser):
         for name in properties:
             self.removed[f"{name} (the studio sets how things look)" if not name.startswith("@")
                          else f"{name} rules"] += 1
+
+
+def _links_inside_studio(attributes: str) -> bool:
+    """A link to a place on the same page (#notes) or to another entry (/entry/<id>)."""
+    return ' href="#' in attributes or ' href="/entry/' in attributes
 
 
 def _removed_attribute_label(name: str) -> str:
