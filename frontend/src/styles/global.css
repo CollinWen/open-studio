@@ -733,13 +733,10 @@ button[type="submit"]:disabled {
   display: block;
 }
 
-/* A write-up's cover: no picture, so its title set large under a rule, on the bare paper.
-   (.entry-card makes it beat the plain block rule for the card's lines.) */
+/* A write-up's cover: no picture, so its title set large under a rule, on the bare
+   paper, only as tall as its words. (.entry-card makes it beat the plain block rule
+   for the card's lines.) */
 .entry-card .writeup-cover {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  aspect-ratio: 4 / 3;
   padding-top: calc(var(--line) / 2);
   border-top: var(--rule);
 }
@@ -749,16 +746,15 @@ button[type="submit"]:disabled {
   line-height: calc(1.5 * var(--line));
   font-weight: 560;
   letter-spacing: -0.01em;
-  overflow: hidden;
+}
+
+.entry-card:hover .writeup-cover-title {
+  text-decoration: underline;
 }
 
 .entry-grid-small .writeup-cover-title {
   font-size: inherit;
   line-height: inherit;
-}
-
-.entry-grid-small .writeup-cover .quiet {
-  display: none;
 }
 
 .entry-card .entry-card-title {

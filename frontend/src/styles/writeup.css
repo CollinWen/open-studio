@@ -37,9 +37,14 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Keeps the first and last margins inside, so the measured height is the real one. */
+/* Keeps the first and last margins inside, so the measured height is the real one.
+   One page width for everything (text, the writer's columns, the rules over
+   sections), so a wide screen never spreads columns apart; it all hangs from
+   the left edge, as on the site. */
 body {
   display: flow-root;
+  max-width: var(--writeup-width);
+  text-align: start;
 }
 
 body > :first-child {
@@ -50,13 +55,22 @@ body > :last-child {
   margin-bottom: 0;
 }
 
-/* The first thing in a column or box of the writer's layout starts at its top. */
+/* The first thing in a column or box of the writer's layout starts at its top,
+   and the last ends at its bottom; the box itself keeps one line below it. */
 :is(div, section, article, aside, header, footer) > :first-child {
   margin-top: 0;
 }
 
-/* Running text keeps a readable measure (about 60 characters); figures,
-   tables and drawings marked wide use the whole width. */
+:is(div, section, article, aside, header, footer) > :last-child {
+  margin-bottom: 0;
+}
+
+body > :is(div, section, article, aside, header, footer) {
+  margin-bottom: var(--line);
+}
+
+/* Running text keeps a readable measure (about 60 characters); figures and
+   drawings marked wide use the whole write-up width. */
 p,
 ul,
 ol,
@@ -70,7 +84,7 @@ figure,
 table,
 pre,
 details {
-  max-width: 34em;
+  max-width: var(--measure);
   margin: 0 0 var(--line);
 }
 
@@ -86,8 +100,10 @@ h1 {
   letter-spacing: -0.01em;
 }
 
-/* A new section starts like a ruled row: a blank line, a hairline, half a line, then the heading. */
+/* A new section starts like a ruled row: a blank line, a hairline, half a line, then the heading.
+   The rule runs the whole write-up width, over whatever columns follow. */
 h2 {
+  max-width: none;
   margin-top: calc(2 * var(--line));
   padding-top: calc(var(--line) / 2);
   border-top: var(--rule);
@@ -103,6 +119,7 @@ h3 {
 
 /* The small label size, in the soft ink: like a caption over a row. */
 h4 {
+  margin-bottom: calc(var(--line) / 4);
   font-size: var(--size-small);
   line-height: var(--leading-small);
   font-weight: 500;
@@ -178,9 +195,11 @@ figcaption {
   margin-top: calc(var(--line) / 4);
 }
 
-/* Tables read like the site's ledger: small column names, hairline rows. */
+/* Tables read like the site's ledger: small column names, hairline rows,
+   across the whole write-up width. */
 table {
   width: 100%;
+  max-width: none;
   border-collapse: collapse;
 }
 

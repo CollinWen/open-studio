@@ -156,8 +156,13 @@ class _WriteupParser(HTMLParser):
 
     def _note_removed_styles(self, properties: list[str]) -> None:
         for name in properties:
-            self.removed[f"{name} (the studio sets how things look)" if not name.startswith("@")
-                         else f"{name} rules"] += 1
+            if name.startswith("@"):
+                label = f"{name} rules"
+            elif ":" in name:
+                label = f"{name} (everything hangs from the left edge and the top)"
+            else:
+                label = f"{name} (the studio sets how things look)"
+            self.removed[label] += 1
 
 
 def _removed_attribute_label(name: str) -> str:
