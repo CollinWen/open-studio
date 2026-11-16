@@ -3,8 +3,9 @@ Search service: finds entries for a typed query, by meaning as well as words.
 
   - semantic: the query is turned into an embedding and compared with every
     entry's embedding, so "bread" can find a sourdough entry that never says "bread"
-  - text: entries whose title, description, tags, kind, source or write-up contain the
-    query get a boost, so exact matches come first
+  - text: entries whose title, description, tags, kind, source, write-up or readings
+    (what was read from their pictures and source link) contain the query get a
+    boost, so exact matches come first. Only embeddings from the current model count.
 
 Without an OpenRouter key (or before entries have embeddings), only the text
 match is used.
@@ -15,6 +16,7 @@ import logging
 from sqlmodel import Session
 
 from app.auth.viewer import Viewer
+from app.config import settings
 from app.features.entries import service as entries_service
 from app.features.entries.models import Entry
 from app.features.related.similarity import cosine_similarity
@@ -41,7 +43,9 @@ def search_entries(db: Session, query: str, viewer: Viewer, board: str | None = 
     scored: list[tuple[float, Entry]] = []
     for entry in entries:
         similarity = (
-            cosine_similarity(query_vector, entry.embedding) if query_vector and entry.embedding else 0.0
+            cosine_similarity(query_vector, entry.embedding)
+            if query_vector and entry.embedding and entry.embedding_model == settings.embedding_model
+            else 0.0
         )
         text_match = _contains(entry, query)
         if text_match or similarity >= MIN_SIMILARITY:
@@ -62,5 +66,8 @@ def _embed_query(query: str) -> list[float] | None:
 
 
 def _contains(entry: Entry, query: str) -> bool:
-    haystack = " ".join([entry.title, entry.description, entry.kind, entry.source_name, entry.writeup_text, *entry.tags])
+    haystack = " ".join(
+        [entry.title, entry.description, entry.kind, entry.source_name, entry.writeup_text, *entry.tags,
+         *(entry.readings or {}).values()]
+    )
     return query.lower() in haystack.lower()

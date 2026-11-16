@@ -6,8 +6,9 @@ Who can see and edit what lives in entries/visibility_rules.py. Every entry is
 on one board; an agent may only add to (or move entries onto) boards it is
 signed on to (boards/service.py). Entries added by an agent are recorded with
 its name (and the run it was on, if any) and start unlisted. When an entry's
-media changes, the words of its write-ups are read back (media/service.py),
-so tags, Related and search know what they say. An agent can't add a second entry for a link
+media changes, the words of its write-ups are read back (media/service.py).
+After every save that changes an entry's meaning, its parts are read and it is
+tagged and embedded in the background (enrichment_queue.py), so saving never waits. An agent can't add a second entry for a link
 that is already in the studio; it gets the existing one back instead.
 
 Long collections can be read a page at a time (list_entry_page). Other
@@ -22,15 +23,15 @@ from sqlmodel import Session, select
 
 from app.auth.viewer import Viewer
 from app.features.boards import service as boards_service
-from app.features.entries.enrichment import enrich_entry
+from app.config import settings
+from app.features.entries.enrichment import MEANING_FIELDS, build_embedding_text
+from app.features.entries.enrichment_queue import is_waiting, queue_enrichment
 from app.features.entries.models import Entry
 from app.features.entries.page_cursor import make_cursor, read_cursor
-from app.features.entries.schemas import EntryCreate, EntryUpdate
+from app.features.entries.schemas import EntryCreate, EntryReading, EntryUpdate, ReadingPart
 from app.features.entries.visibility_rules import AGENT_ENTRY_VISIBILITY, can_open, listing_condition
 from app.features.media import service as media_service
 
-# Edits to these fields change an entry's meaning, so its embedding is recomputed.
-MEANING_FIELDS = {"title", "description", "kind", "source_name", "tags", "writeup_text"}
 MAX_PAGE_SIZE = 200
 
 
@@ -105,9 +106,9 @@ def create_entry(db: Session, data: EntryCreate, viewer: Viewer) -> Entry:
         if existing is not None:
             raise DuplicateLinkError(existing if can_open(viewer, existing) else None)
     entry.writeup_text = media_service.read_writeup_text(entry.media)
-    enrich_entry(entry, existing_tags=_all_tags(db))
     db.add(entry)
     db.commit()
+    queue_enrichment(entry.id)
     db.refresh(entry)
     return entry
 
@@ -137,13 +138,44 @@ def update_entry(db: Session, entry: Entry, changes: EntryUpdate, viewer: Viewer
         setattr(entry, field, value)
     entry.updated_at = datetime.now(timezone.utc)
 
-    if MEANING_FIELDS & changed.keys():
-        enrich_entry(entry, existing_tags=_all_tags(db))
-
     db.add(entry)
     db.commit()
+    if set(MEANING_FIELDS) & changed.keys():
+        queue_enrichment(entry.id)
     db.refresh(entry)
     return entry
+
+
+def read_entry_again(entry: Entry) -> None:
+    """Read every part of the entry afresh, then tag (if it has none) and embed it again, in the background."""
+    queue_enrichment(entry.id, read_again=True)
+
+
+def read_all_entries_again(db: Session, only_missing: bool) -> int:
+    """Queue every entry to be read again (only_missing: just those without an embedding from the
+    current model, keeping pictures already read). Returns how many were queued."""
+    rows = list(db.exec(select(Entry.id, Entry.embedding_model)))
+    if only_missing:
+        rows = [row for row in rows if row[1] != settings.embedding_model]
+    for entry_id, _ in rows:
+        queue_enrichment(entry_id, read_again=not only_missing)
+    return len(rows)
+
+
+def describe_entry_reading(entry: Entry) -> EntryReading:
+    """What the studio read from the entry and embedded, for the owner to check. Callers check it's the owner."""
+    parts = [
+        ReadingPart(part=key.split(" ", 1)[0], address=key.split(" ", 1)[1], text=text)
+        for key, text in (entry.readings or {}).items()
+    ]
+    return EntryReading(
+        parts=parts,
+        embedding_text=build_embedding_text(entry),
+        has_embedding=bool(entry.embedding),
+        embedding_model=entry.embedding_model,
+        embedding_is_current=entry.embedding_model == settings.embedding_model,
+        waiting=is_waiting(entry.id),
+    )
 
 
 def delete_entry(db: Session, entry: Entry) -> None:
@@ -164,8 +196,3 @@ def _find_by_source_url(db: Session, source_url: str) -> Entry | None:
         return None
     return db.exec(select(Entry).where(Entry.source_url == source_url.strip())).first()
 
-
-def _all_tags(db: Session) -> list[str]:
-    """Every tag already in use, so new suggestions reuse them instead of inventing near-duplicates."""
-    tags = {tag for entry in db.exec(select(Entry)) for tag in entry.tags}
-    return sorted(tags)

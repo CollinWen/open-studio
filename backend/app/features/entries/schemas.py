@@ -1,6 +1,7 @@
 """
 Entry API shapes: what the frontend sends to create or edit an entry,
-and what it gets back. The embedding is never sent to the browser.
+and what it gets back. The embedding is never sent to the browser; what the
+studio read from an entry (its readings) goes only to the owner, as EntryReading.
 An entry's media may include a write-up (type html) only if the studio
 stored it, so it was made safe on the way in (media/service.py).
 """
@@ -100,6 +101,27 @@ class EntryOut(BaseModel):
     tags: list[str]
     added_by: str
     board: str
+
+
+class ReadingPart(BaseModel):
+    """What the studio read from one part of an entry: its source link, or one picture."""
+
+    part: Literal["source", "picture"]
+    address: str
+    text: str
+
+
+class EntryReading(BaseModel):
+    """For the owner only: everything the studio read from an entry, and the exact text it embedded."""
+
+    parts: list[ReadingPart]
+    embedding_text: str
+    has_embedding: bool
+    embedding_model: str
+    # False when the embedding was made by another model than the one set now, so it isn't compared.
+    embedding_is_current: bool
+    # True while a reading is queued or under way: refresh in a few seconds.
+    waiting: bool
 
 
 class EntryPage(BaseModel):

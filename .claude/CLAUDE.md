@@ -70,13 +70,13 @@ open-studio/
 │   │   │   ├── agents/       Agents: the owner adds, pauses, re-keys and removes them and grants outside tools; their status and last seen
 │   │   │   ├── agent_log/    The public agent log: what agents plan, think, find and ask
 │   │   │   ├── runs/         Runs: one task for one agent (study, references, prototype), its short-lived token, kit and record
-│   │   │   ├── entries/      Entries: storage, visibility per viewer, CRUD, pages, enrichment (tags + embedding)
+│   │   │   ├── entries/      Entries: storage, visibility per viewer, CRUD, pages, enrichment in the background (read each part into words, then tags + one embedding)
 │   │   │   ├── entry_links/  "Builds on" links between entries, and the chain around an entry
 │   │   │   ├── capture/      Paste a link → prefilled entry draft
 │   │   │   ├── tags/         LLM tag suggestions; tag descriptions + importance (key / normal / hidden)
 │   │   │   ├── related/      Closest entries by meaning (shared tags as fallback)
 │   │   │   ├── search/       Search by meaning (embeddings) + plain word matches
-│   │   │   └── media/        Image/video upload; write-ups (an entry's HTML), made safe before they're stored
+│   │   │   └── media/        Image/video upload; write-ups (an entry's HTML), made safe before they're stored; the picture reader (a picture described in words)
 │   │   ├── agent_server/     The studio as an MCP server (/mcp) for agents: board, read, write, chain, log and run tools
 │   │   └── integrations/     OpenRouter (LLM, embeddings), file storage. One file each.
 │   │       └── link_readers/ One reader per site (YouTube, Google Drive, GitHub, Instagram, X) + a general webpage reader
@@ -92,7 +92,7 @@ open-studio/
 │       ├── pages/            One file per URL (BoardPage for / and /b/<slug>, EntryPage, AgentsPage, AboutPage, StudioPage, SketchPage, NotFoundPage)
 │       ├── features/
 │       │   ├── grid/         Browsing a board: the browse panel (spaces, tag ovals, time slider, view controls), grid/rows views, cards, the shared highlight rule, URL state, loading a page at a time
-│       │   ├── entries/      Pieces of the entry page (wall label, media series, write-up frame, tags, related)
+│       │   ├── entries/      Pieces of the entry page (wall label, media series, write-up frame, tags, related, and for the owner what the studio read)
 │       │   ├── agents/       Pieces of the agents page (agent list, agent log)
 │       │   ├── studio/       Owner-only entry form (a sheet over any page: ?add, ?edit=<id>), link capture, media list editor, entry list, tag notes, agent list
 │       │   └── sketches/     Scratch: home-page ideas tried on real data at /sketch (contact sheet + threads). Delete when one graduates.
@@ -237,7 +237,8 @@ Use these words exactly, in file names, function names, database tables, API rou
 | **Cover** | The first media item; what the grid shows. |
 | **Visibility** | `private`, `unlisted` or `public`. |
 | **Related** | Entries found by embedding similarity. |
-| **Embedding** | An entry's meaning as a list of numbers. Computed from title, description, kind, source, tags and the start of its write-up. |
+| **Reading** | The words the studio reads from one part of an entry, after each save, in the background: the source link's own text (via the link readers), each picture described by a model that can see, a video's or embed's still the same way. Kept per entry (`readings`), never shown to visitors; the owner sees them at the foot of the entry page. In code, `reading`. |
+| **Embedding** | An entry's meaning as a list of numbers: one per entry, from one text that puts title and description first, then kind, source, tags, and its readings, captions and the start of its write-up. Only embeddings from the same model are compared. |
 | **Grid** | A board's public entries as cards, newest first, in three picture sizes (medium by default). A board's default view. |
 | **Highlight** | A picked tag or span of months: matching entries stand out, the rest fade (`grid/entryHighlight.ts`). |
 | **Browse panel** | The block above a board's work holding every way to move around it: the boards, then the view controls with tags and time behind the caret (`grid/BrowsePanel.tsx`). |
