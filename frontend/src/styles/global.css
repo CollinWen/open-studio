@@ -733,36 +733,21 @@ button[type="submit"]:disabled {
   display: block;
 }
 
-/* A write-up's cover: no picture, so its title set large under a rule, on the bare paper.
-   (.entry-card makes it beat the plain block rule for the card's lines.) */
-.entry-card .writeup-cover {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  aspect-ratio: 4 / 3;
-  padding-top: calc(var(--line) / 2);
-  border-top: var(--rule);
+.entry-card .entry-card-title {
+  font-weight: 500;
 }
 
-.writeup-cover-title {
+/* A write-up has no picture, so its title stands in for one, set large. */
+.entry-card.is-writeup .entry-card-title {
   font-size: var(--size-large);
   line-height: calc(1.5 * var(--line));
   font-weight: 560;
   letter-spacing: -0.01em;
-  overflow: hidden;
 }
 
-.entry-grid-small .writeup-cover-title {
+.entry-grid-small .entry-card.is-writeup .entry-card-title {
   font-size: inherit;
   line-height: inherit;
-}
-
-.entry-grid-small .writeup-cover .quiet {
-  display: none;
-}
-
-.entry-card .entry-card-title {
-  font-weight: 500;
 }
 
 /* "Why it's here", cut off after three lines in the grid. (Needs the extra
@@ -878,41 +863,99 @@ button[type="submit"]:disabled {
 
 /* ---- Entry page ---- */
 
-/* The wall label's facts (Board, Kind, Date, Source, Added by): one row
-   across the grid, each two columns wide, a small caption over its value. */
-.fact-row {
+/* An entry page under its title: a narrow column of facts (the wall label,
+   columns 1–3) beside a wide one to read (notes, pictures, write-ups,
+   columns 4–12). The facts stay in view while you read down a long entry.
+   On a phone the facts come first, the reading under them. */
+.entry-layout {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
   column-gap: var(--gutter);
-  row-gap: calc(var(--line) / 2);
+  row-gap: calc(2 * var(--line));
+  align-items: start;
+}
+
+.entry-aside {
+  grid-column: 1 / span 3;
+  position: sticky;
+  top: var(--line);
+}
+
+.entry-main {
+  grid-column: 4 / -1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: calc(2 * var(--line));
+}
+
+@media (max-width: 720px) {
+  .entry-aside,
+  .entry-main {
+    grid-column: 1 / -1;
+    position: static;
+  }
+}
+
+/* The wall label's facts, a small caption over each value, half a line apart. */
+.fact-list {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--line) / 2);
   margin: 0;
 }
 
-.fact {
-  grid-column: span 2;
-  min-width: 0;
-}
-
-.fact dt {
+.fact-list dt {
   font-size: var(--size-small);
   line-height: var(--leading-small);
   color: var(--ink-soft);
 }
 
-.fact dd {
+.fact-list dd {
   margin: 0;
+  overflow-wrap: anywhere;
 }
 
-@media (max-width: 1100px) {
-  .fact {
-    grid-column: span 4;
-  }
-}
-
+/* On a phone, two facts to a line; a source and the tags take a whole line. */
 @media (max-width: 720px) {
-  .fact {
-    grid-column: span 6;
+  .fact-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--gutter);
   }
+
+  .fact-list > :has(.source-link, .is-ovals) {
+    grid-column: 1 / -1;
+  }
+}
+
+/* A source: its name with an arrow out, the address under it in the small soft ink. */
+.source-link {
+  display: block;
+}
+
+.source-link:hover {
+  text-decoration: none;
+}
+
+.source-link-name {
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  text-decoration-thickness: 1px;
+}
+
+.source-link-address {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: var(--size-small);
+  line-height: var(--leading-small);
+  color: var(--ink-soft);
+}
+
+.source-link:hover .source-link-address {
+  color: var(--ink);
 }
 
 /* Pictures run down the content column one after another. */
@@ -993,6 +1036,11 @@ button[type="submit"]:disabled {
   display: flex;
   flex-direction: column;
   gap: calc(var(--line) / 2);
+}
+
+/* The form's gap spaces its lines, so its lines of words keep no margin of their own. */
+.entry-form > p {
+  margin: 0;
 }
 
 /* "add" / "save" and "cancel": a line of room above them. */
