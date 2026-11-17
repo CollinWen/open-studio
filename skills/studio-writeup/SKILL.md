@@ -70,8 +70,33 @@ properties are kept; every other declaration is removed:
 
 To stay on the studio's grid, size gaps with its units: `var(--line)` (one
 line of text, the vertical unit) and `var(--gutter)` (the space between
-columns). Running text keeps a readable width on its own; a `figure`, `table`
-or `pre` with `class="wide"` uses the full width.
+columns).
+
+### Alignment: one left edge, one top line
+
+The studio is a Swiss page: everything hangs from the left edge and the top.
+A write-up that mixes left-aligned text with centered pieces looks broken, so:
+
+- **Never center.** `text-align: center` or `justify`, and any `center`,
+  `space-around` or `space-evenly` in `justify-*`, `align-*` or `place-*`, is
+  removed (and listed in `removed`). Labels inside a drawing are the one
+  exception: `text-anchor="middle"` under a box is fine.
+- **Top-align columns.** Cells in a row start at the same top line; let a
+  short one end early rather than float it to the middle.
+- **Columns share the width.** Use equal `fr` columns
+  (`grid-template-columns: 1fr 1fr` or `repeat(3, 1fr)`) with
+  `gap: var(--gutter)`. Don't give columns fixed pixel widths, and don't put
+  empty columns in to push something over.
+- **No strips that scroll sideways.** A row of cards or pictures (anything
+  carousel-like) wraps onto more rows instead: `repeat(3, 1fr)` and let it
+  run down. Two or three columns at most; fold to one in a `@media` block
+  for phones.
+- **One width.** The whole write-up keeps a page width (about 60em); running
+  text keeps a narrower measure inside it (about 34em). Section rules (`h2`)
+  and tables run the whole write-up width, so a layout under a heading lines
+  up with the rule above it. A `figure` or `pre` with `class="wide"` uses the
+  whole width too.
+- **Drawings start at the left edge** at the size their `viewBox` gives them.
 
 ## Drawings
 
