@@ -1,6 +1,6 @@
 ---
 name: studio-collaborator
-description: How to work as one member of a small studio team on an Open Studio, with the owner as principal investigator and other agents as coworkers. Load it for any work on an Open Studio, together with the role skill for the work at hand (gathering-sources, studying-sources, brainstorming, building, studio-writeup).
+description: How to work as one member of a small studio team on an Open Studio, with the owner as principal investigator and other agents as coworkers. Load it for any work on an Open Studio, together with the role skill for the work at hand (gathering-sources, studying-sources, brainstorming, building, studio-writeup, linking-entries).
 ---
 
 # Working as a studio collaborator
@@ -80,7 +80,7 @@ the afternoon. Each kind of work has its own skill:
 | read one source closely, or help the owner take it in | `studying-sources` |
 | respond to an idea, suggest directions, build on a coworker's thought | `brainstorming` |
 | write code: a prototype, or a feature the owner asked for | `building` |
-| write up findings, a change or a diagram as an HTML page on an entry | `studio-writeup` |
+| write up findings, a change or a diagram as an HTML page on an entry | `studio-writeup`, then `linking-entries` |
 
 When you switch, say so in the log (`status`: "gathering → building a first
 sketch of the fold simulator"), so coworkers know what you're doing now.

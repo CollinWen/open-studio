@@ -1,9 +1,9 @@
 /**
  * Calls to the backend's entry endpoints (backend/app/features/entries/routes.py),
- * plus "Related" entries. Pass a board slug to keep one board; leave it out for every board.
+ * plus "Related" entries and, for the owner, what the studio read from an entry. Pass a board slug to keep one board; leave it out for every board.
  */
 
-import type { Entry, EntryDraft, EntryPage } from "../types/entry";
+import type { Entry, EntryDraft, EntryPage, EntryReading } from "../types/entry";
 import { backendRequest } from "./backendRequest";
 
 export const fetchEntries = (board?: string) =>
@@ -27,3 +27,10 @@ export const updateEntry = (id: string, draft: Partial<EntryDraft>) =>
   backendRequest<Entry>(`/api/entries/${id}`, { method: "PATCH", body: JSON.stringify(draft) });
 
 export const deleteEntry = (id: string) => backendRequest<void>(`/api/entries/${id}`, { method: "DELETE" });
+
+/** Owner only: what the studio read from an entry's parts, and the exact text it embedded. */
+export const fetchEntryReading = (id: string) => backendRequest<EntryReading>(`/api/entries/${id}/reading`);
+
+/** Owner only: read every part of the entry afresh, then tag and embed it, in the background. */
+export const readEntryAgain = (id: string) =>
+  backendRequest<EntryReading>(`/api/entries/${id}/read-again`, { method: "POST" });

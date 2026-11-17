@@ -6,6 +6,7 @@ RESULT_LIMIT and no further.
 """
 
 from app.auth.viewer import Viewer
+from app.config import settings
 from app.features.entries.models import Entry
 from app.features.search import service
 
@@ -13,7 +14,7 @@ NEAR = [1.0, 0.0]
 
 
 def _entry(title: str, embedding: list[float]) -> Entry:
-    return Entry(title=title, embedding=embedding, tags=[])
+    return Entry(title=title, embedding=embedding, embedding_model=settings.embedding_model, tags=[])
 
 
 def _search(monkeypatch, entries: list[Entry], query: str) -> list[str]:

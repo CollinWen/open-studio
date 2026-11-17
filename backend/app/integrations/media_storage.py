@@ -56,6 +56,16 @@ def read_stored_writeup(url: str) -> str:
     return reply["Body"].read().decode("utf-8")
 
 
+def read_local_media_file(url: str) -> bytes | None:
+    """The bytes of a file stored on this machine (a /media/<name> address, local development),
+    or None for any other address (R2 and outside files are read from their web address)."""
+    name = url.rsplit("/", 1)[-1]
+    if url != f"/media/{name}" or not name.replace(".", "", 1).isalnum():
+        return None
+    path = settings.media_dir / name
+    return path.read_bytes() if path.is_file() else None
+
+
 def _save(stored_name: str, content: bytes) -> str:
     if settings.r2_enabled:
         return _save_to_r2(stored_name, content)

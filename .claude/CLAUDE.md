@@ -14,7 +14,7 @@ What we're building is described in [open-studio-brief.md](../open-studio-brief.
 - **Links are the navigation (Zettelkasten-style).** Every view is a URL: entry pages, tag selection, search, view and sort (`/?tag=bread&view=rows`). Anything a visitor can see should be reachable by a link, and pages should link to each other (tags, related entries) so you can wander between them.
 - **Controls are words, with a few clean icons.** "●●● ≡", "recent · oldest · title". The marks that aren't words: the three size dots, the tag ovals, the studio mark, and the line icons in `components/Icon.tsx` (a caret that opens and closes a control band, a plus that adds, a thin × that closes the entry form, three lines for rows), drawn as thin strokes the weight of a rule in the ink color. Add a new icon there, in the same style, only when a word is clearly worse. The current mode sits on a solid ink square; a picked filter is a filled oval.
 - **Media is never altered.** Uploads are stored as the original file. Linked media (YouTube, Google Drive) is shown from where it lives, not copied. Deal with storage limits when they come. The one exception is a write-up, which is text, not media: it is made safe before it's stored (below).
-- **Write-ups are plain HTML, shown in the studio's own style.** When an entry needs more than a description (a study's findings, what a commit changed), an agent attaches a write-up (`attach_writeup`; the owner can upload a `.html`). It becomes an `html` media item. The line: the writer decides what's on the page and how it's arranged (structure, tables, layout CSS such as grids, widths and gaps, SVG diagrams with arrowheads and hatching, in ink only); the studio decides how it looks (typeface, sizes, colors, borders, spacing); nothing can run or load from elsewhere (no scripts, forms, frames, outside files; pictures must be embedded). The backend enforces it (`features/media/writeup_sanitizer.py`, with `writeup_allow_lists.py` and `writeup_css_filter.py`) and reads the write-up's words into the entry's hidden `writeup_text`, which tags, Related and search use. The entry page shows it in a sandboxed frame that can't run anything (`features/entries/WriteupView.tsx`), styled only by `styles/writeup.css`, which is built on the same tokens as the site (`styles/tokens.css`). In the grid it has a typographic cover. Agents learn the rules from `skills/studio-writeup/`. **Keep the three in step:** when the site's look changes (tokens, or how text, tables, captions, rules or figures look in `global.css`), update `writeup.css` to match and check `skills/studio-writeup/example.html` still reads like the site; when the allowed tags, attributes or layout properties change, update `SKILL.md`, the `attach_writeup` tool's description and `writeup.css` with them (a test checks the example survives whole).
+- **Write-ups are plain HTML, shown in the studio's own style.** When an entry needs more than a description (a study's findings, what a commit changed), an agent attaches a write-up (`attach_writeup`; the owner can upload a `.html`). It becomes an `html` media item. The line: the writer decides what's on the page and how it's arranged (structure, tables, layout CSS such as grids, widths and gaps, SVG diagrams with arrowheads and hatching, in ink only); the studio decides how it looks (typeface, sizes, colors, borders, spacing); nothing can run or load from elsewhere (no scripts, forms, frames, outside files; pictures must be embedded). A write-up may link to other entries (`/entry/<id>`), which open on the studio's own page; agents learn to link what a page mentions from `skills/linking-entries/`. The backend enforces it (`features/media/writeup_sanitizer.py`, with `writeup_allow_lists.py` and `writeup_css_filter.py`) and reads the write-up's words into the entry's hidden `writeup_text`, which tags, Related and search use. The entry page shows it in a sandboxed frame that can't run anything (`features/entries/WriteupView.tsx`), styled only by `styles/writeup.css`, which is built on the same tokens as the site (`styles/tokens.css`). In the grid it has a typographic cover. Agents learn the rules from `skills/studio-writeup/`. **Keep the three in step:** when the site's look changes (tokens, or how text, tables, captions, rules or figures look in `global.css`), update `writeup.css` to match and check `skills/studio-writeup/example.html` still reads like the site; when the allowed tags, attributes or layout properties change, update `SKILL.md`, the `attach_writeup` tool's description and `writeup.css` with them (a test checks the example survives whole).
 - **Hosting:** backend on Fly.io (SQLite on a persistent volume), uploaded media in Cloudflare R2, frontend on Firebase Hosting, domain and DNS on Cloudflare. Every deploy setting lives in `deploy.toml` (not committed); `deploy.py` pushes it out, by hand or from GitHub Actions on every push to `main`. Setup steps are in the backend and frontend READMEs. Keep storage behind `backend/app/database.py` and `integrations/media_storage.py` so it can be swapped later.
 
 ---
@@ -70,13 +70,13 @@ open-studio/
 │   │   │   ├── agents/       Agents: the owner adds, pauses, re-keys and removes them and grants outside tools; their status and last seen
 │   │   │   ├── agent_log/    The public agent log: what agents plan, think, find and ask
 │   │   │   ├── runs/         Runs: one task for one agent (study, references, prototype), its short-lived token, kit and record
-│   │   │   ├── entries/      Entries: storage, visibility per viewer, CRUD, pages, enrichment (tags + embedding)
+│   │   │   ├── entries/      Entries: storage, visibility per viewer, CRUD, pages, enrichment in the background (read each part into words, then tags + one embedding)
 │   │   │   ├── entry_links/  "Builds on" links between entries, and the chain around an entry
 │   │   │   ├── capture/      Paste a link → prefilled entry draft
 │   │   │   ├── tags/         LLM tag suggestions; tag descriptions + importance (key / normal / hidden)
 │   │   │   ├── related/      Closest entries by meaning (shared tags as fallback)
 │   │   │   ├── search/       Search by meaning (embeddings) + plain word matches
-│   │   │   └── media/        Image/video upload; write-ups (an entry's HTML), made safe before they're stored
+│   │   │   └── media/        Image/video upload; write-ups (an entry's HTML), made safe before they're stored; the picture reader (a picture described in words)
 │   │   ├── agent_server/     The studio as an MCP server (/mcp) for agents: board, read, write, chain, log and run tools
 │   │   └── integrations/     OpenRouter (LLM, embeddings), file storage. One file each.
 │   │       └── link_readers/ One reader per site (YouTube, Google Drive, GitHub, Instagram, X) + a general webpage reader
@@ -92,7 +92,7 @@ open-studio/
 │       ├── pages/            One file per URL (BoardPage for / and /b/<slug>, EntryPage, AgentsPage, AboutPage, StudioPage, SketchPage, NotFoundPage)
 │       ├── features/
 │       │   ├── grid/         Browsing a board: the browse panel (spaces, tag ovals, time slider, view controls), grid/rows views, cards, the shared highlight rule, URL state, loading a page at a time
-│       │   ├── entries/      Pieces of the entry page (wall label, media series, write-up frame, tags, related)
+│       │   ├── entries/      Pieces of the entry page (wall label, media series, write-up frame, tags, related, and for the owner what the studio read)
 │       │   ├── agents/       Pieces of the agents page (agent list, agent log)
 │       │   ├── studio/       Owner-only entry form (a sheet over any page: ?add, ?edit=<id>), link capture, media list editor, entry list, tag notes, agent list
 │       │   └── sketches/     Scratch: home-page ideas tried on real data at /sketch (contact sheet + threads). Delete when one graduates.
@@ -108,7 +108,8 @@ open-studio/
 │   ├── studying-sources/     SKILL.md: reading one source closely and handing it over so the owner reads actively
 │   ├── brainstorming/        SKILL.md: responding to ideas and suggesting directions, diverge then converge
 │   ├── building/             SKILL.md: writing code for the owner: prototypes and asked-for features, scoped, shown working, reported
-│   └── studio-writeup/       SKILL.md + example.html: writing an HTML page (a write-up) for an entry: how much room it has, what the studio keeps and what it takes over
+│   ├── studio-writeup/       SKILL.md + example.html: writing an HTML page (a write-up) for an entry: how much room it has, what the studio keeps and what it takes over
+│   └── linking-entries/      SKILL.md: making a write-up wiki-style: finding the entries it mentions and linking them (/entry/<id>)
 │
 └── ios/                      iPhone app (Swift): the website's studio page in a web view, signed in, plus a share-sheet extension
     ├── README.md             How to build it on a Mac and get it onto a phone
@@ -236,7 +237,8 @@ Use these words exactly, in file names, function names, database tables, API rou
 | **Cover** | The first media item; what the grid shows. |
 | **Visibility** | `private`, `unlisted` or `public`. |
 | **Related** | Entries found by embedding similarity. |
-| **Embedding** | An entry's meaning as a list of numbers. Computed from title, description, kind, source, tags and the start of its write-up. |
+| **Reading** | The words the studio reads from one part of an entry, after each save, in the background: the source link's own text (via the link readers), each picture described by a model that can see, a video's or embed's still the same way. Kept per entry (`readings`), never shown to visitors; the owner sees them at the foot of the entry page. In code, `reading`. |
+| **Embedding** | An entry's meaning as a list of numbers: one per entry, from one text that puts title and description first, then kind, source, tags, and its readings, captions and the start of its write-up. Only embeddings from the same model are compared. |
 | **Grid** | A board's public entries as cards, newest first, in three picture sizes (medium by default). A board's default view. |
 | **Highlight** | A picked tag or span of months: matching entries stand out, the rest fade (`grid/entryHighlight.ts`). |
 | **Browse panel** | The block above a board's work holding every way to move around it: the boards, then the view controls with tags and time behind the caret (`grid/BrowsePanel.tsx`). |

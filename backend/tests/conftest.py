@@ -1,7 +1,8 @@
 """
 Test setup: points the app at a throwaway data folder, sets a known owner
 token, two agent tokens (scout, archivist) and a board they may add to, and
-turns OpenRouter off so tests never make network calls or cost money.
+turns OpenRouter off so tests never make network calls or cost money, and
+reads entries right away instead of in the background.
 Must run before the app is imported, which is why it sets environment variables at the top.
 """
 
@@ -12,6 +13,7 @@ import tempfile
 os.environ["DATA_DIR"] = tempfile.mkdtemp(prefix="open-studio-test-")
 os.environ["OWNER_TOKEN"] = "test-owner-token"
 os.environ["OPENROUTER_API_KEY"] = ""
+os.environ["READ_IN_BACKGROUND"] = "false"
 os.environ["AGENT_TOKENS"] = "scout=test-scout-token,archivist=test-archivist-token"
 os.environ["AGENT_WRITES_PER_HOUR"] = "5"
 

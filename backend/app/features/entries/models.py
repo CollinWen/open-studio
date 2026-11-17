@@ -52,6 +52,10 @@ class Entry(SQLModel, table=True):
     # Related and search know what they say. Never sent to the browser.
     writeup_text: str = ""
 
+    # What the studio read from each part (entries/entry_reading.py): the source link's words,
+    # each picture described. Keyed "source <url>" / "picture <url>". Only the owner sees them.
+    readings: dict[str, str] = Field(default_factory=dict, sa_column=Column(JSON))
+
     # Short, plain labels. Suggested by an LLM, editable afterwards.
     tags: list[str] = Field(default_factory=list, sa_column=Column(JSON))
 

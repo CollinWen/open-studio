@@ -1,5 +1,6 @@
 """
-LLM client: sends a prompt to a chat model on OpenRouter and returns its text reply.
+LLM client: sends a prompt to a chat model on OpenRouter (with a picture, for
+a model that can see) and returns its text reply.
 
 Knows nothing about entries or tags. The prompts themselves live with the
 feature that uses them (e.g. features/tags/tag_suggester.py).
@@ -25,6 +26,29 @@ def ask_llm(system: str, user: str, model: str | None = None) -> str:
             "temperature": 0.0,
             # Generous because some models think before answering.
             "max_tokens": 4096,
+        },
+    )
+    return reply["choices"][0]["message"]["content"] or ""
+
+
+def ask_llm_about_picture(system: str, user: str, picture_url: str, model: str) -> str:
+    """Show a vision model one picture (a web address or a data: URL) with a prompt; return its reply text."""
+    reply = post_to_openrouter(
+        "/chat/completions",
+        {
+            "model": model,
+            "messages": [
+                {"role": "system", "content": system},
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": user},
+                        {"type": "image_url", "image_url": {"url": picture_url}},
+                    ],
+                },
+            ],
+            "temperature": 0.0,
+            "max_tokens": 1024,
         },
     )
     return reply["choices"][0]["message"]["content"] or ""

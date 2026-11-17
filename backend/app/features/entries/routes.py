@@ -10,6 +10,10 @@ Entry endpoints:
   POST   /api/entries         create (owner, or an agent on its boards: saved unlisted)
   PATCH  /api/entries/{id}    edit (owner, or an agent on agents' unpublished entries)
   DELETE /api/entries/{id}    delete (owner only)
+  POST   /api/entries/read-all-again   queue every entry to be read again (owner only);
+                              ?only_missing=true: just those with no embedding from the current model
+  GET    /api/entries/{id}/reading     what the studio read from it and embedded (owner only)
+  POST   /api/entries/{id}/read-again  read every part afresh, then tag and embed it (owner only)
 
 POST /api/entries is also the capture endpoint: a phone shortcut can call it
 directly with the owner token. Agents usually come in through agent_server/ (MCP)
@@ -26,7 +30,7 @@ from app.auth.viewer import Viewer, current_viewer, require_writer
 from app.database import get_db
 from app.features.entries import service
 from app.features.entries.page_cursor import BadCursorError
-from app.features.entries.schemas import EntryCreate, EntryOut, EntryPage, EntryUpdate
+from app.features.entries.schemas import EntryCreate, EntryOut, EntryPage, EntryReading, EntryUpdate
 from app.features.entries.visibility_rules import can_edit
 
 router = APIRouter(prefix="/entries", tags=["entries"])
@@ -59,6 +63,11 @@ def list_entry_page(
     except BadCursorError as error:
         raise HTTPException(status_code=422, detail=str(error))
     return EntryPage(entries=entries, next_cursor=next_cursor)
+
+
+@router.post("/read-all-again", dependencies=[Depends(require_owner)])
+def read_all_entries_again(only_missing: bool = False, db: Session = Depends(get_db)):
+    return {"queued": service.read_all_entries_again(db, only_missing)}
 
 
 @router.get("/{entry_id}", response_model=EntryOut)
@@ -108,3 +117,21 @@ def delete_entry(entry_id: str, db: Session = Depends(get_db), viewer: Viewer = 
     if entry is None:
         raise HTTPException(status_code=404, detail="Entry not found")
     service.delete_entry(db, entry)
+
+
+@router.get("/{entry_id}/reading", response_model=EntryReading, dependencies=[Depends(require_owner)])
+def get_entry_reading(entry_id: str, db: Session = Depends(get_db), viewer: Viewer = Depends(current_viewer)):
+    entry = service.get_entry(db, entry_id, viewer)
+    if entry is None:
+        raise HTTPException(status_code=404, detail="Entry not found")
+    return service.describe_entry_reading(entry)
+
+
+@router.post("/{entry_id}/read-again", response_model=EntryReading, dependencies=[Depends(require_owner)])
+def read_entry_again(entry_id: str, db: Session = Depends(get_db), viewer: Viewer = Depends(current_viewer)):
+    entry = service.get_entry(db, entry_id, viewer)
+    if entry is None:
+        raise HTTPException(status_code=404, detail="Entry not found")
+    service.read_entry_again(entry)
+    db.refresh(entry)
+    return service.describe_entry_reading(entry)

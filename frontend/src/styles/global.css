@@ -1416,3 +1416,13 @@ main {
     opacity: 1;
   }
 }
+
+/* For the owner: what the studio read from an entry and embedded, set small and soft, line breaks kept. */
+.entry-reading-text {
+  margin: 0;
+  font-size: var(--size-small);
+  line-height: var(--leading-small);
+  color: var(--ink-soft);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
