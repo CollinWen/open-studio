@@ -24,12 +24,19 @@ export async function backendRequest<T>(path: string, init: RequestInit = {}): P
   return response.status === 204 ? (undefined as T) : response.json();
 }
 
-/** The backend's own explanation when it gives one ({"detail": "..."}), otherwise the status code. */
+/**
+ * The backend's own explanation when it gives one, otherwise the status code:
+ * {"detail": "..."} as it is, or a list of field problems (a 422) as their
+ * plain messages, one after another.
+ */
 async function readErrorMessage(response: Response): Promise<string> {
   const text = await response.text();
   try {
     const { detail } = JSON.parse(text);
     if (typeof detail === "string") return detail;
+    if (Array.isArray(detail) && detail.every((problem) => typeof problem?.msg === "string")) {
+      return detail.map((problem) => problem.msg.replace(/^Value error, /, "")).join(" ");
+    }
   } catch {
     // Not JSON: fall through.
   }
