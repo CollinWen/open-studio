@@ -7,6 +7,8 @@ widths, alignment, gaps, order); the studio decides how they look
 blocks), from frontend/src/styles/writeup.css. So only the layout
 properties below survive, in `style` attributes and `<style>` blocks, and
 nothing that could load a file (url(), @import, @font-face) ever does.
+Everything hangs from the left edge and the top, as on the site, so
+centering (and spreading things out evenly) is removed too.
 
 Used by writeup_sanitizer.py. The list of properties is repeated for
 agents in skills/studio-writeup/SKILL.md; keep the two in step.
@@ -27,6 +29,12 @@ LAYOUT_PROPERTIES = {
     "table-layout", "white-space", "object-fit", "object-position", "list-style-type",
     "overflow-x",
 }
+ALIGNMENT_PROPERTIES = {
+    "text-align", "justify-content", "justify-items", "justify-self", "align-items",
+    "align-content", "align-self", "place-items", "place-content", "place-self",
+}
+# Alignments that float things off the left edge or the top: removed, with the value named.
+OFF_THE_EDGE = ("center", "space-around", "space-evenly", "justify")
 # Letters, numbers, units, quotes (grid areas), var(--line) and calc(). Nothing else.
 SAFE_VALUE = re.compile(r"^[A-Za-z0-9\s.,%()'\"+*/_-]*$")
 UNSAFE_WORDS = ("url", "expression", "image", "element", "src")
@@ -44,7 +52,9 @@ def filter_declarations(css: str) -> tuple[str, list[str]]:
         name, _, value = declaration.partition(":")
         name = name.strip().lower()
         value = value.replace("!important", "").strip()
-        if name in LAYOUT_PROPERTIES and value and _is_safe_value(value):
+        if name in ALIGNMENT_PROPERTIES and any(word in value.lower() for word in OFF_THE_EDGE):
+            removed.append(f"{name}: {value}")
+        elif name in LAYOUT_PROPERTIES and value and _is_safe_value(value):
             kept.append(f"{name}: {value}")
         else:
             removed.append(name or "unreadable style")

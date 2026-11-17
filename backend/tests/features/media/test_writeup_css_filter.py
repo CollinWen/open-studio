@@ -18,6 +18,14 @@ def test_a_layout_property_that_tries_to_load_something_is_removed():
     assert removed == ["width"]
 
 
+def test_centering_is_removed_so_everything_hangs_from_the_left_and_top():
+    kept, removed = filter_declarations(
+        "text-align: center; justify-items: start; align-items: center; justify-content: space-between"
+    )
+    assert kept == "justify-items: start; justify-content: space-between"
+    assert removed == ["text-align: center", "align-items: center"]
+
+
 def test_important_is_dropped_so_the_studio_stays_in_charge():
     assert filter_declarations("width: 50% !important")[0] == "width: 50%"
 

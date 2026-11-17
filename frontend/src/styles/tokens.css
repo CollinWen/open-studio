@@ -41,6 +41,11 @@
   --gutter: 22px;
   --margin: 44px;
 
+  /* Write-ups: running text keeps a readable measure (about 60 characters);
+     the whole write-up, its columns and rules included, keeps a page width. */
+  --measure: 34em;
+  --writeup-width: 60em;
+
   /* Motion: one quiet, controlled personality, no overshoot. Things arrive
      decelerating and leave accelerating; leaving takes about 70% as long.
      Three durations; staggers stay under half a second in total. */
