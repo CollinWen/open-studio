@@ -1,8 +1,8 @@
 /**
  * EntryCard: one entry in the home grid. Its cover picture (if any), then a
  * small wall label: title, "kind · date" (plus how many pictures, if several),
- * and the first lines of "why it's here". A write-up's cover already is its
- * title, so its label skips the title and says "write-up" instead.
+ * and the first lines of "why it's here". A write-up has no picture: its
+ * title is set large in its place, and its line says "write-up".
  * The whole card links to the entry's page.
  *
  * Faded (not hidden) when a tag filter is on and this entry doesn't match,
@@ -24,19 +24,18 @@ interface Props {
 
 export function EntryCard({ entry, faded, arriveOrder }: Props) {
   const arriving = arriveOrder !== undefined;
-  const isWriteup = entry.media[0]?.type === "html";
+  const writeup = entry.media[0]?.type === "html";
   return (
     <Link
       to={`/entry/${entry.id}`}
-      className={["entry-card", faded && "is-faded", arriving && "is-arriving"].filter(Boolean).join(" ")}
+      className={["entry-card", writeup && "is-writeup", faded && "is-faded", arriving && "is-arriving"].filter(Boolean).join(" ")}
       style={arriving ? ({ "--arrive-order": arriveOrder } as CSSProperties) : undefined}
     >
       <EntryCover media={entry.media} title={entry.title} />
-      {!isWriteup && <span className="entry-card-title">{entry.title}</span>}
+      <span className="entry-card-title">{entry.title}</span>
       <span className="quiet">
-        {entry.kind} · {formatDate(entry.occurred_at)}
-        {isWriteup && " · write-up"}
-        {entry.media.length > 1 && ` · ${entry.media.length} pictures`}
+        {writeup ? "write-up" : entry.kind} · {formatDate(entry.occurred_at)}
+        {!writeup && entry.media.length > 1 && ` · ${entry.media.length} pictures`}
       </span>
       {entry.description && <span className="entry-card-why">{entry.description}</span>}
     </Link>

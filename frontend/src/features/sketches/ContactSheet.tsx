@@ -86,7 +86,7 @@ export function ContactSheet({ entries, links, threadStyle, rowHeight, gap }: Pr
               onPointerEnter={() => setHovered(entry.id)}
               onPointerLeave={() => setHovered((current) => (current === entry.id ? null : current))}
             >
-              {entry.media.length > 0 ? <EntryCover media={entry.media} title={entry.title} /> : <span>{entry.title}</span>}
+              {entry.media.length > 0 && entry.media[0].type !== "html" ? <EntryCover media={entry.media} title={entry.title} /> : <span>{entry.title}</span>}
             </RouterLink>
           );
         })}
