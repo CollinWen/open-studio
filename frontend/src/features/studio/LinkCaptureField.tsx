@@ -7,12 +7,16 @@
  *
  * Paste several Drive photo links one after another to build a series:
  * each one's pictures are added, and the last link stays as the source.
+ *
+ * What's typed or pasted is made a web address first (webAddress.ts): spaces
+ * trimmed, and https:// added to a bare "example.com/recipe".
  */
 
 import { useState } from "react";
 import { captureLink } from "../../api/captureApi";
 import { LoadingWord } from "../../components/LoadingWord";
 import type { CapturedLink } from "../../types/entry";
+import { toWebAddress } from "./webAddress";
 
 interface Props {
   url: string;
@@ -25,11 +29,13 @@ const READING = "reading the link…";
 export function LinkCaptureField({ url, onChange, onCaptured }: Props) {
   const [status, setStatus] = useState("");
 
-  async function read(link: string) {
-    if (!link.trim()) return;
+  async function read(typed: string) {
+    const link = toWebAddress(typed);
+    if (!link) return;
+    onChange(link);
     setStatus(READING);
     try {
-      onCaptured(await captureLink(link.trim()));
+      onCaptured(await captureLink(link));
       setStatus("");
     } catch (error) {
       setStatus(`couldn't read it (${error instanceof Error ? error.message : error}); the link is still kept`);
@@ -43,7 +49,12 @@ export function LinkCaptureField({ url, onChange, onCaptured }: Props) {
         placeholder="link (paste one to fill in the rest)"
         value={url}
         onChange={(event) => onChange(event.target.value)}
-        onPaste={(event) => read(event.clipboardData.getData("text"))}
+        onBlur={() => onChange(toWebAddress(url))}
+        onPaste={(event) => {
+          // The pasted link replaces the field, already made a web address.
+          event.preventDefault();
+          read(event.clipboardData.getData("text"));
+        }}
         onKeyDown={(event) => {
           if (event.key === "Enter") {
             event.preventDefault();

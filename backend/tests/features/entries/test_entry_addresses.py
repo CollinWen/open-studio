@@ -51,3 +51,9 @@ def test_an_edit_is_held_to_the_same_rule(client):
     edit = client.patch(f"/api/entries/{entry_id}", json={"source_url": "javascript:alert(1)"}, headers=OWNER_HEADERS)
     assert edit.status_code == 422
     assert client.get(f"/api/entries/{entry_id}", headers=OWNER_HEADERS).json()["source_url"] == "https://example.com"
+
+
+def test_addresses_are_kept_without_surrounding_spaces(client):
+    response = _create(client, source_url="  https://example.com/recipe  ")
+    assert response.status_code == 200
+    assert response.json()["source_url"] == "https://example.com/recipe"

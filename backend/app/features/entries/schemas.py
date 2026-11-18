@@ -51,7 +51,11 @@ WEB_ADDRESS_STARTS = ("http://", "https://", "/media/")
 
 
 def _web_address(value: str | None) -> str | None:
-    if value and not value.strip().lower().startswith(WEB_ADDRESS_STARTS):
+    """The address without surrounding spaces; refused if it isn't a web address."""
+    if not value:
+        return value
+    value = value.strip()
+    if not value.lower().startswith(WEB_ADDRESS_STARTS):
         raise ValueError(f"Addresses must start with http:// or https://, not {value[:40]!r}")
     return value
 
@@ -60,8 +64,8 @@ def _checked_media(media: list[MediaItem] | None) -> list[MediaItem] | None:
     for item in media or []:
         if not item.url:
             raise ValueError("Every picture, video or write-up needs an address")
-        _web_address(item.url)
-        _web_address(item.thumbnail_url)
+        item.url = _web_address(item.url)
+        item.thumbnail_url = _web_address(item.thumbnail_url)
         if item.type == "html" and not is_stored_writeup_url(item.url):
             raise ValueError("A write-up must be stored by the studio first (attach_writeup, or upload the .html)")
     return media
