@@ -4,7 +4,8 @@ Media storage: saves uploaded files and returns the URL they're served from.
 When the R2 settings are filled in (production), files go to the Cloudflare R2
 bucket and the URL points at its public address. Otherwise (local development)
 they go to backend/data/media and are served by main.py under /media.
-Files are stored exactly as uploaded, under a random name. Write-ups (.html)
+Files are stored exactly as uploaded, under a random name that is never
+reused, so browsers are told to keep them for a year instead of asking again. Write-ups (.html)
 are stored only through save_writeup_file, which callers use for HTML they
 have already made safe (features/media/writeup_sanitizer.py); a raw .html
 upload through save_media_file is refused.
@@ -20,6 +21,8 @@ from app.config import settings
 
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".mp4", ".webm"}
 WRITEUP_EXTENSION = ".html"
+# A stored file never changes (each save gets a new name), so it can be cached as long as browsers allow.
+CACHE_FOREVER = "public, max-age=31536000, immutable"
 
 
 def save_media_file(original_name: str, content: bytes) -> str:
@@ -82,6 +85,7 @@ def _save_to_r2(stored_name: str, content: bytes) -> str:
         Key=stored_name,
         Body=content,
         ContentType=content_type,
+        CacheControl=CACHE_FOREVER,
     )
     return f"{settings.media_public_url.rstrip('/')}/{stored_name}"
 
