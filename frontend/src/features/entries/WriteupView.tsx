@@ -10,10 +10,12 @@
  * skills/linking-entries/) opens that entry on this page, like any link on
  * the site; links out open in a new tab. Used by MediaView.
  *
- * The frame is measured by its body, and only refitted when it loads, when
- * its typeface arrives and when the column changes width: never because
- * the frame itself grew. A write-up sized by the screen (100vh) would
- * otherwise grow with every refit, re-laying the page every frame forever.
+ * The frame grows to fit, up to a tallest height (--writeup-max-height in
+ * tokens.css; past it the write-up scrolls inside the frame). It's measured
+ * by its body and refitted only when it loads, when its typeface arrives and
+ * when the column changes width, never because the frame itself grew: a
+ * write-up sized by the screen (100vh) would otherwise grow with every
+ * refit, re-laying the page every frame.
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";

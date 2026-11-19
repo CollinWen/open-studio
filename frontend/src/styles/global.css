@@ -651,45 +651,50 @@ button[type="submit"]:disabled {
   display: none;
 }
 
-/* Masonry: entries flow down columns that land exactly on the page grid
-   (same gutter, a column count that divides twelve). */
+/* Masonry: entries are dealt into columns that land exactly on the page grid
+   (same gutter, a column count that divides twelve), each column a stack.
+   --grid-columns is read by EntryGrid (features/grid/useGridColumns.ts) to
+   know how many columns to deal into. */
 .entry-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-columns), minmax(0, 1fr));
   column-gap: var(--gutter);
+  align-items: start;
 }
 
 .entry-grid-small {
-  columns: 6;
+  --grid-columns: 6;
 }
 
 .entry-grid-medium {
-  columns: 4;
+  --grid-columns: 4;
 }
 
 .entry-grid-large {
-  columns: 2;
+  --grid-columns: 2;
 }
 
 @media (max-width: 1100px) {
   .entry-grid-small {
-    columns: 4;
+    --grid-columns: 4;
   }
 
   .entry-grid-medium {
-    columns: 3;
+    --grid-columns: 3;
   }
 }
 
 @media (max-width: 720px) {
   .entry-grid-small {
-    columns: 3;
+    --grid-columns: 3;
   }
 
   .entry-grid-medium {
-    columns: 2;
+    --grid-columns: 2;
   }
 
   .entry-grid-large {
-    columns: 1;
+    --grid-columns: 1;
   }
 }
 
@@ -705,7 +710,6 @@ button[type="submit"]:disabled {
 
 .entry-card {
   display: block;
-  break-inside: avoid;
   margin-bottom: calc(2 * var(--line));
   transition: opacity var(--motion-standard) var(--ease-enter);
 }
@@ -994,7 +998,7 @@ button[type="submit"]:disabled {
 /* A write-up's frame takes the height of what's in it (WriteupView), not 16:9. */
 .media-view .writeup-frame {
   aspect-ratio: auto;
-  max-height: none;
+  max-height: var(--writeup-max-height);
 }
 
 .media-view figcaption {

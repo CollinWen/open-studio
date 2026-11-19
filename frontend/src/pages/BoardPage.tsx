@@ -11,7 +11,8 @@
  * tag or span of months highlights its entries in whichever view is showing.
  *
  * Entries load a page at a time (useEntryPages): the first pictures show at
- * once and the rest rise in behind them. Until the first page is in (or a
+ * once and the rest rise in behind them. Only a few screens of them are
+ * drawn at first, more as the visitor scrolls (useShownCount). Until the first page is in (or a
  * search's results), the large studio mark sweeps where the view will be;
  * the board's count appears beside its name once the last page is in.
  * After the owner saves an entry the page reloads quietly. Every choice
@@ -35,6 +36,7 @@ import { EntryRows } from "../features/grid/EntryRows";
 import { sortEntries } from "../features/grid/sortEntries";
 import { useBrowseParams } from "../features/grid/useBrowseParams";
 import { useEntryPages } from "../features/grid/useEntryPages";
+import { useShownCount } from "../features/grid/useShownCount";
 import { useOnEntrySaved } from "../features/studio/entrySavedEvent";
 import { NotFoundPage } from "./NotFoundPage";
 import type { Board, Entry, Tag } from "../types/entry";
@@ -74,6 +76,8 @@ export function BoardPage() {
   // Kept stable between renders so the views don't redo work on every hover.
   const shown = useMemo(() => entries && sortEntries(entries, sort), [entries, sort]);
   const highlight = useMemo(() => ({ tag, range }), [tag, range]);
+  const { shownCount, markerRef } = useShownCount(shown?.length ?? 0, `${board} ${query} ${sort}`);
+  const drawn = useMemo(() => shown?.slice(0, shownCount), [shown, shownCount]);
 
   if (boards && !current) return <NotFoundPage />;
 
@@ -100,12 +104,13 @@ export function BoardPage() {
         ) : (
           <LabelRow wide>
             {!shown && <LoadingMark />}
-            {shown && view === "rows" && (
-              <EntryRows entries={shown} highlight={highlight} arriveOrder={collection.orderOf} />
+            {drawn && view === "rows" && (
+              <EntryRows entries={drawn} highlight={highlight} arriveOrder={collection.orderOf} />
             )}
-            {shown && view !== "rows" && (
-              <EntryGrid entries={shown} highlight={highlight} size={view} arriveOrder={collection.orderOf} />
+            {drawn && view !== "rows" && (
+              <EntryGrid entries={drawn} highlight={highlight} size={view} arriveOrder={collection.orderOf} />
             )}
+            <div ref={markerRef} aria-hidden="true" />
           </LabelRow>
         )}
       </main>
