@@ -2,6 +2,8 @@
  * useEntryFormParam: whether the entry form is open, read from the URL.
  * `?add` opens it blank and `?edit=<id>` opens that entry, on any page, so
  * the form opens over whatever you're looking at and can be linked to.
+ * Opening and closing it replaces the address rather than adding to the
+ * history, so Back leaves the page instead of reopening the form.
  *
  * Used by EntryFormModal (which shows it) and by every "add" and "edit" word.
  */
@@ -20,7 +22,7 @@ export function useEntryFormParam() {
         update(next);
         return next;
       },
-      { replace: false },
+      { replace: true },
     );
 
   return {

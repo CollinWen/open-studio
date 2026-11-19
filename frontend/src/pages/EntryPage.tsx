@@ -72,7 +72,7 @@ export function EntryPage() {
                     ownerActions={
                       isOwnerSignedIn() && (
                         <p className="word-list">
-                          <Link to={`?edit=${entry.id}`}>edit</Link>
+                          <Link to={`?edit=${entry.id}`} replace>edit</Link>
                           <span className="quiet">{entry.visibility}</span>
                         </p>
                       )
