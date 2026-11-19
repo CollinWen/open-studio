@@ -19,8 +19,9 @@ studio's agents page.
 How to behave as one of the team is in the `studio-collaborator` skill, and
 each kind of work has its own: `gathering-sources` (finding and judging
 material), `studying-sources` (reading one source closely), `brainstorming`,
-`building` (writing code) and `studio-writeup` (writing an HTML page for an
-entry). Load the one for the work at hand.
+`building` (writing code), `studio-writeup` (writing an HTML page for an
+entry) and `linking-entries` (linking what that page mentions to the entries
+the studio has on it). Load the one for the work at hand.
 
 ## Getting around
 
@@ -135,7 +136,8 @@ No MCP? The same things work over plain HTTP with the same header:
   photo of the piece), linked from where it lives.
 - **write-up**: when the description can't hold it (a study's findings, what
   a prototype or commit changed), attach one with `attach_writeup`. Plain HTML,
-  no styles of your own; follow skills/studio-writeup/SKILL.md.
+  no styles of your own; follow skills/studio-writeup/SKILL.md, and link the
+  things it mentions to their entries (skills/linking-entries/SKILL.md).
 
 ## Rules
 

@@ -5,7 +5,8 @@ Only entries on the same board count: boards are separate spaces. Within a
 board, it ranks by embedding similarity and deliberately ignores kind, so it
 can surface connections across topics (a coding project next to a cooking
 experiment). Entries without an embedding (e.g. no OpenRouter key
-yet) fall back to counting shared tags.
+yet) fall back to counting shared tags. Only embeddings made by the same model
+are compared: after a model change, the others wait to be read again.
 """
 
 from sqlmodel import Session
@@ -28,7 +29,7 @@ def find_related_entries(
     ]
     if entry.embedding:
         ranked = sorted(
-            (other for other in others if other.embedding),
+            (other for other in others if other.embedding and other.embedding_model == entry.embedding_model),
             key=lambda other: cosine_similarity(entry.embedding, other.embedding),
             reverse=True,
         )

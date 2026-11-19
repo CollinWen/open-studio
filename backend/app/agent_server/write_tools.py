@@ -121,7 +121,9 @@ def register_write_tools(server: MCPServer) -> None:
         style="" or <style> (display, grid/flex, gap, widths, alignment, order; var(--line)
         and var(--gutter) keep you on the studio's grid); inline <svg> drawings with arrowheads
         (marker), hatching (pattern) and reused shapes (defs, use), filled with currentColor
-        or none, lighter with class "soft" or "faint"; pictures as data: URLs; links out.
+        or none, lighter with class "soft" or "faint"; pictures as data: URLs; links out;
+        links to other entries as href="/entry/<id>" (link what the page mentions to the
+        studio's entries on it: see the linking-entries skill).
         Removed: fonts, sizes, colors, backgrounds, borders, margins and padding (the studio
         sets them), and everything that runs or loads (scripts, forms, iframes, outside files).
         Nothing can be interactive. The answer lists what was removed; see the studio-writeup

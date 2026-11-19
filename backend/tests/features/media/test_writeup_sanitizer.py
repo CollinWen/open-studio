@@ -55,6 +55,13 @@ def test_links_point_out_but_never_run_code():
     assert _kept('<a href="data:text/html,<script>">a</a>') == "<a>a</a>"
 
 
+def test_links_to_other_entries_stay_inside_the_studio():
+    assert _kept('<a href="/entry/3f2a9c">the starter</a>') == '<a href="/entry/3f2a9c">the starter</a>'
+    assert _kept('<a href="/entry/3f2a9c/../../api">a</a>') == "<a>a</a>"
+    assert _kept('<a href="/studio">a</a>') == "<a>a</a>"
+    assert _kept('<a href="//evil.example.com/entry/1">a</a>') == "<a>a</a>"
+
+
 def test_frames_forms_and_media_players_are_removed_with_their_contents():
     html = '<iframe src="https://x.com">x</iframe><form><input name="a"><p>in</p></form><p>after</p>'
     assert _kept(html) == "<p>after</p>"

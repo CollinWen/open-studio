@@ -2,6 +2,12 @@
 
 Python API built with FastAPI. Stores entries in a SQLite file, asks an LLM
 (via OpenRouter) for tags, and computes embeddings to find related entries.
+After each save, in the background, it reads every part of an entry into words
+(the source link's own text, each picture described by a model that can see,
+the write-ups) and makes one embedding from all of it; the owner sees what was
+read at the foot of the entry page. After changing EMBEDDING_MODEL or
+PICTURE_MODEL, read everything again:
+`curl -X POST "$API/api/entries/read-all-again" -H "Authorization: Bearer $OWNER_TOKEN"`.
 
 ## Setup (first time)
 
@@ -47,7 +53,7 @@ API docs appear at http://localhost:8000/docs.
 | `app/database.py` | Opens the SQLite database |
 | `app/database_migrations.py` | Changes to existing tables. Add a step here whenever a field is added to a `models.py`. |
 | `app/auth/` | Who is asking: visitor, agent (an active agent's token, or a live run's token) or owner; making and checking run tokens (`run_tokens.py`); agents' hourly limits on entries and log lines; `GET /api/auth/owner`, which the studio uses to check a password before keeping it (`routes.py`) |
-| `app/features/entries/` | Entries: storage, visibility rules (per viewer, in `visibility_rules.py`), create/edit/delete, enrichment (tags + embedding). Each entry has a list of media items; the first is the cover, `board` says which board it's on, and `added_by` says whether the owner or which agent added it. `GET /api/entries/page` reads a long collection a page at a time (`page_cursor.py`). |
+| `app/features/entries/` | Entries: storage, visibility rules (per viewer, in `visibility_rules.py`), create/edit/delete, enrichment in the background after each save (`enrichment_queue.py`): read each part into words (`entry_reading.py`), then tags and one embedding (`enrichment.py`). Each entry has a list of media items; the first is the cover, `board` says which board it's on, and `added_by` says whether the owner or which agent added it. `GET /api/entries/page` reads a long collection a page at a time (`page_cursor.py`). |
 | `app/features/boards/` | Boards: separate spaces in the studio. `home` is your own collection (what the home page shows, made on startup); each other board has a description agents read as their brief, and the list of agents allowed to add to it |
 | `app/features/agents/` | Agents: the owner adds, pauses, re-keys and removes them (`/api/agents`); only a fingerprint of each token is stored (`agent_tokens.py`). Each has a status line and a last-seen time. Which boards it's on is kept on the board. |
 | `app/features/runs/` | Runs: one task for one agent (study a source, gather references, start a project; `task_kinds.py`), with a short-lived token that says what it may do and a kit any harness can use (`run_kit.py`), plus optional ready-made setups per harness (`claude_code_setup.py`). `POST /api/runs` starts one; what it added and its summary are kept for review. |

@@ -2,11 +2,11 @@
  * EntryForm: write a new entry or edit an existing one. Plain text fields,
  * no boxes. Leaving tags blank asks the backend to suggest them.
  *
- * A new entry asks only for the essentials (a link, a title, why it's here,
- * which space it goes in, who sees it); kind, date, source, tags and pictures sit behind "more",
+ * A new entry asks only for the essentials (a title, a link, why it's here,
+ * which space it goes in, who sees it); kind, date, source name, tags and pictures sit behind "more",
  * summed up in one quiet line. Editing shows everything.
- * Pasting a link at the top fills in whatever fields are still empty and adds
- * the link's pictures to the media list (see LinkCaptureField).
+ * The link is the entry's one source url; pasting one fills in whatever
+ * fields are still empty and adds the link's pictures (see LinkCaptureField).
  *
  * The last line holds the buttons: "add" (or "save" when editing), a solid
  * ink square, and "cancel".
@@ -53,7 +53,8 @@ export function EntryForm({ editing, boards, defaultBoard, onSaved, onCancel }: 
       description: current.description || captured.description,
       kind: current.kind && current.kind !== "note" ? current.kind : captured.kind,
       source_name: current.source_name || captured.source_name,
-      source_url: current.source_url || captured.source_url,
+      // The link field's own text, as the backend tidied it.
+      source_url: captured.source_url || current.source_url,
       occurred_at: current.occurred_at || captured.occurred_at,
       media: [...current.media, ...captured.media],
     }));
@@ -73,8 +74,18 @@ export function EntryForm({ editing, boards, defaultBoard, onSaved, onCancel }: 
 
   return (
     <form className="entry-form" onSubmit={(event) => (event.preventDefault(), save())}>
-      <LinkCaptureField onCaptured={applyCaptured} autoFocus={!editing} />
-      <input placeholder="title" value={draft.title} onChange={(e) => set("title", e.target.value)} required />
+      <input
+        autoFocus={!editing}
+        placeholder="title"
+        value={draft.title}
+        onChange={(e) => set("title", e.target.value)}
+        required
+      />
+      <LinkCaptureField
+        url={draft.source_url}
+        onChange={(url) => set("source_url", url)}
+        onCaptured={applyCaptured}
+      />
       <textarea
         placeholder="why it's here"
         rows={4}
@@ -108,7 +119,6 @@ export function EntryForm({ editing, boards, defaultBoard, onSaved, onCancel }: 
             value={draft.source_name}
             onChange={(e) => set("source_name", e.target.value)}
           />
-          <input placeholder="source url" value={draft.source_url} onChange={(e) => set("source_url", e.target.value)} />
           <input
             placeholder="tags, comma separated (blank = suggest)"
             value={tagText}

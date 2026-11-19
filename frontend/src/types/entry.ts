@@ -79,3 +79,20 @@ export interface CapturedLink {
   occurred_at: string | null;
   media: MediaItem[];
 }
+
+/** For the owner only: what the studio read from one part of an entry (backend ReadingPart). */
+export interface ReadingPart {
+  part: "source" | "picture";
+  address: string;
+  text: string;
+}
+
+/** For the owner only: everything the studio read from an entry, and the text it embedded (backend EntryReading). */
+export interface EntryReading {
+  parts: ReadingPart[];
+  embedding_text: string;
+  has_embedding: boolean;
+  embedding_model: string;
+  embedding_is_current: boolean;
+  waiting: boolean;
+}

@@ -60,6 +60,16 @@ class Settings:
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
     tag_model: str = os.environ.get("TAG_MODEL", "z-ai/glm-5.3-flash")
     embedding_model: str = os.environ.get("EMBEDDING_MODEL", "openai/text-embedding-3-small")
+    # A model that can look at pictures, used to describe each picture in words before embedding.
+    picture_model: str = os.environ.get("PICTURE_MODEL", "google/gemini-2.5-flash-lite")
+    # Read entries (pictures, source link, tags, embedding) after saving, without making the save wait.
+    # Off in tests, so the reading happens before the request returns.
+    read_in_background: bool = os.environ.get("READ_IN_BACKGROUND", "true").lower() != "false"
+    # How many of an entry's pictures are read, and the largest stored file sent to be read.
+    pictures_read_per_entry: int = int(os.environ.get("PICTURES_READ_PER_ENTRY", 8))
+    picture_max_bytes_for_reading: int = int(os.environ.get("PICTURE_MAX_BYTES_FOR_READING", 8_000_000))
+    # How much of a source link's own text (a video's description, a post's caption) is kept.
+    source_text_for_meaning: int = int(os.environ.get("SOURCE_TEXT_FOR_MEANING", 3000))
 
     # Local storage: the database file, and uploaded images when R2 isn't set up.
     data_dir: Path = Path(os.environ.get("DATA_DIR", BACKEND_DIR / "data"))

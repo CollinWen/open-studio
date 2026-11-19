@@ -1,8 +1,13 @@
 """
 Entry API shapes: what the frontend sends to create or edit an entry,
-and what it gets back. The embedding is never sent to the browser.
+and what it gets back. The embedding is never sent to the browser; what the
+studio read from an entry (its readings) goes only to the owner, as EntryReading.
 An entry's media may include a write-up (type html) only if the studio
-stored it, so it was made safe on the way in (media/service.py).
+stored it, so it was made safe on the way in (media/service.py). Every
+address sent in (the source link, each media item's address and thumbnail)
+must be a web address or a file the studio stored, so nothing like
+javascript: can ever reach a page as a link or a frame. Stored entries are
+read back as they are; only what's sent in is checked.
 """
 
 from datetime import datetime, timezone
@@ -41,14 +46,33 @@ class MediaItem(BaseModel):
     size_bytes: int = Field(default=0, ge=0)
 
 
-def _only_stored_writeups(media: list[MediaItem] | None) -> list[MediaItem] | None:
+# A web address, or a file the studio stored (/media/<name> when stored on this machine).
+WEB_ADDRESS_STARTS = ("http://", "https://", "/media/")
+
+
+def _web_address(value: str | None) -> str | None:
+    """The address without surrounding spaces; refused if it isn't a web address."""
+    if not value:
+        return value
+    value = value.strip()
+    if not value.lower().startswith(WEB_ADDRESS_STARTS):
+        raise ValueError(f"Addresses must start with http:// or https://, not {value[:40]!r}")
+    return value
+
+
+def _checked_media(media: list[MediaItem] | None) -> list[MediaItem] | None:
     for item in media or []:
+        if not item.url:
+            raise ValueError("Every picture, video or write-up needs an address")
+        item.url = _web_address(item.url)
+        item.thumbnail_url = _web_address(item.thumbnail_url)
         if item.type == "html" and not is_stored_writeup_url(item.url):
             raise ValueError("A write-up must be stored by the studio first (attach_writeup, or upload the .html)")
     return media
 
 
-SentMedia = Annotated[list[MediaItem], AfterValidator(_only_stored_writeups)]
+SentMedia = Annotated[list[MediaItem], AfterValidator(_checked_media)]
+SentAddress = Annotated[str, AfterValidator(_web_address)]
 
 
 class EntryCreate(BaseModel):
@@ -58,7 +82,7 @@ class EntryCreate(BaseModel):
     description: str = ""
     kind: str = "note"
     source_name: str = ""
-    source_url: str = ""
+    source_url: SentAddress = ""
     media: SentMedia = []
     occurred_at: UtcDatetime | None = None
     visibility: Visibility = "private"
@@ -74,7 +98,7 @@ class EntryUpdate(BaseModel):
     description: str | None = None
     kind: str | None = None
     source_name: str | None = None
-    source_url: str | None = None
+    source_url: SentAddress | None = None
     media: SentMedia | None = None
     occurred_at: UtcDatetime | None = None
     visibility: Visibility | None = None
@@ -100,6 +124,27 @@ class EntryOut(BaseModel):
     tags: list[str]
     added_by: str
     board: str
+
+
+class ReadingPart(BaseModel):
+    """What the studio read from one part of an entry: its source link, or one picture."""
+
+    part: Literal["source", "picture"]
+    address: str
+    text: str
+
+
+class EntryReading(BaseModel):
+    """For the owner only: everything the studio read from an entry, and the exact text it embedded."""
+
+    parts: list[ReadingPart]
+    embedding_text: str
+    has_embedding: bool
+    embedding_model: str
+    # False when the embedding was made by another model than the one set now, so it isn't compared.
+    embedding_is_current: bool
+    # True while a reading is queued or under way: refresh in a few seconds.
+    waiting: bool
 
 
 class EntryPage(BaseModel):
