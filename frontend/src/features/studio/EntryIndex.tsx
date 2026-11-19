@@ -51,7 +51,7 @@ export function EntryIndex({ entries, query, onSearch, onEdit, onChanged }: Prop
         controls={
           <div className="browse-controls">
             <SearchField value={query} onSearch={onSearch} placeholder="titles and tags" />
-            <Link to="?add" className="icon-button" aria-label="add an entry">
+            <Link to="?add" replace className="icon-button" aria-label="add an entry">
               <Icon name="plus" />
             </Link>
           </div>

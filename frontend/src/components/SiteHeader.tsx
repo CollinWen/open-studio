@@ -36,7 +36,7 @@ export function SiteHeader() {
       <nav className="site-nav" aria-label="studio">
         <NavLink to="/studio">{isOwner ? "studio" : "owner"}</NavLink>
         {isOwner && (
-          <Link to={{ search: withAdd.toString() }} className="icon-button" aria-label="add an entry">
+          <Link to={{ search: withAdd.toString() }} replace className="icon-button" aria-label="add an entry">
             <Icon name="plus" />
           </Link>
         )}
