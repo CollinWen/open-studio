@@ -227,8 +227,11 @@
   font-weight: 500;
 }
 
+/* A margin, not padding: the last line is often the clipped "why it's here",
+   and padding inside its clip would show the top of the line after it. The
+   card's frame keeps the margin inside, so its height is the same. */
 .entry-card > span:last-child {
-  padding-bottom: var(--grid-square);
+  margin-bottom: var(--grid-square);
 }
 
 /* A write-up has no picture, so its title stands in for one, set large. */
