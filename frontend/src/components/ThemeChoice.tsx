@@ -3,7 +3,7 @@
  * this browser (localStorage), so it stays on every visit; "auto", the
  * default, follows the system's light or dark setting and changes with it.
  *
- * Sets data-theme on <html>; global.css holds the dark tokens. index.html
+ * Sets data-theme on <html>; styles/tokens.css holds the dark tokens. index.html
  * applies the saved pick before the first paint (no flash of the wrong
  * paper) and reads the same key, so change both together. Used by SiteFooter.
  */

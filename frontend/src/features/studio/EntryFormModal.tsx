@@ -4,7 +4,7 @@
  * what you were looking at. Opens on `?add` or `?edit=<id>` (see
  * useEntryFormParam); Escape, the thin × in its top corner or "cancel" put
  * it away. Drag its bottom-right corner to make it bigger or smaller. It
- * rises in and sinks out (.entry-sheet in global.css). While the entry to
+ * rises in and sinks out (.entry-sheet in styles/entry-sheet.css). While the entry to
  * edit is on its way it says "loading".
  *
  * A new entry goes into the board you were looking at (/b/<slug>, or home)

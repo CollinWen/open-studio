@@ -1,9 +1,13 @@
 /**
  * App: the route table (which URL shows which page; anything else gets the
- * not-found page), plus the owner's entry form, which opens over any page.
+ * not-found page), under the one site header, which stays put (and stays
+ * up while a page loads), plus the owner's entry form, which opens over any page.
+ * A newly opened page starts at the top (ScrollToTopOnNewPage).
  */
 
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { ScrollToTopOnNewPage } from "./components/ScrollToTopOnNewPage";
+import { SiteHeader } from "./components/SiteHeader";
 import { EntryFormModal } from "./features/studio/EntryFormModal";
 import { AboutPage } from "./pages/AboutPage";
 import { AgentsPage } from "./pages/AgentsPage";
@@ -16,6 +20,8 @@ import { StudioPage } from "./pages/StudioPage";
 export function App() {
   return (
     <BrowserRouter>
+      <ScrollToTopOnNewPage />
+      <SiteHeader />
       <Routes>
         <Route path="/" element={<BoardPage />} />
         <Route path="/b/:board" element={<BoardPage />} />

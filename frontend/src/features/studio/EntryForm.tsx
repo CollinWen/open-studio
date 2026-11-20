@@ -3,7 +3,7 @@
  * no boxes. Leaving tags blank asks the backend to suggest them.
  *
  * A new entry asks only for the essentials (a title, a link, why it's here,
- * which space it goes in, who sees it); kind, date, source name, tags and pictures sit behind "more",
+ * which space it goes in, who sees it, whether it's pinned first on its board); kind, date, source name, tags and pictures sit behind "more",
  * summed up in one quiet line. Editing shows everything.
  * The link is the entry's one source url; pasting one fills in whatever
  * fields are still empty and adds the link's pictures (see LinkCaptureField).
@@ -35,6 +35,7 @@ interface Props {
 const SAVING = "saving, suggesting tags…";
 const KINDS = ["note", "link", "project", "photo", "video", "book", "artwork", "sketch", "recipe", "post"];
 const VISIBILITIES: Visibility[] = ["private", "unlisted", "public"];
+const PIN_CHOICES = ["in order", "pinned"] as const;
 
 export function EntryForm({ editing, boards, defaultBoard, onSaved, onCancel }: Props) {
   const [draft, setDraft] = useState<EntryDraft>(() => draftFrom(editing, defaultBoard));
@@ -152,6 +153,17 @@ export function EntryForm({ editing, boards, defaultBoard, onSaved, onCancel }: 
         ))}
       </p>
 
+      <p className="word-list" role="group" aria-label="pinned">
+        {PIN_CHOICES.map((choice) => (
+          <WordChoice
+            key={choice}
+            label={choice}
+            active={draft.pinned === (choice === "pinned")}
+            onPick={() => set("pinned", choice === "pinned")}
+          />
+        ))}
+      </p>
+
       <p className="word-list entry-form-actions">
         <button type="submit" className="square is-primary" disabled={status === SAVING}>
           {editing ? "save" : "add"}
@@ -177,6 +189,7 @@ function draftFrom(entry: Entry | null, defaultBoard: string): EntryDraft {
     visibility: entry?.visibility ?? "private",
     tags: entry?.tags ?? [],
     board: entry?.board ?? defaultBoard,
+    pinned: entry?.pinned ?? false,
   };
 }
 

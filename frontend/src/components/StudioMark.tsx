@@ -10,7 +10,7 @@
  * from the top-left corner and fade again, like a panel refreshing. Used by
  * LoadingWord, LoadingMark and the footer.
  *
- * Looks: .studio-mark in global.css (ink, sizes, the sweep).
+ * Looks: .studio-mark in styles/motion.css (ink, sizes, the sweep).
  */
 
 import type { CSSProperties } from "react";

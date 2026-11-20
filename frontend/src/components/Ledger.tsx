@@ -6,7 +6,7 @@
  * (rows view, studio), agents, the agent log, boards, tags.
  *
  * On phones the cells stack and the column names are hidden.
- * Looks: .ledger in global.css.
+ * Looks: .ledger in styles/ledger.css.
  */
 
 import { createContext, type CSSProperties, type ReactNode } from "react";

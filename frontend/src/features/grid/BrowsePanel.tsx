@@ -1,11 +1,12 @@
 /**
  * BrowsePanel: every way to move around a board, above the work, in the
- * shape every page shares (components/SectionLine + ControlBand):
+ * shape every page shares (components/SectionLine + ControlBand), right
+ * under the header's rule (a board has no intro; its brief is the first card):
  *
  *   the boards, as larger words; the one you're in sits on the accent,
  *   with its entry count in brackets. Each is its own page, so spaces never
- *   mix. Switching keeps the view and drops what you'd picked. Under them,
- *   the agents signed on to this board, each linked to its log.
+ *   mix. Switching keeps the view and drops what you'd picked. (Which agents
+ *   work on a board is on /agents, not here.)
  *   then the band: search, picture sizes / rows, sort, clear; and a caret
  *   that opens the board's tags (each in an oval; pick one to highlight
  *   it) and a slider over the months that have entries.
@@ -16,7 +17,6 @@
  */
 
 import { useMemo } from "react";
-import { Link } from "react-router-dom";
 import { ControlBand } from "../../components/ControlBand";
 import { LabelRow } from "../../components/LabelRow";
 import { SectionLine } from "../../components/SectionLine";
@@ -42,7 +42,6 @@ interface Props {
 
 export function BrowsePanel({ boards, board, tags, entries, count, browse }: Props) {
   const months = useMemo(() => countMonths(entries), [entries]);
-  const agents = boards.find((candidate) => candidate.slug === board)?.agents ?? [];
   const keepView = browse.view === DEFAULT_VIEW ? "" : `?view=${browse.view}`;
   const sections = boards.map((candidate) => ({
     key: candidate.slug,
@@ -53,19 +52,7 @@ export function BrowsePanel({ boards, board, tags, entries, count, browse }: Pro
 
   return (
     <section className="browse-panel">
-      <SectionLine label="Boards" sections={sections} current={board}>
-        {agents.length > 0 && (
-          <p className="word-list quiet section-note">
-            <span>with</span>
-            {agents.map((name) => (
-              <Link key={name} to={`/agents?agent=${name}`}>
-                {name}
-              </Link>
-            ))}
-            <Link to={`/agents?board=${board}`}>their log</Link>
-          </p>
-        )}
-      </SectionLine>
+      <SectionLine label="Boards" sections={sections} current={board} rule="none" />
       <ControlBand
         label="View and filters"
         rememberAs="board-filters-open"

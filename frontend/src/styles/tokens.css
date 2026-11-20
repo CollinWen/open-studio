@@ -30,16 +30,46 @@
   /* Type sizes. Small is for labels and captions; large for the site name.
      The display size's leading is a whole number of lines. */
   --size-small: 12px;
-  --leading-small: 18px;
+  /* Small type keeps the body's line, so every line of words, any size,
+     sits on the graph paper. */
+  --leading-small: var(--line);
   --size-body: 15px;
   --size-large: 20px;
   --size-display: 64px;
   --leading-display: calc(3 * var(--line));
 
-  /* The grid: the line unit, the gutter between columns, the page margin. */
+  /* The grid: the line unit, the gutter between columns, the page margin
+     (kept tight, so the work runs close to the screen's edges). */
   --line: 22px;
   --gutter: 22px;
-  --margin: 44px;
+  --margin: 22px;
+  /* The site header's height (a line above, a line of words, a line below,
+     the double rule), so things that stick under it know where it ends. */
+  --header-height: calc(3 * var(--line));
+
+  /* Graph paper: squares half a line on a side, drawn faintly under every
+     page. Set the ink to transparent to put the plain paper back. */
+  --grid-square: 11px;
+  --grid-line-ink: color-mix(in srgb, var(--ink) 6%, transparent);
+
+  /* Everything snaps to those squares: every height and space is a whole
+     number of them. So lines are drawn without taking up any room (a
+     border would add a pixel and push all that follows off the grid): a
+     rule along an edge is a painted line, an underline an inset shadow,
+     a frame an outline drawn just inside the edge. */
+  --rule-above: linear-gradient(var(--ink), var(--ink)) top / 100% 1px no-repeat;
+  --rule-above-faint: linear-gradient(var(--ink-faint), var(--ink-faint)) top / 100% 1px no-repeat;
+  --double-rule-above:
+    linear-gradient(var(--ink), var(--ink)) 0 0 / 100% 1px no-repeat,
+    linear-gradient(var(--ink), var(--ink)) 0 3px / 100% 1px no-repeat;
+  --double-rule-below:
+    linear-gradient(var(--ink), var(--ink)) 0 100% / 100% 1px no-repeat,
+    linear-gradient(var(--ink), var(--ink)) 0 calc(100% - 3px) / 100% 1px no-repeat;
+  --underline: inset 0 -1px 0 var(--ink);
+  --underline-faint: inset 0 -1px 0 var(--ink-faint);
+
+  /* How many of its large lines a board's brief shows before "read all". */
+  --brief-lines: 4;
 
   /* Write-ups: running text keeps a readable measure (about 60 characters);
      the whole write-up, its columns and rules included, keeps a page width. */
@@ -67,7 +97,10 @@
   --square-padding: 0.4em;
   --oval-padding: 0.55em;
   --oval-gap: 0.4em;
-  --mark-choice: calc(var(--line) + 4px);
+  --mark-choice: var(--line);
+  /* Text fields' widths, in whole squares: a search, a longer field. */
+  --field-width: calc(18 * var(--grid-square));
+  --field-width-long: calc(29 * var(--grid-square));
   --dot-small: 6px;
   --dot-medium: 10px;
   --dot-large: 15px;
@@ -108,7 +141,7 @@
   :root {
     --size-display: 30px;
     --leading-display: calc(1.5 * var(--line));
-    --gutter: 16px;
-    --margin: 16px;
+    --gutter: 11px;
+    --margin: 11px;
   }
 }

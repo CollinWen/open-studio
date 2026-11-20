@@ -1,0 +1,315 @@
+/*
+ * Board: browsing a board (features/grid/). The browse controls and the
+ * time slider in its control band, "clear", the masonry grid of framed
+ * entry cards in three picture sizes, the board's brief as the first card,
+ * and the fade between boards when you switch.
+ *
+ * Part of global.css. The rows view is a Ledger (ledger.css).
+ */
+
+/* The time slider: month bars on a hairline, two handles laid over them. */
+.time-filter {
+  max-width: 640px;
+  font-size: var(--size-small);
+  line-height: var(--leading-small);
+}
+
+.time-strip {
+  position: relative;
+  height: var(--time-bar-height);
+  margin: 0 calc(var(--time-handle) / 2);
+  border-bottom: var(--rule-faint);
+}
+
+.time-bars {
+  position: relative;
+  height: 100%;
+}
+
+/* Each bar sits at its month (--at, 0 to 1) and is as tall as the month is full (--fill). */
+.time-bar {
+  position: absolute;
+  bottom: 0;
+  left: calc(var(--at) * 100%);
+  width: 2px;
+  height: max(2px, calc(var(--fill) * 100%));
+  transform: translateX(-50%);
+  background: var(--ink-faint);
+  transition: background var(--motion-quick) var(--ease-enter);
+}
+
+.time-bar.is-in {
+  background: var(--ink);
+}
+
+/* The two range inputs cover the strip; only their handles take the pointer. */
+.time-strip input[type="range"] {
+  position: absolute;
+  inset: auto calc(var(--time-handle) / -2) calc(var(--time-handle) / -2);
+  width: calc(100% + var(--time-handle));
+  height: var(--time-handle);
+  appearance: none;
+  background: none;
+  pointer-events: none;
+}
+
+.time-strip input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: var(--time-handle);
+  height: var(--time-handle);
+  border-radius: 50%;
+  background: var(--ink);
+  cursor: grab;
+  pointer-events: auto;
+}
+
+.time-strip input[type="range"]::-moz-range-thumb {
+  width: var(--time-handle);
+  height: var(--time-handle);
+  border: none;
+  border-radius: 50%;
+  background: var(--ink);
+  cursor: grab;
+  pointer-events: auto;
+}
+
+.time-strip input[type="range"]:focus-visible::-webkit-slider-thumb {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+.time-years {
+  position: relative;
+  height: var(--leading-small);
+  margin: calc(var(--line) / 4) calc(var(--time-handle) / 2) calc(var(--line) / 4);
+  color: var(--ink-soft);
+}
+
+.time-years span {
+  position: absolute;
+  left: calc(var(--at) * 100%);
+}
+
+.time-filter p {
+  margin: 0 0 calc(var(--line) / 4);
+  font-size: var(--size-body);
+  line-height: var(--line);
+}
+
+/* "clear ×": takes every pick and the search off at once. */
+.clear-word {
+  color: var(--ink);
+}
+
+/* ---- Board views: grid, rows ---- */
+
+/* Search, view, sort and clear, on one line that wraps on phones. */
+.browse-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  row-gap: calc(var(--line) / 4);
+  column-gap: calc(2 * var(--gutter));
+}
+
+/* On a band's first line the controls join that line itself, so on a narrow
+   screen the caret wraps along with them instead of onto a line of its own. */
+.control-line > .browse-controls {
+  display: contents;
+}
+
+/* Masonry: entries are dealt into columns a gutter apart, each column a
+   stack. Each column is a whole number of graph-paper squares wide (the
+   grid comes up short of the right margin by less than a square per
+   column), so every card's edges land on the paper's lines. --grid-columns
+   is set per picture size and screen, and read by EntryGrid
+   (features/grid/useGridColumns.ts) to know how many columns to deal into. */
+.entry-grid {
+  --grid-columns: 4;
+  --column-width: round(down, (100% - (var(--grid-columns) - 1) * var(--gutter)) / var(--grid-columns), var(--grid-square));
+  display: grid;
+  grid-template-columns: repeat(var(--grid-columns), var(--column-width));
+  column-gap: var(--gutter);
+  align-items: start;
+}
+
+.entry-grid-small {
+  --grid-columns: 6;
+}
+
+.entry-grid-large {
+  --grid-columns: 2;
+}
+
+@media (max-width: 1100px) {
+  .entry-grid-small {
+    --grid-columns: 4;
+  }
+
+  .entry-grid-medium {
+    --grid-columns: 3;
+  }
+}
+
+@media (max-width: 720px) {
+  .entry-grid-small {
+    --grid-columns: 3;
+  }
+
+  .entry-grid-medium {
+    --grid-columns: 2;
+  }
+
+  .entry-grid-large {
+    --grid-columns: 1;
+  }
+}
+
+.entry-grid-small .entry-card {
+  font-size: var(--size-small);
+  line-height: var(--leading-small);
+}
+
+.entry-grid-small .entry-card-why {
+  display: none;
+}
+
+/* Every card is framed: a thin line around plain paper, laid on the graph
+   paper, so you can see the space each entry takes. The frame is drawn
+   just inside the card's edge, so it takes no room and the card stays a
+   whole number of squares. Its picture runs to the frame's edges; its words
+   sit one square in from them. Cards sit a gutter apart, down the columns
+   as across them. */
+.entry-card,
+.board-brief {
+  display: block;
+  margin-bottom: var(--gutter);
+  outline: var(--rule-faint);
+  outline-offset: -1px;
+  background: var(--paper);
+  /* So the picture can be sized from the card's width (cqw, below). */
+  container-type: inline-size;
+  transition:
+    opacity var(--motion-standard) var(--ease-enter),
+    outline-color var(--motion-quick) var(--ease-enter);
+}
+
+.entry-card:hover {
+  text-decoration: none;
+  outline-color: var(--ink);
+}
+
+.entry-card:hover .entry-card-title {
+  text-decoration: underline;
+}
+
+.entry-card.is-faded {
+  opacity: 0.15;
+}
+
+/* The picture keeps its own shape, its height rounded to whole squares
+   (trimming or adding under half a square). Its shape comes from the
+   picture itself once loaded (--image-ratio, components/FadeInImage). */
+.entry-cover {
+  display: block;
+  width: 100%;
+  height: round(nearest, 100cqw / var(--image-ratio, 1.5), var(--grid-square));
+  object-fit: cover;
+}
+
+.entry-card > span {
+  display: block;
+  padding: 0 var(--grid-square);
+}
+
+.entry-card .entry-card-title {
+  padding-top: var(--grid-square);
+  font-weight: 500;
+}
+
+.entry-card > span:last-child {
+  padding-bottom: var(--grid-square);
+}
+
+/* A write-up has no picture, so its title stands in for one, set large. */
+.entry-card.is-writeup .entry-card-title {
+  font-size: var(--size-large);
+  line-height: calc(1.5 * var(--line));
+  font-weight: 560;
+  letter-spacing: -0.01em;
+}
+
+.entry-grid-small .entry-card.is-writeup .entry-card-title {
+  font-size: inherit;
+  line-height: inherit;
+}
+
+/* "Why it's here", cut off after three lines in the grid. (Needs the extra
+   .entry-card so it beats the display: block rule above.) */
+.entry-card .entry-card-why {
+  font-size: var(--size-small);
+  line-height: var(--leading-small);
+  color: var(--ink-soft);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ---- A board's brief (features/grid/BoardBrief.tsx): its first card ---- */
+.board-brief {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: var(--grid-square);
+}
+
+.board-brief-label {
+  font-size: var(--size-small);
+  line-height: var(--leading-small);
+  color: var(--ink-soft);
+}
+
+.board-brief-text {
+  margin: 0;
+  max-width: var(--measure);
+  font-size: var(--size-large);
+  line-height: calc(1.5 * var(--line));
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: var(--brief-lines);
+  overflow: hidden;
+}
+
+.entry-grid-small .board-brief-text {
+  font-size: var(--size-body);
+  line-height: var(--line);
+}
+
+.board-brief.is-open .board-brief-text {
+  display: block;
+  overflow: visible;
+}
+
+.board-brief-more {
+  margin-top: var(--grid-square);
+}
+
+/* Switching boards: the one on screen fades out while the next loads, then
+   the next fades in whole (features/grid/useEntryPages.ts). */
+.board-work {
+  animation: fade-in var(--motion-standard) var(--ease-enter) backwards;
+}
+
+.is-leaving .board-work {
+  opacity: 0;
+  transition: opacity var(--motion-quick) var(--ease-exit);
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}

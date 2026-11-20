@@ -1,7 +1,7 @@
 """
 Tests for agents adding and editing entries: their entries arrive unlisted and
 signed with their name, other agents can list them but visitors can't, agents
-can't publish or touch the owner's entries, the same link isn't added twice,
+can't publish, pin or touch the owner's entries, the same link isn't added twice,
 and the hourly write limit holds.
 """
 
@@ -55,6 +55,15 @@ def test_agents_edit_agent_entries_but_cannot_publish(client):
     assert edited.status_code == 200
     published = client.patch(f"/api/entries/{entry_id}", json={"visibility": "public"}, headers=SCOUT_HEADERS)
     assert published.status_code == 403
+
+
+def test_only_the_owner_pins(client):
+    entry = _agent_create(client, SCOUT_HEADERS, pinned=True)
+    assert entry["pinned"] is False
+    pinned = client.patch(f"/api/entries/{entry['id']}", json={"pinned": True}, headers=SCOUT_HEADERS)
+    assert pinned.status_code == 403
+    by_owner = client.patch(f"/api/entries/{entry['id']}", json={"pinned": True}, headers=OWNER_HEADERS)
+    assert by_owner.json()["pinned"] is True
 
 
 def test_agents_cannot_edit_or_delete_owner_entries(client):

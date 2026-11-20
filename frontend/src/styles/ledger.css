@@ -1,0 +1,88 @@
+/*
+ * Ledger: every list of things, on the page grid under small column names
+ * (components/Ledger, LedgerRow): a board's rows, the studio's lists,
+ * Related, the agents.
+ *
+ * Part of global.css.
+ */
+
+/* ---- Ledger: every list of things on the page grid (components/Ledger.tsx) ---- */
+
+/* Each row is the 12-column grid; each cell spans --span columns, so lists
+   line up with the page's columns. Rows are ruled by hairlines. Cells line
+   up at the top of their line (not on the words' baseline, which small
+   type beside body type would push down a pixel), so every row is a whole
+   number of squares tall. */
+.ledger-row {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--gutter);
+  align-items: start;
+  padding: calc(var(--line) / 4) 0;
+  background: var(--rule-above-faint);
+  transition: opacity var(--motion-standard) var(--ease-enter);
+}
+
+.ledger-cell {
+  grid-column: span var(--span, 12);
+  min-width: 0;
+}
+
+/* The column names: small and soft, above the first line, unruled. */
+.ledger-row.is-heading {
+  background: none;
+  font-size: var(--size-small);
+  line-height: var(--leading-small);
+  color: var(--ink-soft);
+}
+
+/* A row that is a link (a board's rows, the studio's entries) is a list to
+   scan and open: one line each, a long title or tag list cut short, so every
+   row is the same height. Its second cell (its title) underlines on hover. */
+.ledger-row.is-link .ledger-cell {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ledger-row.is-link:hover {
+  text-decoration: none;
+}
+
+.ledger-row.is-link:hover .ledger-cell:nth-child(2) {
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.ledger-row.is-faded {
+  opacity: 0.25;
+}
+
+/* A second, quieter line inside a cell (a description under a name). */
+.ledger-note {
+  display: block;
+}
+
+/* Fields inside a ledger fill their cell. */
+.ledger input,
+.ledger textarea {
+  width: 100%;
+  resize: vertical;
+  box-shadow: var(--underline-faint);
+}
+
+.ledger input:focus,
+.ledger textarea:focus {
+  box-shadow: var(--underline);
+}
+
+/* On phones the cells stack and the column names go. */
+@media (max-width: 720px) {
+  .ledger-cell {
+    grid-column: 1 / -1;
+  }
+
+  .ledger-row.is-heading {
+    display: none;
+  }
+}

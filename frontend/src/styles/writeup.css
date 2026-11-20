@@ -9,8 +9,8 @@
  * from here; the backend removes its fonts, sizes, colors and spacing
  * (features/media/writeup_css_filter.py). The class names with a look here
  * are lead, soft, faint and wide, as in skills/studio-writeup/SKILL.md.
- * When the site's text, tables, captions or rules change in global.css,
- * change them here too.
+ * When the site's text, tables, captions or rules change (base.css,
+ * page.css, entry-page.css), change them here too.
  */
 
 @import "@fontsource-variable/inter";
@@ -21,7 +21,7 @@
 }
 
 /* The frame grows to fit the write-up, so it scrolls on its own only past
-   its tallest (--writeup-max-height, set on the frame in global.css). */
+   its tallest (--writeup-max-height, set on the frame in entry-page.css). */
 html {
   overflow-x: hidden;
   overflow-y: auto;

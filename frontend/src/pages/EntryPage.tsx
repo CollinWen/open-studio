@@ -16,7 +16,6 @@ import { isOwnerSignedIn } from "../api/ownerSignIn";
 import { LabelRow } from "../components/LabelRow";
 import { LoadingMark } from "../components/LoadingMark";
 import { SiteFooter } from "../components/SiteFooter";
-import { SiteHeader } from "../components/SiteHeader";
 import { EntryReading } from "../features/entries/EntryReading";
 import { EntryNotes } from "../features/entries/EntryNotes";
 import { MediaSeries } from "../features/entries/MediaSeries";
@@ -51,17 +50,16 @@ export function EntryPage() {
 
   return (
     <>
-      <SiteHeader />
       <main>
         {!missing && !entry && <LoadingMark />}
         {missing && (
-          <LabelRow rule="double">
+          <LabelRow>
             <p className="quiet">Nothing here.</p>
           </LabelRow>
         )}
         {entry && (
           <>
-            <LabelRow rule="double" className="intro-row">
+            <LabelRow className="intro-row">
               <h1 className="display">{entry.title}</h1>
             </LabelRow>
             <LabelRow>

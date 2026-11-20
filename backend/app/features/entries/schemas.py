@@ -87,6 +87,8 @@ class EntryCreate(BaseModel):
     occurred_at: UtcDatetime | None = None
     visibility: Visibility = "private"
     board: str = "home"
+    # Only the owner pins; an agent's pinned is ignored.
+    pinned: bool = False
     # Leave empty to have tags suggested automatically.
     tags: list[str] = []
 
@@ -104,6 +106,7 @@ class EntryUpdate(BaseModel):
     visibility: Visibility | None = None
     tags: list[str] | None = None
     board: str | None = None
+    pinned: bool | None = None
 
 
 class EntryOut(BaseModel):
@@ -124,6 +127,7 @@ class EntryOut(BaseModel):
     tags: list[str]
     added_by: str
     board: str
+    pinned: bool
 
 
 class ReadingPart(BaseModel):

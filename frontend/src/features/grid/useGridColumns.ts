@@ -1,7 +1,8 @@
 /**
- * useGridColumns: how many columns the picture grid has right now, read from
- * its --grid-columns in global.css (which changes with the picture size and
- * the screen width), so the column counts live in one place: the styles.
+ * useGridColumns: how many columns the picture grid has right now, read
+ * from its --grid-columns in styles/board.css (which changes with the
+ * picture size and the screen width), so the column counts live in one
+ * place: the styles.
  * Read again whenever the grid changes width. Used by EntryGrid.
  */
 

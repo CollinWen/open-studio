@@ -26,7 +26,6 @@ import { LoadingMark } from "../components/LoadingMark";
 import { LoadingWord } from "../components/LoadingWord";
 import { SectionLine } from "../components/SectionLine";
 import { SiteFooter } from "../components/SiteFooter";
-import { SiteHeader } from "../components/SiteHeader";
 import { AgentList } from "../features/agents/AgentList";
 import { AgentLog } from "../features/agents/AgentLog";
 import { AgentLogBand } from "../features/agents/AgentLogBand";
@@ -85,9 +84,8 @@ export function AgentsPage() {
 
   return (
     <>
-      <SiteHeader />
       <main>
-        <LabelRow rule="double" className="intro-row">
+        <LabelRow className="intro-row">
           <p className="display">What the agents are working on.</p>
         </LabelRow>
         <SectionLine label="Agents" sections={sections} current={section} />

@@ -1,0 +1,198 @@
+/*
+ * Controls: the shapes of what can be picked, used on every page. A mode
+ * word on a square, a filter in an oval, a view as a mark in a small square
+ * (components/WordChoice, MarkChoice), the thin line icons and icon buttons
+ * (components/Icon), the caret that opens a control band, and the search
+ * field (components/SearchField). Every pick sits on the accent.
+ *
+ * Part of global.css.
+ */
+
+/* A mode word (a view, a sort, who sees it): a square of paper around the
+   word, shaded when pointed at, on the accent when picked, so the pick reads
+   at a glance. Every pick on the site looks this way: the board or section
+   you're in, the page in the header, a picked tag or view mark. A form's
+   main button ("add", "save") is a solid ink square instead: it acts, it
+   isn't picked. The padding is taken back by the margin, so the words sit where
+   they would without it (the first on the line's edge). */
+.square {
+  padding: 0 var(--square-padding);
+  margin: 0 calc(-1 * var(--square-padding));
+  line-height: var(--line);
+}
+
+.square:hover {
+  text-decoration: none;
+  background: var(--ink-faint);
+  color: var(--ink);
+}
+
+.square.is-picked,
+.square.is-current {
+  background: var(--accent);
+  color: var(--paper);
+}
+
+.square.is-primary {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* A filter you can turn on and off (a tag): the word in a thin flat oval,
+   so it reads as something to pick. Picked, the oval fills with the
+   accent, like every pick, so it's always clear what is narrowing the
+   view. Clicking it again clears it. */
+.oval {
+  padding: 0 var(--oval-padding);
+  border: 1px solid var(--ink-faint);
+  border-radius: 1em;
+  line-height: calc(var(--line) - 2px);
+}
+
+.oval.is-key {
+  border-color: var(--ink-soft);
+}
+
+.oval:hover {
+  text-decoration: none;
+  border-color: var(--ink);
+}
+
+.oval.is-picked {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--paper);
+}
+
+/* Ovals sit closer than words, and wrap onto lines a square apart. */
+.word-list.is-ovals {
+  column-gap: var(--oval-gap);
+  row-gap: var(--grid-square);
+}
+
+/* A view picked as a mark (MarkChoice): a dot whose size is the picture
+   size, or the rows icon, in full ink inside a small square. Shaded when
+   pointed at; picked, the square fills with the accent and the mark turns paper. */
+.mark-choice {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--mark-choice);
+  height: var(--mark-choice);
+  color: var(--ink);
+}
+
+.mark-choice:hover {
+  background: var(--ink-faint);
+}
+
+.mark-choice.is-picked {
+  background: var(--accent);
+  color: var(--paper);
+}
+
+.dot {
+  display: block;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.dot-small {
+  width: var(--dot-small);
+  height: var(--dot-small);
+}
+
+.dot-medium {
+  width: var(--dot-medium);
+  height: var(--dot-medium);
+}
+
+.dot-large {
+  width: var(--dot-large);
+  height: var(--dot-large);
+}
+
+.mark-choice .icon {
+  width: var(--dot-large);
+  height: var(--dot-large);
+  vertical-align: 0;
+}
+
+/* The marks sit square against each other, each one square of the paper wide. */
+.mark-list {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  align-self: center;
+}
+
+/* Icons: thin strokes in the ink color, the weight of a rule, a little
+   taller than a lowercase letter. */
+.icon {
+  display: inline-block;
+  width: 0.95em;
+  height: 0.95em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.25px;
+  stroke-linecap: square;
+  vector-effect: non-scaling-stroke;
+  vertical-align: -0.1em;
+}
+
+/* A button or link that is only an icon: soft ink until hovered. */
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  color: var(--ink-soft);
+}
+
+.icon-button:hover {
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.icon-button:disabled,
+button[type="submit"]:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* The caret turns a quarter to point down when the band is open. */
+.caret-toggle {
+  display: inline-flex;
+  align-items: center;
+  color: var(--ink-soft);
+}
+
+.caret-toggle:hover {
+  color: var(--ink);
+}
+
+.caret-toggle .icon {
+  transition: transform var(--motion-quick) var(--ease-enter);
+}
+
+.caret-toggle[aria-expanded="true"] .icon {
+  transform: rotate(90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caret-toggle .icon {
+    transition: none;
+  }
+}
+
+.search-field {
+  width: var(--field-width);
+  max-width: 100%;
+  box-shadow: var(--underline-faint);
+}
+
+.search-field:focus {
+  box-shadow: var(--underline);
+}
+
+.search-field::-webkit-search-cancel-button {
+  display: none;
+}

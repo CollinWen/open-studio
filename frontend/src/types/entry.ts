@@ -37,6 +37,8 @@ export interface Entry {
   added_by: string;
   /** Slug of the board it's on; "home" is the owner's own collection. */
   board: string;
+  /** Pinned entries come first on their board. Only the owner pins. */
+  pinned: boolean;
 }
 
 /** A separate space in the studio. "home" is the owner's own collection; its page is "/", the others' "/b/<slug>". */
@@ -56,7 +58,7 @@ export interface EntryPage {
 /** What the admin form sends. Empty tags means "suggest them for me". */
 export type EntryDraft = Pick<
   Entry,
-  "title" | "description" | "kind" | "source_name" | "source_url" | "media" | "visibility" | "tags" | "board"
+  "title" | "description" | "kind" | "source_name" | "source_url" | "media" | "visibility" | "tags" | "board" | "pinned"
 > & { occurred_at: string | null };
 
 /** A tag in use. importance: -1 hidden, 0 normal, 1 key (listed first, in black). */

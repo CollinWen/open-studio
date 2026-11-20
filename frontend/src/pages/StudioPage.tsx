@@ -28,7 +28,6 @@ import { LabelRow } from "../components/LabelRow";
 import { LoadingMark } from "../components/LoadingMark";
 import { SectionLine } from "../components/SectionLine";
 import { SiteFooter } from "../components/SiteFooter";
-import { SiteHeader } from "../components/SiteHeader";
 import { AgentManager } from "../features/studio/AgentManager";
 import { BoardManager } from "../features/studio/BoardManager";
 import { EntryIndex } from "../features/studio/EntryIndex";
@@ -83,9 +82,8 @@ export function StudioPage() {
 
   return (
     <>
-      <SiteHeader />
       <main>
-        <LabelRow rule="double" className="intro-row">
+        <LabelRow className="intro-row">
           <p className="display">The back room.</p>
         </LabelRow>
         {!signedIn && (
