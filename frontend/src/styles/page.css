@@ -80,6 +80,15 @@
   height: var(--header-height);
   padding: var(--line) var(--margin);
   background: var(--double-rule-below), var(--paper);
+  transition: transform var(--motion-standard) var(--ease-enter);
+}
+
+/* Scrolling down, the header slides up out of the way (accelerating, as
+   things leave); it comes back decelerating. Never while one of its words
+   has the keyboard's focus. */
+.site-header.is-hidden:not(:focus-within) {
+  transform: translateY(-100%);
+  transition: transform var(--motion-exit) var(--ease-exit);
 }
 
 /* The header's words are centred in its line (not set on the site name's

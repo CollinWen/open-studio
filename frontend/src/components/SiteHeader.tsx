@@ -2,7 +2,10 @@
  * SiteHeader: the top line of every page, drawn once by App so it stays
  * while pages change and load. It sticks to the top of the screen on solid
  * paper (the graph paper doesn't run under it), closed by the double rule
- * that separates it from the page. On the left, my name (which goes
+ * that separates it from the page. Scrolling down, it slides out of the
+ * way; scrolling up, or moving the pointer up to where it sits, brings it
+ * back (useHiddenWhileScrollingDown). It also comes back whenever a word
+ * in it has the keyboard's focus. On the left, my name (which goes
  * home, the index) and "about"; on the far right, the way into the
  * studio: "owner" goes to the studio page, where the owner signs in; once
  * signed in it reads "studio", with a plus beside it.
@@ -16,21 +19,25 @@
  * section line; a view on its way shows the studio mark where it will be.
  */
 
+import { useRef } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { isOwnerSignedIn } from "../api/ownerSignIn";
 import { Icon } from "./Icon";
+import { useHiddenWhileScrollingDown } from "./useHiddenWhileScrollingDown";
 
 const navWord = ({ isActive }: { isActive: boolean }) => (isActive ? "square is-current" : "square");
 
 export function SiteHeader() {
   const isOwner = isOwnerSignedIn();
   const location = useLocation();
+  const header = useRef<HTMLElement>(null);
+  const hidden = useHiddenWhileScrollingDown(header);
   const withAdd = new URLSearchParams(location.search);
   withAdd.delete("edit");
   withAdd.set("add", "");
 
   return (
-    <header className="site-header">
+    <header ref={header} className={hidden ? "site-header is-hidden" : "site-header"}>
       <nav className="site-nav">
         <Link to="/" className="site-name">
           Collin Wen

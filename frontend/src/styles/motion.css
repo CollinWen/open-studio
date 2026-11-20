@@ -138,6 +138,12 @@ main {
     animation-delay: 0ms;
   }
 
+  /* The header steps in and out at once instead of sliding. */
+  .site-header,
+  .site-header.is-hidden:not(:focus-within) {
+    transition: none;
+  }
+
   /* Cards don't move; they show with the page's own fade. */
   .is-arriving {
     animation: none;
