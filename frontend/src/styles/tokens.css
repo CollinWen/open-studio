@@ -75,6 +75,10 @@
      the whole write-up, its columns and rules included, keeps a page width. */
   --measure: 34em;
   --writeup-width: 60em;
+  /* The tallest a write-up's frame grows on its entry page (about 15 phone
+     screens); a longer write-up scrolls inside it. A backstop, so no
+     write-up can stretch the page without end. */
+  --writeup-max-height: calc(600 * var(--line));
 
   /* Motion: one quiet, controlled personality, no overshoot. Things arrive
      decelerating and leave accelerating; leaving takes about 70% as long.

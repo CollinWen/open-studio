@@ -146,11 +146,16 @@
   max-height: 85vh;
 }
 
-/* A player is 16:9, its height rounded to whole squares. (A write-up's
-   frame sets its own height, the height of what's in it: WriteupView.) */
+/* A player is 16:9, its height rounded to whole squares. */
 .media-view iframe {
   width: 100%;
   height: round(nearest, 100cqw * 9 / 16, var(--grid-square));
+}
+
+/* A write-up's frame sets its own height, the height of what's in it in
+   whole squares (WriteupView), up to its tallest; past that it scrolls. */
+.media-view .writeup-frame {
+  max-height: var(--writeup-max-height);
 }
 
 .media-view figcaption {

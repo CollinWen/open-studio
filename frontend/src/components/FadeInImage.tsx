@@ -22,6 +22,8 @@ export function FadeInImage({ className, style, ...props }: ImgHTMLAttributes<HT
   };
   return (
     <img
+      // Decode off the main thread, so scrolling past many pictures stays smooth.
+      decoding="async"
       {...props}
       className={classes}
       style={size ? ({ ...style, "--image-ratio": size.ratio, "--image-width": `${size.width}px` } as CSSProperties) : style}

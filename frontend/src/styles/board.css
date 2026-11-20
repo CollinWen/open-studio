@@ -118,47 +118,50 @@
   display: contents;
 }
 
-/* Masonry: entries flow down columns a gutter apart. Each column is a
-   whole number of graph-paper squares wide (the grid is narrowed to fit,
-   by less than a square per column), so every card's edges land on the
-   paper's lines. --columns is set per picture size. */
+/* Masonry: entries are dealt into columns a gutter apart, each column a
+   stack. Each column is a whole number of graph-paper squares wide (the
+   grid comes up short of the right margin by less than a square per
+   column), so every card's edges land on the paper's lines. --grid-columns
+   is set per picture size and screen, and read by EntryGrid
+   (features/grid/useGridColumns.ts) to know how many columns to deal into. */
 .entry-grid {
-  --columns: 4;
-  --column-width: round(down, (100% - (var(--columns) - 1) * var(--gutter)) / var(--columns), var(--grid-square));
-  width: calc(var(--columns) * var(--column-width) + (var(--columns) - 1) * var(--gutter));
-  columns: var(--columns);
+  --grid-columns: 4;
+  --column-width: round(down, (100% - (var(--grid-columns) - 1) * var(--gutter)) / var(--grid-columns), var(--grid-square));
+  display: grid;
+  grid-template-columns: repeat(var(--grid-columns), var(--column-width));
   column-gap: var(--gutter);
+  align-items: start;
 }
 
 .entry-grid-small {
-  --columns: 6;
+  --grid-columns: 6;
 }
 
 .entry-grid-large {
-  --columns: 2;
+  --grid-columns: 2;
 }
 
 @media (max-width: 1100px) {
   .entry-grid-small {
-    --columns: 4;
+    --grid-columns: 4;
   }
 
   .entry-grid-medium {
-    --columns: 3;
+    --grid-columns: 3;
   }
 }
 
 @media (max-width: 720px) {
   .entry-grid-small {
-    --columns: 3;
+    --grid-columns: 3;
   }
 
   .entry-grid-medium {
-    --columns: 2;
+    --grid-columns: 2;
   }
 
   .entry-grid-large {
-    --columns: 1;
+    --grid-columns: 1;
   }
 }
 
@@ -180,7 +183,6 @@
 .entry-card,
 .board-brief {
   display: block;
-  break-inside: avoid;
   margin-bottom: var(--gutter);
   outline: var(--rule-faint);
   outline-offset: -1px;

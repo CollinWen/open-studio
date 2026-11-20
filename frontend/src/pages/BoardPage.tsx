@@ -11,11 +11,13 @@
  * tag or span of months highlights its entries in whichever view is showing.
  *
  * Entries load a page at a time (useEntryPages): the first page fades in
- * whole and the rest rise in behind it. Switching boards fades the one on
- * screen out until the next board's first page is in, then fades that in,
- * so nothing empties and refills. Until a board's first page is in (or a
- * search's results), the large studio mark sweeps where the view will be;
- * the board's count appears beside its name once the last page is in.
+ * whole and the rest rise in behind it. Only a few screens of them are
+ * drawn at first, more as the visitor scrolls (useShownCount). Switching
+ * boards fades the one on screen out until the next board's first page is
+ * in, then fades that in, so nothing empties and refills. Until a board's
+ * first page is in (or a search's results), the large studio mark sweeps
+ * where the view will be; the board's count appears beside its name once
+ * the last page is in.
  * After the owner saves an entry the page reloads quietly. Every choice
  * lives in the URL (useBrowseParams). An address for a board that doesn't
  * exist (/b/nope) shows the not-found page instead of an empty board.
@@ -37,6 +39,7 @@ import { EntryRows } from "../features/grid/EntryRows";
 import { sortEntries } from "../features/grid/sortEntries";
 import { useBrowseParams } from "../features/grid/useBrowseParams";
 import { useEntryPages } from "../features/grid/useEntryPages";
+import { useShownCount } from "../features/grid/useShownCount";
 import { useOnEntrySaved } from "../features/studio/entrySavedEvent";
 import { NotFoundPage } from "./NotFoundPage";
 import type { Board, Entry, Tag } from "../types/entry";
@@ -80,6 +83,8 @@ export function BoardPage() {
   // Kept stable between renders so the views don't redo work on every hover.
   const shown = useMemo(() => entries && sortEntries(entries, sort), [entries, sort]);
   const highlight = useMemo(() => ({ tag, range }), [tag, range]);
+  const { shownCount, markerRef } = useShownCount(shown?.length ?? 0, `${board} ${query} ${sort}`);
+  const drawn = useMemo(() => shown?.slice(0, shownCount), [shown, shownCount]);
 
   if (boards && !current) return <NotFoundPage />;
 
@@ -104,16 +109,17 @@ export function BoardPage() {
           <LabelRow wide className={collection.switching ? "is-leaving" : undefined}>
             {!shown && <LoadingMark />}
             <div key={collection.entriesBoard ?? ""} className="board-work">
-              {shown && view === "rows" && (
+              {drawn && view === "rows" && (
                 <>
                   {brief}
-                  <EntryRows entries={shown} highlight={highlight} arriveOrder={collection.orderOf} />
+                  <EntryRows entries={drawn} highlight={highlight} arriveOrder={collection.orderOf} />
                 </>
               )}
-              {shown && view !== "rows" && (
-                <EntryGrid entries={shown} highlight={highlight} size={view} arriveOrder={collection.orderOf} lead={brief} />
+              {drawn && view !== "rows" && (
+                <EntryGrid entries={drawn} highlight={highlight} size={view} arriveOrder={collection.orderOf} lead={brief} />
               )}
             </div>
+            <div ref={markerRef} aria-hidden="true" />
           </LabelRow>
         )}
       </main>
