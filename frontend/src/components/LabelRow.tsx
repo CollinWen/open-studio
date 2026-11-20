@@ -7,9 +7,9 @@
  * the content says what it is.
  *
  * `rule` starts a new section with a line above the row: "double" for major
- * breaks (under the header, before the work, before the footer), "single"
- * for minor ones. A `wide` row (the picture grid, a list) gets a line of
- * space above its content. The grid, spacing and rules live in global.css
+ * breaks (before the footer; the one under the header is the header's
+ * own), "single" for minor ones. A `wide` row (the picture grid, a list) gets a line of
+ * space above its content. The grid, spacing and rules live in styles/page.css
  * (.label-row).
  */
 

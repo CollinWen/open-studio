@@ -9,8 +9,8 @@
  * from here; the backend removes its fonts, sizes, colors and spacing
  * (features/media/writeup_css_filter.py). The class names with a look here
  * are lead, soft, faint and wide, as in skills/studio-writeup/SKILL.md.
- * When the site's text, tables, captions or rules change in global.css,
- * change them here too.
+ * When the site's text, tables, captions or rules change (base.css,
+ * page.css, entry-page.css), change them here too.
  */
 
 @import "@fontsource-variable/inter";

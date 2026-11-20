@@ -1,0 +1,146 @@
+/*
+ * Base: the page's plain materials, before any component. The reset, the
+ * one typeface and its sizes and inks, links, a line of words (.word-list),
+ * form fields and buttons that read as plain words, keyboard focus, and
+ * words only screen readers hear.
+ *
+ * Part of global.css, which imports it first. Values come from tokens.css.
+ */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: var(--size-body);
+  line-height: var(--line);
+  /* Figures all the same width, so dates and counts line up in columns. */
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* The paper sits on the page itself (not body), so the graph paper drawn
+   under #root shows through. */
+html {
+  background: var(--paper);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Words, ovals and dots ease into their hover and picked colors instead of
+   snapping. Only color changes here, so it stays on with reduced motion. */
+a,
+button,
+.mark-choice {
+  transition:
+    color var(--motion-quick) var(--ease-enter),
+    background-color var(--motion-quick) var(--ease-enter),
+    border-color var(--motion-quick) var(--ease-enter);
+}
+
+a:hover,
+a.is-underlined {
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+  text-decoration-thickness: 1px;
+}
+
+h1 {
+  font-size: inherit;
+  font-weight: 500;
+  margin: 0;
+}
+
+p {
+  margin: 0 0 var(--line);
+}
+
+/* Second-strength ink: labels, details, words you could pick but haven't. */
+.quiet {
+  color: var(--ink-soft);
+}
+
+/* The one large size: an intro, a title. Tight and heavy, like a poster. */
+.display {
+  font-size: var(--size-display);
+  font-weight: 560;
+  line-height: var(--leading-display);
+  letter-spacing: -0.035em;
+  max-width: 17em;
+  margin: 0;
+}
+
+/* Running text keeps a readable measure (about 60 characters). */
+.prose {
+  max-width: 34em;
+}
+
+.prose p:last-child {
+  margin-bottom: 0;
+}
+
+/* Words in a row, evenly spaced: the one way to lay out a line of words or
+   word controls. */
+.word-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 1em;
+}
+
+/* Form controls look like plain text. Buttons are words. */
+input,
+textarea,
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  outline: none;
+}
+
+button {
+  cursor: pointer;
+}
+
+/* The reset above hides the browser's focus ring so buttons read as words;
+   this puts one back for keyboard users, the same on links and buttons. */
+a:focus-visible,
+button:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
+}
+
+button:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+/* Words only screen readers need ("loading" under the large mark). */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+::placeholder {
+  color: var(--ink-soft);
+}
+
+::selection {
+  background: var(--ink);
+  color: var(--paper);
+}

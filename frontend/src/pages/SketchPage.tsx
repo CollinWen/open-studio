@@ -15,7 +15,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { fetchEntries } from "../api/entriesApi";
-import { SiteHeader } from "../components/SiteHeader";
 import { WordChoice } from "../components/WordChoice";
 import { ContactSheet, type ThreadStyle } from "../features/sketches/ContactSheet";
 import { fetchRelatedMap, listLinks, orderByKinship, type RelatedMap } from "../features/sketches/relatedLinks";
@@ -62,7 +61,6 @@ export function SketchPage() {
 
   return (
     <>
-      <SiteHeader />
       <div className="sketch-controls">
         <Choices options={SKETCHES} current={sketch} onPick={(value) => choose("sketch", value)} />
         <Choices options={Object.keys(ROW_HEIGHTS)} current={size} onPick={(value) => choose("size", value)} />

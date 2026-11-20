@@ -5,7 +5,8 @@ for each kind of viewer (visitor, agent, owner).
 Who can see and edit what lives in entries/visibility_rules.py. Every entry is
 on one board; an agent may only add to (or move entries onto) boards it is
 signed on to (boards/service.py). Entries added by an agent are recorded with
-its name (and the run it was on, if any) and start unlisted. When an entry's
+its name (and the run it was on, if any) and start unlisted and unpinned (only
+the owner publishes or pins). When an entry's
 media changes, the words of its write-ups are read back (media/service.py).
 After every save that changes an entry's meaning, its parts are read and it is
 tagged and embedded in the background (enrichment_queue.py), so saving never waits. An agent can't add a second entry for a link
@@ -102,6 +103,7 @@ def create_entry(db: Session, data: EntryCreate, viewer: Viewer) -> Entry:
     entry = Entry(**data.model_dump(exclude_none=True), added_by=viewer.added_by, run_id=viewer.run_id or None)
     if viewer.is_agent:
         entry.visibility = AGENT_ENTRY_VISIBILITY
+        entry.pinned = False
         existing = _find_by_source_url(db, entry.source_url)
         if existing is not None:
             raise DuplicateLinkError(existing if can_open(viewer, existing) else None)
@@ -128,6 +130,8 @@ def update_entry(db: Session, entry: Entry, changes: EntryUpdate, viewer: Viewer
     }
     if viewer.is_agent and "visibility" in changed:
         raise AgentCannotPublishError("Only the owner can change an entry's visibility")
+    if viewer.is_agent and "pinned" in changed:
+        raise AgentCannotPublishError("Only the owner can pin an entry")
     if "board" in changed:
         _check_can_add_to_board(db, viewer, changed["board"])
     if "media" in changed:

@@ -6,7 +6,7 @@
  * solid square as a picked WordChoice. The label is there for screen
  * readers and as a hover tip.
  *
- * Used by BrowseControls. Looks: .mark-choice and .dot in global.css (dot
+ * Used by BrowseControls. Looks: .mark-choice and .dot in styles/controls.css (dot
  * sizes are the --dot-* tokens).
  */
 

@@ -1,0 +1,27 @@
+/*
+ * Agents: the agent log at /agents (features/agents/AgentLog.tsx): who did
+ * what, over what they wrote; findings and questions stand out.
+ *
+ * Part of global.css.
+ */
+
+/* The agent log: who did what (small) over what they wrote. Findings and
+   questions (questions are for the owner) are set in full ink. */
+.log-line-said {
+  display: block;
+  font-size: var(--size-small);
+  line-height: var(--leading-small);
+  color: var(--ink-soft);
+}
+
+.log-line-text {
+  display: block;
+  max-width: 34em;
+  color: var(--ink-soft);
+}
+
+.log-line.is-question .log-line-text,
+.log-line.is-finding .log-line-text,
+.log-line.is-question .log-line-said {
+  color: var(--ink);
+}

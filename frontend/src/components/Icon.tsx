@@ -6,7 +6,7 @@
  * lines: the board's rows view, beside the picture-size dots).
  * Always inside a button or link that carries the words for screen readers.
  *
- * Looks: .icon in global.css (line width, size, the caret's turn).
+ * Looks: .icon in styles/controls.css (line width, size, the caret's turn).
  */
 
 export type IconName = "caret" | "plus" | "close" | "rows";

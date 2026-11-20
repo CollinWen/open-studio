@@ -1,0 +1,230 @@
+/*
+ * Page: the shape every page shares. The 12-column page grid and its rules
+ * (components/LabelRow), the frame around every page (the header that stays
+ * at the top, the graph paper under everything, the footer), the section
+ * line (components/SectionLine) and the shaded control band under it
+ * (components/ControlBand).
+ *
+ * Part of global.css.
+ */
+
+/* ---- Page grid (see components/LabelRow.tsx) ---- */
+
+/* Twelve columns inside the page margins. Content starts on column 1, the
+   page's one left edge; a label, when there is one, is a small caption on
+   its own line above. The row itself runs edge to edge, so its rule does too. */
+.label-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--gutter);
+  align-items: baseline;
+  padding: 0 var(--margin);
+}
+
+.label-row-label {
+  grid-column: 1 / -1;
+  font-size: var(--size-small);
+  line-height: var(--leading-small);
+  color: var(--ink-soft);
+}
+
+.label-row-content {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+/* Wide rows (the grid of pictures, a list) get a line of space above. */
+.label-row.is-wide .label-row-content {
+  margin-top: var(--line);
+}
+
+/* A ruled row starts a section: a blank line, the rule, half a line, then
+   text. The rule is painted on, so it takes no room. A double rule's
+   second line is 3px under the first. */
+.label-row.is-ruled,
+.label-row.is-double {
+  margin-top: var(--line);
+  padding-top: calc(var(--line) / 2);
+  background: var(--rule-above);
+}
+
+.label-row.is-double {
+  background: var(--double-rule-above);
+}
+
+/* Intros and titles get room below them. */
+.intro-row {
+  padding-bottom: calc(3 * var(--line));
+}
+
+@media (max-width: 720px) {
+  .intro-row {
+    padding-bottom: calc(2 * var(--line));
+  }
+}
+
+/* ---- Page frame ---- */
+
+/* The header stays at the top of the screen on solid paper, closed by the
+   double rule under it, and never leaves while a page changes or loads.
+   One line of words, so its height is fixed (--header-height). */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0 1em;
+  height: var(--header-height);
+  padding: var(--line) var(--margin);
+  background: var(--double-rule-below), var(--paper);
+}
+
+/* The header's words are centred in its line (not set on the site name's
+   larger baseline), so their squares sit on the graph paper. */
+.site-nav {
+  display: flex;
+  align-items: center;
+  gap: 1em;
+}
+
+/* The site name: the one place the large size is used. */
+.site-name {
+  margin-right: 1em;
+  font-size: var(--size-large);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.site-name:hover {
+  text-decoration: none;
+}
+
+/* The page is at least as tall as the window, and main takes up the slack,
+   so on a short page the footer sits at the bottom of the screen instead of
+   halfway up; on a long one it simply comes after everything. */
+#root {
+  /* Rounded down to whole squares, so a footer pushed to the bottom of a
+     short page still lands on the graph paper. */
+  min-height: round(down, 100vh, var(--grid-square));
+  display: flex;
+  flex-direction: column;
+}
+
+/* Half a line under the header's rule before the page begins. */
+main {
+  flex: 1 0 auto;
+  padding-top: calc(var(--line) / 2);
+}
+
+/* Graph paper: squares half a line on a side under every page, scrolling
+   with it, their columns starting on the page's left edge (the margin).
+   Entry cards are framed pieces of plain paper laid on it. Color:
+   --grid-line-ink. */
+#root {
+  background-image:
+    linear-gradient(to bottom, var(--grid-line-ink) 1px, transparent 1px),
+    linear-gradient(to right, var(--grid-line-ink) 1px, transparent 1px);
+  background-size: var(--grid-square) var(--grid-square);
+  background-position: var(--margin) 0;
+}
+
+.site-footer {
+  margin-top: calc(3 * var(--line));
+  padding-bottom: calc(2 * var(--line));
+}
+
+/* ---- The shape every page shares: SectionLine, ControlBand, Icon (components/) ---- */
+
+/* The section line: what you're looking at, as the largest words among the
+   controls, on the paper itself; the current one sits on an accent square. */
+.section-row {
+  padding-bottom: calc(var(--line) / 2);
+}
+
+.section-line {
+  font-size: var(--size-large);
+  line-height: var(--line);
+}
+
+.section-line .square {
+  line-height: calc(1.5 * var(--line));
+}
+
+/* Its small type takes no height of its own, so the line stays 1.5 lines tall. */
+.section-count {
+  font-size: var(--size-small);
+  line-height: 0;
+}
+
+/* A small line under the section words ("leave the studio"). */
+.section-note {
+  margin: 0;
+  font-size: var(--size-small);
+  line-height: var(--leading-small);
+}
+
+/* The controls sit on a shaded band edge to edge, under a hairline, so they
+   read as tools and not as part of the work. Lines half a line apart. */
+.control-band {
+  background: var(--rule-above-faint), var(--paper-shade);
+  padding: calc(var(--line) / 2) 0;
+}
+
+.control-band .label-row + .label-row,
+.control-band-more {
+  margin-top: calc(var(--line) / 2);
+}
+
+/* The band's first line: its controls, then the caret, then what's picked. */
+.control-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: calc(2 * var(--gutter));
+  row-gap: var(--grid-square);
+}
+
+/* Text fields in a band are underlines, like the search. */
+.control-band input:not([type="range"]) {
+  width: var(--field-width);
+  max-width: 100%;
+  box-shadow: var(--underline-faint);
+}
+
+.control-band input.is-long {
+  width: var(--field-width-long);
+}
+
+.control-band input:focus {
+  box-shadow: var(--underline);
+}
+
+/* The footer's one line: the about link, and the light/dark pick at the far end. */
+.site-footer-line {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  column-gap: var(--gutter);
+}
+
+/* The footer's mark beside the year; pointing at it plays one sweep. */
+.site-footer-sign {
+  display: inline-flex;
+  align-items: center;
+  /* Centred in its line rather than on the words' baseline, which the mark
+     would push down, making the line taller than one. */
+  align-self: center;
+  gap: 0.6em;
+}
+
+.site-footer-sign .studio-mark {
+  color: var(--ink);
+}
+
+.site-footer-sign:hover .studio-mark rect {
+  animation: mark-light var(--motion-ambient) 1 backwards;
+  animation-delay: calc(var(--mark-order) * var(--motion-ambient) / 20);
+}

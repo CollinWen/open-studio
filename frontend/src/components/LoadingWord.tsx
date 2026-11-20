@@ -5,7 +5,7 @@
  * Screen readers hear the word, politely, once.
  *
  * Not here: the larger mark that stands in for a whole view still on its
- * way (LoadingMark.tsx). Looks: .loading-word in global.css.
+ * way (LoadingMark.tsx). Looks: .loading-word in styles/motion.css.
  */
 
 import type { ReactNode } from "react";

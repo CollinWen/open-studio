@@ -6,14 +6,12 @@
 
 import { LabelRow } from "../components/LabelRow";
 import { SiteFooter } from "../components/SiteFooter";
-import { SiteHeader } from "../components/SiteHeader";
 
 export function AboutPage() {
   return (
     <>
-      <SiteHeader />
       <main>
-        <LabelRow rule="double" className="intro-row">
+        <LabelRow className="intro-row">
           <p className="display">
             Welcome. This is a working collection of things I make and things I'm curious about.
           </p>

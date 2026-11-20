@@ -5,7 +5,7 @@
  * Screen readers hear a hidden "loading" instead of the mark.
  *
  * Not here: the small mark and word for the header and forms (LoadingWord.tsx).
- * Looks: .loading-mark in global.css.
+ * Looks: .loading-mark in styles/motion.css.
  */
 
 import { StudioMark } from "./StudioMark";

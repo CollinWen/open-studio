@@ -21,7 +21,7 @@ Requests to `/api` and `/media` are passed through to the backend on port 8000
 
 | URL | File | What it shows |
 |---|---|---|
-| `/`, `/b/<slug>` | `pages/BoardPage.tsx` | One board: `/` is home (the owner's own collection), `/b/bread` the bread board, and so on; a board shows only its own entries. `?tag=` highlights a tag and shows its description, `?from=2023-04&to=2024-09` highlights a span of months, `?q=` searches the board, `?view=small\|large\|rows` (default: medium pictures), `?sort=oldest\|title\|relevance` |
+| `/`, `/b/<slug>` | `pages/BoardPage.tsx` | One board: `/` is home (the owner's own collection), `/b/bread` the bread board, and so on; a board shows only its own entries. The board's brief (its description) is the first tile; `?tag=` highlights a tag and shows its description there instead, `?from=2023-04&to=2024-09` highlights a span of months, `?q=` searches the board, `?view=small\|large\|rows` (default: medium pictures), `?sort=oldest\|title\|relevance` |
 | `/entry/:id` | `pages/EntryPage.tsx` | One entry: the title, then the wall label (every fact, source link, tags) beside the notes, pictures and write-ups; related entries below |
 | `/about` | `pages/AboutPage.tsx` | The welcome text |
 | any other address | `pages/NotFoundPage.tsx` | "Nothing here", with a link back to the index |
@@ -44,7 +44,7 @@ Requests to `/api` and `/media` are passed through to the backend on port 8000
 | `public/` | Files served as they are: `favicon.svg` (the studio mark on pure white, with a one-square empty border so the ink never touches the edge) |
 | `src/api/` | Every call to the backend, and the owner's sign-in (`ownerSignIn.ts`: the password today, the one file to change for Google sign-in) |
 | `src/types/` | Data shapes, matching the backend's `schemas.py` files |
-| `src/styles/` | The entire visual style. `tokens.css`: every color, type size, line unit, gutter, margin and motion value, light and dark. `global.css`: the site, built on them. `writeup.css`: write-ups (an entry's HTML), built on the same tokens and loaded only inside a write-up's frame; when the site's text, tables, captions or rules change, change it too. The typeface comes from `@fontsource-variable/inter`, loaded in `main.tsx` (and imported by `writeup.css`) |
+| `src/styles/` | The entire visual style. `tokens.css`: every color, type size, line unit, gutter, margin and motion value, light and dark. `global.css`: the site's design notes, importing the site's styles one area to a file: `base.css` (type, links, words in a row), `controls.css` (what can be picked), `page.css` (the page grid, header, footer, graph paper, section line, control band), `board.css`, `ledger.css`, `entry-page.css`, `studio.css`, `agents.css`, `entry-sheet.css`, `sketches.css`, `motion.css` (arriving, waiting, reduced motion). `writeup.css`: write-ups (an entry's HTML), built on the same tokens and loaded only inside a write-up's frame; when the site's text, tables, captions or rules change, change it too. The typeface comes from `@fontsource-variable/inter`, loaded in `main.tsx` (and imported by `writeup.css`) |
 
 ## The studio mark
 
@@ -55,7 +55,7 @@ pattern of rows (`O` a square, `_` a gap), `MARK_PATTERN` in
 the sign of waiting: while something loads its squares light up in a sweep from
 the top-left corner. To redraw it, change the pattern there, then the copies
 in `public/favicon.svg` and `../ios/Shared/StudioMark.swift`. Its sizes and
-the sweep are under "studio mark" in `global.css`.
+the sweep are under "studio mark" in `styles/motion.css`.
 
 Config files (`package.json`, `tsconfig.json`, `vite.config.ts`, `index.html`) are standard Vite + React setup.
 

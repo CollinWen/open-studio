@@ -15,7 +15,7 @@ import { isFaded, type Highlight } from "./entryHighlight";
 interface Props {
   entries: Entry[];
   highlight: Highlight;
-  arriveOrder?: (entry: Entry) => number;
+  arriveOrder?: (entry: Entry) => number | undefined;
 }
 
 const COLUMNS = [
@@ -32,7 +32,9 @@ export function EntryRows({ entries, highlight, arriveOrder }: Props) {
         <LedgerRow
           key={entry.id}
           to={`/entry/${entry.id}`}
-          className={[isFaded(entry, highlight) && "is-faded", arriveOrder && "is-arriving"].filter(Boolean).join(" ")}
+          className={[isFaded(entry, highlight) && "is-faded", arriveOrder?.(entry) !== undefined && "is-arriving"]
+            .filter(Boolean)
+            .join(" ")}
           style={arriveOrder && ({ "--arrive-order": arriveOrder(entry) } as CSSProperties)}
           cells={[
             <span className="quiet">{entry.occurred_at.slice(0, 10)}</span>,

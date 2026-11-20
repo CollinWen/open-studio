@@ -1,8 +1,9 @@
 /**
  * WriteupView: a write-up (an entry's illustrated text) on its entry page,
  * read straight on the page as if it were part of it: the studio's own
- * type and grid, the visitor's paper, and a frame that grows to fit, so it
- * never scrolls on its own. A caption, if any, sits underneath.
+ * type and grid, the visitor's paper, and a frame that grows to fit (to
+ * whole squares of the graph paper), so it never scrolls on its own. A
+ * caption, if any, sits underneath.
  *
  * The write-up is shown in a sandboxed frame that can't run anything
  * (no scripts, no forms, no reaching the page around it); writeupPage.ts
@@ -44,7 +45,10 @@ export function WriteupView({ item, title }: { item: MediaItem; title: string })
 
   const fitToContent = useCallback(() => {
     const page = frame.current?.contentDocument?.documentElement;
-    if (page) setHeight(page.scrollHeight);
+    if (!page) return;
+    // Rounded up to whole squares of the graph paper, so what follows stays on it.
+    const square = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--grid-square")) || 11;
+    setHeight(Math.ceil(page.scrollHeight / square) * square);
   }, []);
 
   // Refit when the column changes width (the text rewraps) and once the typeface has loaded.

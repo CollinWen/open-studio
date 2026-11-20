@@ -3,15 +3,17 @@
  * home board (the owner's own collection); every other board has its own
  * address and shows only its own entries, tags and time, so spaces never mix.
  *
- * Laid out as labeled rows: the intro set large (the board's description,
- * or a picked tag's) in a block of fixed height, so a longer or shorter
- * intro never moves what's below it; then the browse panel (boards, view,
- * tags, time: every way to move around, in one block), then the entries as
- * a grid of medium pictures by default, or small, large or rows. A picked
+ * Laid out as labeled rows: first the browse panel (boards, view, tags,
+ * time: every way to move around, in one block), then the work, as medium
+ * pictures by default, or small or large ones, or rows. There is no intro
+ * above: the board's brief (its description, or a picked tag's) is the
+ * first tile of the work (BoardBrief), beside the pinned entries. A picked
  * tag or span of months highlights its entries in whichever view is showing.
  *
- * Entries load a page at a time (useEntryPages): the first pictures show at
- * once and the rest rise in behind them. Until the first page is in (or a
+ * Entries load a page at a time (useEntryPages): the first page fades in
+ * whole and the rest rise in behind it. Switching boards fades the one on
+ * screen out until the next board's first page is in, then fades that in,
+ * so nothing empties and refills. Until a board's first page is in (or a
  * search's results), the large studio mark sweeps where the view will be;
  * the board's count appears beside its name once the last page is in.
  * After the owner saves an entry the page reloads quietly. Every choice
@@ -27,8 +29,8 @@ import { fetchTags } from "../api/tagsApi";
 import { LabelRow } from "../components/LabelRow";
 import { LoadingMark } from "../components/LoadingMark";
 import { SiteFooter } from "../components/SiteFooter";
-import { SiteHeader } from "../components/SiteHeader";
 import { HOME_BOARD } from "../features/grid/boardPath";
+import { BoardBrief } from "../features/grid/BoardBrief";
 import { BrowsePanel } from "../features/grid/BrowsePanel";
 import { EntryGrid } from "../features/grid/EntryGrid";
 import { EntryRows } from "../features/grid/EntryRows";
@@ -69,8 +71,12 @@ export function BoardPage() {
 
   const current = boards?.find((candidate) => candidate.slug === board);
   const activeTag = tags.find((candidate) => candidate.name === tag);
-  const boardIntro = board === HOME_BOARD ? HOME_INTRO : current?.description || current?.name;
-  const intro = tag ? activeTag?.description || `Everything tagged “${tag}”.` : boardIntro;
+  const boardBrief = board === HOME_BOARD ? HOME_INTRO : current?.description || current?.name || "";
+  const brief = tag ? (
+    <BoardBrief label={`tagged “${tag}”`} text={activeTag?.description || `Everything tagged “${tag}” stands out.`} />
+  ) : (
+    boardBrief && <BoardBrief label="about this board" text={boardBrief} />
+  );
   // Kept stable between renders so the views don't redo work on every hover.
   const shown = useMemo(() => entries && sortEntries(entries, sort), [entries, sort]);
   const highlight = useMemo(() => ({ tag, range }), [tag, range]);
@@ -79,11 +85,7 @@ export function BoardPage() {
 
   return (
     <>
-      <SiteHeader />
       <main>
-        <LabelRow rule="double" className="intro-row board-intro">
-          <p className="display">{intro}</p>
-        </LabelRow>
         <BrowsePanel
           boards={boards ?? []}
           board={board}
@@ -98,14 +100,20 @@ export function BoardPage() {
             <p className="quiet">{query ? "Nothing matches that." : "Nothing here yet."}</p>
           </LabelRow>
         ) : (
-          <LabelRow wide>
+          // While another board loads, the one on screen fades out; the new one fades in whole.
+          <LabelRow wide className={collection.switching ? "is-leaving" : undefined}>
             {!shown && <LoadingMark />}
-            {shown && view === "rows" && (
-              <EntryRows entries={shown} highlight={highlight} arriveOrder={collection.orderOf} />
-            )}
-            {shown && view !== "rows" && (
-              <EntryGrid entries={shown} highlight={highlight} size={view} arriveOrder={collection.orderOf} />
-            )}
+            <div key={collection.entriesBoard ?? ""} className="board-work">
+              {shown && view === "rows" && (
+                <>
+                  {brief}
+                  <EntryRows entries={shown} highlight={highlight} arriveOrder={collection.orderOf} />
+                </>
+              )}
+              {shown && view !== "rows" && (
+                <EntryGrid entries={shown} highlight={highlight} size={view} arriveOrder={collection.orderOf} lead={brief} />
+              )}
+            </div>
           </LabelRow>
         )}
       </main>

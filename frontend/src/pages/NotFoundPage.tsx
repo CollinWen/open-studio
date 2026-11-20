@@ -10,14 +10,12 @@
 import { Link } from "react-router-dom";
 import { LabelRow } from "../components/LabelRow";
 import { SiteFooter } from "../components/SiteFooter";
-import { SiteHeader } from "../components/SiteHeader";
 
 export function NotFoundPage() {
   return (
     <>
-      <SiteHeader />
       <main>
-        <LabelRow rule="double">
+        <LabelRow>
           <p className="quiet">
             Nothing here. <Link to="/">Back to the index.</Link>
           </p>

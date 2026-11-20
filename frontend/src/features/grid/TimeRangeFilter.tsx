@@ -8,7 +8,7 @@
  * a handle moves, its place is kept here (the URL catches up a moment later).
  *
  * Used by BrowsePanel. Months come from monthRange.ts; the span lives in the
- * URL (?from=&to=, see useBrowseParams). Looks: .time-filter in global.css.
+ * URL (?from=&to=, see useBrowseParams). Looks: .time-filter in styles/board.css.
  */
 
 import { useEffect, useState, type CSSProperties } from "react";

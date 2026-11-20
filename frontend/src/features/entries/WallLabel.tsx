@@ -5,7 +5,7 @@
  * Source (SourceLink), Added by when an agent added it, and Tags.
  *
  * Used by EntryPage, which sets it in the narrow column beside the entry's
- * notes and pictures (.entry-aside in global.css).
+ * notes and pictures (.entry-aside in styles/entry-page.css).
  */
 
 import type { ReactNode } from "react";

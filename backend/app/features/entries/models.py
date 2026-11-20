@@ -43,6 +43,10 @@ class Entry(SQLModel, table=True):
     # private: only me. unlisted: anyone with the link. public: in the grid.
     visibility: str = "private"
 
+    # Pinned entries come first on their board, whatever the sort (except a search's).
+    # Only the owner pins.
+    pinned: bool = False
+
     # Who added it: "owner", or "agent:<name>" for an agent (see auth/viewer.py).
     added_by: str = "owner"
     # The run it was added in (runs/models.py), when an agent added it on a run token.

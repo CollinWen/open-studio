@@ -1,0 +1,105 @@
+/*
+ * Sketches: the scratch page at /sketch (pages/SketchPage.tsx,
+ * features/sketches/): a contact sheet of every picture, with threads
+ * between related entries. Delete with the sketches when one graduates.
+ *
+ * Part of global.css.
+ */
+
+/* ---- Sketch page (see pages/SketchPage.tsx; scratch, not on the home page) ---- */
+
+.sketch-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 calc(2 * var(--gutter));
+  padding: 0 var(--margin) var(--line);
+}
+
+/* The proof sheet runs edge to edge; each picture is placed by justifyRows. */
+.contact-sheet {
+  position: relative;
+}
+
+.sheet-tile {
+  position: absolute;
+  display: block;
+  overflow: hidden;
+  transition: opacity var(--motion-standard) var(--ease-enter);
+}
+
+.sheet-tile:hover {
+  text-decoration: none;
+}
+
+.sheet-tile.is-dim {
+  opacity: 0.12;
+}
+
+.sheet-tile img,
+.sheet-tile video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  object-fit: cover;
+}
+
+/* Entries without a picture: their title, set large, so the tile reads as a
+   page of text rather than a hole in the sheet. */
+.sheet-tile > span {
+  display: block;
+  padding: 0.5em 0.6em;
+  font-size: inherit; /* set per tile by ContactSheet, from the row height */
+  line-height: 1.1;
+  font-weight: 500;
+}
+
+/* Threads: white with difference blending, so black on paper and a negative on photos. */
+.link-lines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  mix-blend-mode: difference;
+}
+
+.link-line {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 1;
+  opacity: 0.12;
+  transition: opacity var(--motion-standard) var(--ease-enter);
+}
+
+.link-line circle {
+  fill: #fff;
+  stroke: none;
+}
+
+.link-line.is-strong {
+  stroke-width: 1.5;
+  opacity: 1;
+}
+
+/* The title and date beside the pointer, inverted like the threads. */
+.sheet-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  width: 240px;
+  color: #fff;
+  mix-blend-mode: difference;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.sheet-label.is-visible {
+  opacity: 1;
+}
+
+.sheet-label > span {
+  display: block;
+  font-size: var(--size-small);
+  line-height: var(--leading-small);
+}
