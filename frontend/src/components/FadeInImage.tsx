@@ -13,6 +13,8 @@ export function FadeInImage({ className, ...props }: ImgHTMLAttributes<HTMLImage
   const classes = ["fade-in-image", loaded && "is-loaded", className].filter(Boolean).join(" ");
   return (
     <img
+      // Decode off the main thread, so scrolling past many pictures stays smooth.
+      decoding="async"
       {...props}
       className={classes}
       // A picture already in the browser's cache can finish before onLoad is attached.

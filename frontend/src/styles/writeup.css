@@ -20,9 +20,11 @@
   box-sizing: border-box;
 }
 
-/* The frame grows to fit the write-up, so it never scrolls on its own. */
+/* The frame grows to fit the write-up, so it scrolls on its own only past
+   its tallest (--writeup-max-height, set on the frame in global.css). */
 html {
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 html,

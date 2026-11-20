@@ -9,6 +9,13 @@
  * builds what goes inside. A link to another entry (/entry/<id>, see
  * skills/linking-entries/) opens that entry on this page, like any link on
  * the site; links out open in a new tab. Used by MediaView.
+ *
+ * The frame grows to fit, up to a tallest height (--writeup-max-height in
+ * tokens.css; past it the write-up scrolls inside the frame). It's measured
+ * by its body and refitted only when it loads, when its typeface arrives and
+ * when the column changes width, never because the frame itself grew: a
+ * write-up sized by the screen (100vh) would otherwise grow with every
+ * refit, re-laying the page every frame.
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -42,16 +49,22 @@ export function WriteupView({ item, title }: { item: MediaItem; title: string })
     };
   }, [item.url]);
 
+  // The body, not the whole document: the document is never shorter than the frame, so it could only grow.
   const fitToContent = useCallback(() => {
-    const page = frame.current?.contentDocument?.documentElement;
-    if (page) setHeight(page.scrollHeight);
+    const body = frame.current?.contentDocument?.body;
+    if (body) setHeight(Math.ceil(body.getBoundingClientRect().height));
   }, []);
 
-  // Refit when the column changes width (the text rewraps) and once the typeface has loaded.
+  // Refit when the column changes width (the text rewraps); the frame's own height changing is ignored.
   useEffect(() => {
     const element = frame.current;
     if (!element) return;
-    const watcher = new ResizeObserver(fitToContent);
+    let width = element.clientWidth;
+    const watcher = new ResizeObserver(() => {
+      if (element.clientWidth === width) return;
+      width = element.clientWidth;
+      fitToContent();
+    });
     watcher.observe(element);
     return () => watcher.disconnect();
   }, [html, fitToContent]);

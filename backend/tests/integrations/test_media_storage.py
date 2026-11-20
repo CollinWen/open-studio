@@ -38,6 +38,7 @@ def test_saves_to_r2_when_configured(monkeypatch):
     assert stored["Bucket"] == "studio-media"
     assert stored["Body"] == b"frames"
     assert stored["ContentType"] == "video/mp4"
+    assert stored["CacheControl"] == "public, max-age=31536000, immutable"
     assert url == f"https://media.example.com/{stored['Key']}"
 
 
