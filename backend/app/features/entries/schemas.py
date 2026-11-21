@@ -6,8 +6,9 @@ An entry's media may include a write-up (type html) only if the studio
 stored it, so it was made safe on the way in (media/service.py). Every
 address sent in (the source link, each media item's address and thumbnail)
 must be a web address or a file the studio stored, so nothing like
-javascript: can ever reach a page as a link or a frame. Stored entries are
-read back as they are; only what's sent in is checked.
+javascript: can ever reach a page as a link or a frame. A kind sent in is
+kept plain (lowercase, single spaces), so "Photo" and "photo" are one kind.
+Stored entries are read back as they are; only what's sent in is checked.
 """
 
 from datetime import datetime, timezone
@@ -71,6 +72,14 @@ def _checked_media(media: list[MediaItem] | None) -> list[MediaItem] | None:
     return media
 
 
+def _plain_kind(value: str | None) -> str | None:
+    """The kind in lowercase with single spaces; a blank kind is a note."""
+    if value is None:
+        return value
+    return " ".join(value.lower().split()) or "note"
+
+
+SentKind = Annotated[str, AfterValidator(_plain_kind)]
 SentMedia = Annotated[list[MediaItem], AfterValidator(_checked_media)]
 SentAddress = Annotated[str, AfterValidator(_web_address)]
 
@@ -80,7 +89,7 @@ class EntryCreate(BaseModel):
 
     title: str
     description: str = ""
-    kind: str = "note"
+    kind: SentKind = "note"
     source_name: str = ""
     source_url: SentAddress = ""
     media: SentMedia = []
@@ -98,7 +107,7 @@ class EntryUpdate(BaseModel):
 
     title: str | None = None
     description: str | None = None
-    kind: str | None = None
+    kind: SentKind | None = None
     source_name: str | None = None
     source_url: SentAddress | None = None
     media: SentMedia | None = None
