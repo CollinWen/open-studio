@@ -7,7 +7,9 @@
  * time: every way to move around, in one block), then the work, as medium
  * pictures by default, or small or large ones, or rows. There is no intro
  * above: the board's brief (its description, or a picked tag's) is the
- * first tile of the work (BoardBrief), beside the pinned entries. A picked
+ * first tile of the work (BoardBrief), beside the pinned entries; a board
+ * with nothing on it yet (or a search with no match) still shows its brief,
+ * with a line saying so under it. A picked
  * tag or span of months highlights its entries in whichever view is showing.
  *
  * Entries load a page at a time (useEntryPages): the first page fades in
@@ -99,29 +101,24 @@ export function BoardPage() {
           count={collection.loading ? undefined : collection.entries?.length}
           browse={browse}
         />
-        {shown?.length === 0 ? (
-          // A plain row, so the message starts on the left edge like other text, and no view draws an empty list.
-          <LabelRow>
-            <p className="quiet">{query ? "Nothing matches that." : "Nothing here yet."}</p>
-          </LabelRow>
-        ) : (
-          // While another board loads, the one on screen fades out; the new one fades in whole.
-          <LabelRow wide className={collection.switching ? "is-leaving" : undefined}>
-            {!shown && <LoadingMark />}
-            <div key={collection.entriesBoard ?? ""} className="board-work">
-              {drawn && view === "rows" && (
-                <>
-                  {brief}
-                  <EntryRows entries={drawn} highlight={highlight} arriveOrder={collection.orderOf} />
-                </>
-              )}
-              {drawn && view !== "rows" && (
-                <EntryGrid entries={drawn} highlight={highlight} size={view} arriveOrder={collection.orderOf} lead={brief} />
-              )}
-            </div>
-            <div ref={markerRef} aria-hidden="true" />
-          </LabelRow>
-        )}
+        {/* While another board loads, the one on screen fades out; the new one fades in whole. */}
+        <LabelRow wide className={collection.switching ? "is-leaving" : undefined}>
+          {!shown && <LoadingMark />}
+          <div key={collection.entriesBoard ?? ""} className="board-work">
+            {drawn && view === "rows" && (
+              <>
+                {brief}
+                {drawn.length > 0 && <EntryRows entries={drawn} highlight={highlight} arriveOrder={collection.orderOf} />}
+              </>
+            )}
+            {drawn && view !== "rows" && (
+              <EntryGrid entries={drawn} highlight={highlight} size={view} arriveOrder={collection.orderOf} lead={brief} />
+            )}
+            {/* An empty board still says what it's for (its brief), then that nothing is on it yet. */}
+            {shown?.length === 0 && <p className="quiet">{query ? "Nothing matches that." : "Nothing here yet."}</p>}
+          </div>
+          <div ref={markerRef} aria-hidden="true" />
+        </LabelRow>
       </main>
       <SiteFooter />
     </>
