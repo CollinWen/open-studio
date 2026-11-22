@@ -25,6 +25,8 @@ MIGRATIONS: list[str] = [
     "ALTER TABLE entry ADD COLUMN writeup_text VARCHAR NOT NULL DEFAULT ''",
     "ALTER TABLE entry ADD COLUMN readings JSON NOT NULL DEFAULT '{}'",
     "ALTER TABLE entry ADD COLUMN pinned BOOLEAN NOT NULL DEFAULT 0",
+    # Kinds are kept lowercase from now on (entries/schemas.py); bring older ones in line.
+    "UPDATE entry SET kind = CASE WHEN trim(kind) = '' THEN 'note' ELSE lower(trim(kind)) END",
 ]
 
 
