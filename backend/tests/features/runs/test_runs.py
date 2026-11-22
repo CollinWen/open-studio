@@ -5,7 +5,7 @@ run on what it adds, can't edit or link entries on other boards, logs only
 on its own board (a line that names none lands there), and stops working
 when the run is finished or its agent paused; a run can't be given outside tools the agent wasn't granted; a run
 leaves a link to its harness's session (a web address, while it's live) that only
-the owner and the run's agent see; an
+the owner and the run's agent see, and the log narrows to one run's lines; an
 agent can start runs only for itself, and a run token can't start more.
 """
 
@@ -179,6 +179,16 @@ def test_a_runs_log_lines_stay_on_its_board(client):
     assert client.post("/api/agent-log", json=about_elsewhere, headers=_bearer(kit)).status_code == 403
 
 
+def test_the_log_narrows_to_one_runs_lines(client):
+    _second_board(client)
+    name, agent_headers = _add_agent(client, tools=["web"])
+    kit = _start(client, name).json()
+    client.post("/api/agent-log", json={"type": "plan", "text": "on the run"}, headers=_bearer(kit))
+    client.post("/api/agent-log", json={"board": AGENT_BOARD, "type": "plan", "text": "off it"}, headers=agent_headers)
+    lines = client.get(f"/api/agent-log?run={kit['run']['id']}").json()
+    assert [line["text"] for line in lines] == ["on the run"]
+
+
 def test_a_run_leaves_its_session_link_for_the_owner(client):
     _second_board(client)
     name, _ = _add_agent(client, tools=["web"])
@@ -191,6 +201,26 @@ def test_a_run_leaves_its_session_link_for_the_owner(client):
     assert response.json()["session_url"] == link
     listed = client.get(f"/api/runs?agent={name}", headers=OWNER_HEADERS).json()
     assert listed[0]["session_url"] == link
+
+
+def test_a_run_that_ran_out_takes_no_session_link(client):
+    from datetime import datetime, timedelta, timezone
+
+    from sqlmodel import Session
+
+    from app.database import engine
+    from app.features.runs.models import Run
+
+    _second_board(client)
+    name, _ = _add_agent(client, tools=["web"])
+    run_id = _start(client, name).json()["run"]["id"]
+    with Session(engine) as db:
+        run = db.get(Run, run_id)
+        run.expires_at = datetime.now(timezone.utc) - timedelta(minutes=1)
+        db.add(run)
+        db.commit()
+    late = client.post(f"/api/runs/{run_id}/session", json={"url": "https://x.test/s"}, headers=OWNER_HEADERS)
+    assert late.status_code == 409
 
 
 def test_a_session_link_must_be_a_web_address_and_the_run_live(client):

@@ -129,7 +129,7 @@ export function StudioPage() {
             {section === "agents" && agents && boards && (
               <AgentManager agents={agents} boards={boards} onChanged={reload} />
             )}
-            {section === "runs" && runs && <RunList runs={runs} />}
+            {section === "runs" && runs && entries && <RunList runs={runs} entries={entries} />}
           </>
         )}
       </main>

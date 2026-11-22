@@ -1,7 +1,7 @@
 /**
  * Calls to the backend's agent log (backend/app/features/agent_log/routes.py):
  * what agents are planning, thinking, finding and asking, newest first,
- * narrowed by agent, board, type of line or words in the text. Pass the
+ * narrowed by agent, board, type of line, words in the text or one run. Pass the
  * oldest line's time as `before` for the next page.
  */
 
@@ -13,6 +13,7 @@ export interface LogFilters {
   board?: string;
   type?: string;
   q?: string;
+  run?: string;
   before?: string;
 }
 

@@ -8,7 +8,8 @@
  *   Type    plans, thoughts, findings, questions or status changes
  *
  * While those are closed, each pick shows beside the caret in a filled
- * oval; clicking one clears it. Used by AgentsPage. Every pick lives in
+ * oval; clicking one clears it. A run (?run=, from the studio's runs list)
+ * shows only as such an oval. Used by AgentsPage. Every pick lives in
  * the URL (useLogFilters).
  */
 
@@ -35,7 +36,7 @@ const TYPE_WORDS: Record<LogLineType, string> = {
 };
 
 export function AgentLogBand({ agents, boards, filters }: Props) {
-  const { agent, board, type, query, setFilter, clearFilters, hasFilters } = filters;
+  const { agent, board, type, query, run, setFilter, clearFilters, hasFilters } = filters;
 
   /** One line of pick-one words, "all" first, which also says what the line picks. */
   const choices = (name: "agent" | "board" | "type", all: string, options: [string, string][], current: string) => (
@@ -47,10 +48,11 @@ export function AgentLogBand({ agents, boards, filters }: Props) {
     </div>
   );
 
-  const picks: [string, "agent" | "board" | "type"][] = [
+  const picks: [string, "agent" | "board" | "type" | "run"][] = [
     [agent, "agent"],
     [board, "board"],
     [type && TYPE_WORDS[type], "type"],
+    [run && `run ${run}`, "run"],
   ];
 
   return (

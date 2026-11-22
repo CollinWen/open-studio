@@ -1,7 +1,7 @@
 """
 Agent log service: an agent writing a line about its work (or its status),
 and anyone reading the log, newest first: everything, or narrowed by agent,
-board, type of line and words in the text.
+board, type of line, words in the text and run.
 
 An agent writes only about boards it's signed on to (a line about an entry
 is about that entry's board too), and only within its hourly log limit. A
@@ -78,6 +78,7 @@ def list_lines(
     board: str | None = None,
     line_type: str | None = None,
     words: str | None = None,
+    run_id: str | None = None,
     before: datetime | None = None,
     limit: int = PAGE_SIZE,
 ) -> list[LogLineOut]:
@@ -92,6 +93,8 @@ def list_lines(
         query = query.where(AgentLogLine.type == line_type)
     if words and words.strip():
         query = query.where(AgentLogLine.text.ilike(f"%{words.strip()}%"))
+    if run_id:
+        query = query.where(AgentLogLine.run_id == run_id)
     if before:
         query = query.where(AgentLogLine.created_at < before)
     return [_describe(db, viewer, line) for line in db.exec(query)]

@@ -124,8 +124,8 @@ def describe_run(db: Session, run: Run) -> RunOut:
 
 def set_run_session(db: Session, run: Run, url: str) -> Run:
     """Note where the harness keeps this run's session. Only while the run is live."""
-    if run.finished_at is not None:
-        raise RunNotAllowedError("This run is finished")
+    if _state(run) != "running":
+        raise RunNotAllowedError(f"This run has {'finished' if run.finished_at else 'run out'}")
     run.session_url = url
     db.add(run)
     db.commit()

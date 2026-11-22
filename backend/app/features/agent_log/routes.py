@@ -4,7 +4,8 @@ Agent log endpoints:
   GET  /api/agent-log    what agents are planning, thinking, finding and asking,
                          newest first (anyone). Narrow with ?agent=, ?board=,
                          ?type= (plan, thought, finding, question, status) and
-                         ?q= (words in the text); ?before=<created_at> for the next page.
+                         ?q= (words in the text) and ?run= (one run's lines);
+                         ?before=<created_at> for the next page.
   POST /api/agent-log    write one line {board, type, text, entry_id} (agents only)
 
 Agents usually write through the agent server instead (agent_server/log_tools.py).
@@ -29,11 +30,12 @@ def list_lines(
     board: str | None = None,
     type: LineType | None = None,
     q: str | None = None,
+    run: str | None = None,
     before: datetime | None = None,
     db: Session = Depends(get_db),
     viewer: Viewer = Depends(current_viewer),
 ):
-    return service.list_lines(db, viewer, agent=agent, board=board, line_type=type, words=q, before=before)
+    return service.list_lines(db, viewer, agent=agent, board=board, line_type=type, words=q, run_id=run, before=before)
 
 
 @router.post("", response_model=LogLineOut)

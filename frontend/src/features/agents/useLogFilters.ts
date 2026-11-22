@@ -1,7 +1,8 @@
 /**
  * useLogFilters: what the agent log on /agents is narrowed to, kept in the
  * URL so any view of it is a link: ?agent=, ?board=, ?type= (plan, thought,
- * finding, question, status) and ?q= (words in the text).
+ * finding, question, status), ?q= (words in the text) and ?run= (one run's
+ * lines, linked from the studio's runs list).
  *
  * Used by AgentsPage and AgentLogBand.
  */
@@ -10,7 +11,7 @@ import { useSearchParams } from "react-router-dom";
 import type { LogLineType } from "../../types/agent";
 
 export const LINE_TYPES: LogLineType[] = ["plan", "thought", "finding", "question", "status"];
-const FILTERS = ["agent", "board", "type", "q"] as const;
+const FILTERS = ["agent", "board", "type", "q", "run"] as const;
 type Filter = (typeof FILTERS)[number];
 
 export function useLogFilters() {
@@ -20,6 +21,7 @@ export function useLogFilters() {
   const typeParam = params.get("type") as LogLineType | null;
   const type: LogLineType | "" = typeParam && LINE_TYPES.includes(typeParam) ? typeParam : "";
   const query = params.get("q") ?? "";
+  const run = params.get("run") ?? "";
 
   /** Set one filter (empty removes it). Typing replaces history instead of adding to it. */
   const setFilter = (name: Filter, value: string) =>
@@ -34,7 +36,7 @@ export function useLogFilters() {
     );
 
   const clearFilters = () => setParams({});
-  const hasFilters = Boolean(agent || board || type || query);
+  const hasFilters = Boolean(agent || board || type || query || run);
 
-  return { agent, board, type, query, setFilter, clearFilters, hasFilters };
+  return { agent, board, type, query, run, setFilter, clearFilters, hasFilters };
 }

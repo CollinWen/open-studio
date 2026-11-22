@@ -38,7 +38,7 @@ const PAGE_SIZE = 50;
 export function AgentsPage() {
   const section = useParams().section === "who" ? "who" : "log";
   const filters = useLogFilters();
-  const { agent, board, type, query } = filters;
+  const { agent, board, type, query, run } = filters;
   // null while on its way, so the large studio mark can hold its place.
   const [agents, setAgents] = useState<Agent[] | null>(null);
   const [boards, setBoards] = useState<Board[]>([]);
@@ -54,7 +54,7 @@ export function AgentsPage() {
 
   useEffect(() => {
     setLines(null);
-    fetchAgentLog({ agent, board, type, q: query })
+    fetchAgentLog({ agent, board, type, q: query, run })
       .then((page) => {
         setLines(page);
         setHasMore(page.length === PAGE_SIZE);
@@ -63,12 +63,12 @@ export function AgentsPage() {
         console.error(error);
         setLines([]);
       });
-  }, [agent, board, type, query]);
+  }, [agent, board, type, query, run]);
 
   const loadMore = () => {
     const before = lines?.[lines.length - 1]?.created_at;
     setLoadingMore(true);
-    fetchAgentLog({ agent, board, type, q: query, before })
+    fetchAgentLog({ agent, board, type, q: query, run, before })
       .then((page) => {
         setLines((shown) => [...(shown ?? []), ...page]);
         setHasMore(page.length === PAGE_SIZE);
