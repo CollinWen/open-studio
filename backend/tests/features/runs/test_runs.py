@@ -3,7 +3,9 @@ Tests for runs: the owner starts a run and gets a kit (token, MCP address,
 prompt, command); the run's token adds only to its own board, records the
 run on what it adds, can't edit or link entries on other boards, logs only
 on its own board (a line that names none lands there), and stops working
-when the run is finished or its agent paused; a run can't be given outside tools the agent wasn't granted; an
+when the run is finished or its agent paused; a run can't be given outside tools the agent wasn't granted; a run
+leaves a link to its harness's session (a web address, while it's live) that only
+the owner and the run's agent see; an
 agent can start runs only for itself, and a run token can't start more.
 """
 
@@ -175,3 +177,37 @@ def test_a_runs_log_lines_stay_on_its_board(client):
     assert unnamed.json()["board"] == AGENT_BOARD
     about_elsewhere = {"type": "finding", "text": "seen", "entry_id": elsewhere["id"]}
     assert client.post("/api/agent-log", json=about_elsewhere, headers=_bearer(kit)).status_code == 403
+
+
+def test_a_run_leaves_its_session_link_for_the_owner(client):
+    _second_board(client)
+    name, _ = _add_agent(client, tools=["web"])
+    kit = _start(client, name).json()
+    assert kit["run"]["session_url"] == ""
+    assert "set_run_session" in kit["prompt"]
+    link = "https://claude.ai/code/session_abc"
+    response = client.post(f"/api/runs/{kit['run']['id']}/session", json={"url": f" {link} "}, headers=_bearer(kit))
+    assert response.status_code == 200, response.text
+    assert response.json()["session_url"] == link
+    listed = client.get(f"/api/runs?agent={name}", headers=OWNER_HEADERS).json()
+    assert listed[0]["session_url"] == link
+
+
+def test_a_session_link_must_be_a_web_address_and_the_run_live(client):
+    _second_board(client)
+    name, _ = _add_agent(client, tools=["web"])
+    kit = _start(client, name).json()
+    run_id = kit["run"]["id"]
+    bad = client.post(f"/api/runs/{run_id}/session", json={"url": "javascript:alert(1)"}, headers=_bearer(kit))
+    assert bad.status_code == 422
+    client.post(f"/api/runs/{run_id}/finish", json={"summary": "done"}, headers=OWNER_HEADERS)
+    late = client.post(f"/api/runs/{run_id}/session", json={"url": "https://x.test/s"}, headers=OWNER_HEADERS)
+    assert late.status_code == 409
+
+
+def test_only_the_owner_or_the_runs_agent_sets_its_session(client):
+    _second_board(client)
+    name, _ = _add_agent(client, tools=["web"])
+    kit = _start(client, name).json()
+    response = client.post(f"/api/runs/{kit['run']['id']}/session", json={"url": "https://x.test/s"}, headers=SCOUT_HEADERS)
+    assert response.status_code == 404

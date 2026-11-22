@@ -9,8 +9,10 @@
  *   tags     ( /studio/tags )    describe and rank each tag
  *   agents   ( /studio/agents )  add, pause, re-key, remove; which boards
  *                                and outside tools each may use
+ *   runs     ( /studio/runs )    every run: its task, agent, board, state,
+ *                                and a link to watch its harness's session
  *
- * This page loads all four lists (for the counts) and reloads them after
+ * This page loads all five lists (for the counts) and reloads them after
  * any change; the large studio mark holds the section until its own list
  * is in. "leave" (under the section words) signs the owner out. ?q=
  * searches entries or tags. Adding and editing an entry happen in the form
@@ -22,6 +24,7 @@ import { useParams, useSearchParams } from "react-router-dom";
 import { fetchAgents } from "../api/agentsApi";
 import { fetchBoards } from "../api/boardsApi";
 import { fetchEntries } from "../api/entriesApi";
+import { fetchRuns } from "../api/runsApi";
 import { isOwnerSignedIn, signOwnerOut } from "../api/ownerSignIn";
 import { fetchTags } from "../api/tagsApi";
 import { LabelRow } from "../components/LabelRow";
@@ -32,13 +35,15 @@ import { AgentManager } from "../features/studio/AgentManager";
 import { BoardManager } from "../features/studio/BoardManager";
 import { EntryIndex } from "../features/studio/EntryIndex";
 import { OwnerSignInForm } from "../features/studio/OwnerSignInForm";
+import { RunList } from "../features/studio/RunList";
 import { TagNotesEditor } from "../features/studio/TagNotesEditor";
 import { useOnEntrySaved } from "../features/studio/entrySavedEvent";
 import { useEntryFormParam } from "../features/studio/useEntryFormParam";
 import type { Agent } from "../types/agent";
 import type { Board, Entry, Tag } from "../types/entry";
+import type { Run } from "../types/run";
 
-const SECTIONS = ["entries", "boards", "tags", "agents"] as const;
+const SECTIONS = ["entries", "boards", "tags", "agents", "runs"] as const;
 type Section = (typeof SECTIONS)[number];
 
 export function StudioPage() {
@@ -52,6 +57,7 @@ export function StudioPage() {
   const [boards, setBoards] = useState<Board[] | null>(null);
   const [tags, setTags] = useState<Tag[] | null>(null);
   const [agents, setAgents] = useState<Agent[] | null>(null);
+  const [runs, setRuns] = useState<Run[] | null>(null);
   const { openEntryEdit } = useEntryFormParam();
 
   const reload = useCallback(() => {
@@ -59,6 +65,7 @@ export function StudioPage() {
     fetchBoards().then(setBoards).catch(console.error);
     fetchTags().then(setTags).catch(console.error);
     fetchAgents().then(setAgents).catch(console.error);
+    fetchRuns().then(setRuns).catch(console.error);
   }, []);
 
   useEffect(() => {
@@ -72,6 +79,7 @@ export function StudioPage() {
     boards: boards?.length,
     tags: tags?.length,
     agents: agents?.length,
+    runs: runs?.length,
   };
   const sections = SECTIONS.map((key) => ({
     key,
@@ -106,7 +114,7 @@ export function StudioPage() {
                 </button>
               </p>
             </SectionLine>
-            {{ entries, boards, tags, agents }[section] === null && <LoadingMark />}
+            {{ entries, boards, tags, agents, runs }[section] === null && <LoadingMark />}
             {section === "entries" && entries && (
               <EntryIndex
                 entries={entries}
@@ -121,6 +129,7 @@ export function StudioPage() {
             {section === "agents" && agents && boards && (
               <AgentManager agents={agents} boards={boards} onChanged={reload} />
             )}
+            {section === "runs" && runs && <RunList runs={runs} />}
           </>
         )}
       </main>

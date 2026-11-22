@@ -1,6 +1,7 @@
 """
 Run service: starting a run (one task for one agent, with a short-lived token
-that says what it may do), describing one, and finishing it.
+that says what it may do), describing one, noting where its harness keeps the
+session, and finishing it.
 
 The rules for what a run may be given:
   - the owner may start a run for any agent; an agent (on its own key) only
@@ -119,6 +120,17 @@ def describe_run(db: Session, run: Run) -> RunOut:
         scopes=scopes_of(run),
         added=entries_service.list_entry_ids_added_in_run(db, run.id),
     )
+
+
+def set_run_session(db: Session, run: Run, url: str) -> Run:
+    """Note where the harness keeps this run's session. Only while the run is live."""
+    if run.finished_at is not None:
+        raise RunNotAllowedError("This run is finished")
+    run.session_url = url
+    db.add(run)
+    db.commit()
+    db.refresh(run)
+    return run
 
 
 def finish_run(db: Session, run: Run, summary: str) -> Run:
