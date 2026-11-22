@@ -67,7 +67,7 @@ export function EntryIndex({ entries, query, onSearch, onEdit, onChanged }: Prop
                 <Link to={`/entry/${entry.id}`}>{entry.title}</Link>,
                 <span className="quiet">{entry.board}</span>,
                 <span className="word-list">
-                  <span className="quiet">{entry.visibility === "public" ? "everyone" : entry.visibility}</span>
+                  <span className="quiet">{entry.visibility}</span>
                   <button type="button" className="quiet" onClick={() => onEdit(entry)}>
                     edit
                   </button>
