@@ -1,4 +1,4 @@
-# Deploy: on every push to main, run the backend tests, then ship the backend
+# Deploy: on every push to main, run the backend and frontend tests, then ship the backend
 # (Fly.io) and the site (Firebase) with deploy.py, exactly as a hand deploy would.
 # Each deploy gets the next version number (v0.1.0, v0.1.1, ...): it's built into
 # the site's footer, and pushed as a git tag once the deploy succeeds. To start a
@@ -48,6 +48,9 @@ jobs:
         run: |
           npm ci --prefix frontend
           npm install -g firebase-tools
+      - name: Frontend tests
+        working-directory: frontend
+        run: npm test
       - uses: superfly/flyctl-actions/setup-flyctl@master
 
       - name: Write deploy settings and Firebase key
