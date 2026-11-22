@@ -10,12 +10,15 @@ The rules for what a run may be given:
   - its outside tools must be among those the owner granted the agent
   - it may start from an entry only if the agent can open that entry
   - its token works for RUN_HOURS (or as asked, up to RUN_HOURS_MAX)
+  - its session link may only go to a site in SESSION_LINK_SITES, and only
+    while the run is live
 
 Used by runs/routes.py and agent_server/run_tools.py. The token itself is
 made in auth/run_tokens.py; the kit's prompt and command in run_kit.py.
 """
 
 from datetime import datetime, timedelta, timezone
+from urllib.parse import urlsplit
 
 from sqlmodel import Session, select
 
@@ -36,6 +39,10 @@ SUMMARY_MAX_LENGTH = 4000
 
 class RunNotAllowedError(Exception):
     """The run asks for something its starter or its agent may not have."""
+
+
+class SessionSiteNotAllowedError(RunNotAllowedError):
+    """A session link goes to a site not in SESSION_LINK_SITES."""
 
 
 def start_run(db: Session, data: RunCreate, starter: Viewer) -> tuple[Run, str]:
@@ -123,9 +130,12 @@ def describe_run(db: Session, run: Run) -> RunOut:
 
 
 def set_run_session(db: Session, run: Run, url: str) -> Run:
-    """Note where the harness keeps this run's session. Only while the run is live."""
+    """Note where the harness keeps this run's session. Only while the run is live,
+    and only to an allowed site (SESSION_LINK_SITES)."""
     if _state(run) != "running":
         raise RunNotAllowedError(f"This run has {'finished' if run.finished_at else 'run out'}")
+    if not _is_allowed_session_site(url):
+        raise SessionSiteNotAllowedError(f"Session links may only go to: {', '.join(settings.session_link_sites)}")
     run.session_url = url
     db.add(run)
     db.commit()
@@ -151,6 +161,13 @@ def _check_starter(starter: Viewer, agent_name: str) -> None:
         raise RunNotAllowedError("Only the owner, or an agent on its own key, can start a run")
     if starter.agent_name != agent_name:
         raise RunNotAllowedError("An agent can only start runs for itself")
+
+
+def _is_allowed_session_site(url: str) -> bool:
+    if not settings.session_link_sites:
+        return True
+    host = (urlsplit(url).hostname or "").lower()
+    return any(host == site or host.endswith(f".{site}") for site in settings.session_link_sites)
 
 
 def _state(run: Run) -> str:

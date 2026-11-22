@@ -5,7 +5,7 @@ run on what it adds, can't edit or link entries on other boards, logs only
 on its own board (a line that names none lands there), and stops working
 when the run is finished or its agent paused; a run can't be given outside tools the agent wasn't granted; a run
 leaves a link to its harness's session (a web address, while it's live) that only
-the owner and the run's agent see, and the log narrows to one run's lines; an
+the owner and the run's agent see, on an allowed site, and the log narrows to one run's lines; an
 agent can start runs only for itself, and a run token can't start more.
 """
 
@@ -219,7 +219,7 @@ def test_a_run_that_ran_out_takes_no_session_link(client):
         run.expires_at = datetime.now(timezone.utc) - timedelta(minutes=1)
         db.add(run)
         db.commit()
-    late = client.post(f"/api/runs/{run_id}/session", json={"url": "https://x.test/s"}, headers=OWNER_HEADERS)
+    late = client.post(f"/api/runs/{run_id}/session", json={"url": "https://claude.ai/code/s"}, headers=OWNER_HEADERS)
     assert late.status_code == 409
 
 
@@ -231,7 +231,7 @@ def test_a_session_link_must_be_a_web_address_and_the_run_live(client):
     bad = client.post(f"/api/runs/{run_id}/session", json={"url": "javascript:alert(1)"}, headers=_bearer(kit))
     assert bad.status_code == 422
     client.post(f"/api/runs/{run_id}/finish", json={"summary": "done"}, headers=OWNER_HEADERS)
-    late = client.post(f"/api/runs/{run_id}/session", json={"url": "https://x.test/s"}, headers=OWNER_HEADERS)
+    late = client.post(f"/api/runs/{run_id}/session", json={"url": "https://claude.ai/code/s"}, headers=OWNER_HEADERS)
     assert late.status_code == 409
 
 
@@ -239,5 +239,29 @@ def test_only_the_owner_or_the_runs_agent_sets_its_session(client):
     _second_board(client)
     name, _ = _add_agent(client, tools=["web"])
     kit = _start(client, name).json()
-    response = client.post(f"/api/runs/{kit['run']['id']}/session", json={"url": "https://x.test/s"}, headers=SCOUT_HEADERS)
+    response = client.post(f"/api/runs/{kit['run']['id']}/session", json={"url": "https://claude.ai/code/s"}, headers=SCOUT_HEADERS)
     assert response.status_code == 404
+
+
+def _allow_session_sites(monkeypatch, *sites: str) -> None:
+    from dataclasses import replace
+
+    from app.features.runs import run_kit, service
+
+    for module in (service, run_kit):
+        monkeypatch.setattr(module, "settings", replace(module.settings, session_link_sites=sites))
+
+
+def test_a_session_link_goes_only_to_an_allowed_site(client, monkeypatch):
+    _allow_session_sites(monkeypatch, "claude.ai")
+    _second_board(client)
+    name, _ = _add_agent(client, tools=["web"])
+    kit = _start(client, name).json()
+    assert "(on claude.ai)" in kit["prompt"]
+    url = f"/api/runs/{kit['run']['id']}/session"
+    for elsewhere in ["https://claude.ai.example.com/s", "https://notclaude.ai/s", "https://example.com/claude.ai"]:
+        assert client.post(url, json={"url": elsewhere}, headers=_bearer(kit)).status_code == 422, elsewhere
+    assert client.post(url, json={"url": "https://code.claude.ai/s"}, headers=_bearer(kit)).status_code == 200
+
+    _allow_session_sites(monkeypatch)
+    assert client.post(url, json={"url": "https://example.com/s"}, headers=_bearer(kit)).status_code == 200

@@ -35,7 +35,8 @@ def register_run_tools(server: MCPServer) -> None:
     def set_run_session(url: str, ctx: Context) -> RunOut:
         """If your harness keeps a page for this session (e.g. a claude.ai/code session link),
         leave it here once, when you start, so the owner can watch how you work. Only the owner
-        sees it. Skip this if there's no such link."""
+        sees it, and only some sites are allowed (your run's prompt names them). Skip this if
+        there's no such link."""
         viewer = viewer_for(ctx)
         try:
             url = RunSession(url=url).url

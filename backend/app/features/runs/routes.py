@@ -8,7 +8,8 @@ Run endpoints:
                                (the owner, or the run's agent)
   POST /api/runs/{id}/session  note where the harness keeps its session (a link the
                                owner can follow to watch the agent work)
-                               (the owner, or the run's agent, while it's live)
+                               (the owner, or the run's agent, while it's live; only
+                               to a site in SESSION_LINK_SITES)
   POST /api/runs/{id}/finish   end it with a summary; its token stops working
                                (the owner, or the run's agent)
 
@@ -60,6 +61,8 @@ def get_run(run_id: str, viewer: Viewer = Depends(current_viewer), db: Session =
 def set_run_session(run_id: str, data: RunSession, viewer: Viewer = Depends(current_viewer), db: Session = Depends(get_db)):
     try:
         run = service.set_run_session(db, _visible(run_id, viewer, db), data.url)
+    except service.SessionSiteNotAllowedError as error:
+        raise HTTPException(status_code=422, detail=str(error))
     except service.RunNotAllowedError as error:
         raise HTTPException(status_code=409, detail=str(error))
     return service.describe_run(db, run)

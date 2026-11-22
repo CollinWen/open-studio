@@ -19,8 +19,9 @@ import { Ledger } from "../../components/Ledger";
 import { LedgerRow } from "../../components/LedgerRow";
 import type { Entry } from "../../types/entry";
 import type { Run } from "../../types/run";
-import { formatTimeAgo } from "../agents/formatTimeAgo";
 import { boardPath } from "../grid/boardPath";
+import { describeRunState } from "./describeRunState";
+import { linkSite } from "./linkSite";
 
 const COLUMNS = [
   { label: "run", span: 4 },
@@ -64,13 +65,13 @@ export function RunList({ runs, entries }: { runs: Run[]; entries: Entry[] }) {
               </>,
               run.agent,
               <Link to={boardPath(run.board)}>{run.board}</Link>,
-              <span className="quiet">{describeState(run)}</span>,
+              <span className="quiet">{describeRunState(run)}</span>,
               run.session_url ? (
                 <>
                   <a href={run.session_url} target="_blank" rel="noreferrer">
                     watch
                   </a>
-                  <span className="quiet ledger-note">{siteOf(run.session_url)}</span>
+                  <span className="quiet ledger-note">{linkSite(run.session_url)}</span>
                 </>
               ) : (
                 <span className="quiet">none left</span>
@@ -81,19 +82,4 @@ export function RunList({ runs, entries }: { runs: Run[]; entries: Entry[] }) {
       </Ledger>
     </LabelRow>
   );
-}
-
-function describeState(run: Run): string {
-  if (run.state === "finished" && run.finished_at) return `finished ${formatTimeAgo(run.finished_at)}`;
-  if (run.state === "expired") return `ran out ${formatTimeAgo(run.expires_at)}`;
-  return `running, started ${formatTimeAgo(run.created_at)}`;
-}
-
-/** The site a link goes to ("claude.ai"), so a misleading link shows itself. */
-function siteOf(address: string): string {
-  try {
-    return new URL(address).host;
-  } catch {
-    return address;
-  }
 }

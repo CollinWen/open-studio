@@ -51,6 +51,13 @@ class Settings:
     # How long a run's token works unless asked otherwise, and the most it may be given.
     run_hours: int = int(os.environ.get("RUN_HOURS", "4"))
     run_hours_max: int = int(os.environ.get("RUN_HOURS_MAX", "24"))
+    # Sites a run's session link may go to (the harness's own page for the session), comma
+    # separated. A site also covers its subdomains. Empty: any web address.
+    session_link_sites: tuple[str, ...] = tuple(
+        site.strip().lower()
+        for site in os.environ.get("SESSION_LINK_SITES", "claude.ai").split(",")
+        if site.strip()
+    )
     # This API's public address, put in each run's kit so the agent knows where to connect
     # (e.g. https://api.yourdomain.com). Empty: the address the request came in on.
     public_api_url: str = os.environ.get("PUBLIC_API_URL", "")
