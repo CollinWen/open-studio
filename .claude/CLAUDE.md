@@ -51,7 +51,7 @@ React frontend, Python backend, one repo.
 ```
 open-studio/
 ├── .claude/                  Agent guidelines (this file) + local run config
-├── .github/workflows/        deploy.yml: runs the backend and frontend tests and deploy.py on every push to main; ios-build.yml: builds the iOS app when ios/ changes
+├── .github/workflows/        deploy.yml: runs the tests and deploy.py on every push to main; ios-build.yml: builds the iOS app when ios/ changes
 ├── open-studio-brief.md      Product brief: what we're building and why
 ├── README.md                 How to run it; map of the top-level folders
 ├── deploy.py                 Ships backend (Fly.io) and frontend (Firebase) using deploy.toml
@@ -86,7 +86,6 @@ open-studio/
 ├── frontend/                 React + TypeScript (Vite dev server)
 │   ├── README.md
 │   ├── public/               Files served as they are: favicon.svg (the studio mark)
-│   ├── tests/                Mirrors src/ folder-for-folder (vitest): the plain logic, no browser
 │   └── src/
 │       ├── main.tsx          Mounts the app
 │       ├── App.tsx           Route table: which URL shows which page
@@ -286,5 +285,5 @@ If a new concept needs a name, add it here.
 4. **Ask before structural changes** (new top-level folders, new feature folders, new dependencies, changes to the data model in the brief).
 5. **Follow the brief's build phases.** Don't build phase 4 features while working on phase 1 unless asked.
 6. **New fields need a migration.** Adding or renaming a field in a `models.py` also needs a step at the end of `backend/app/database_migrations.py`, or the live database won't have it.
-7. **Tests mirror the code.** Tests for `backend/app/features/tags/tag_suggester.py` live in `backend/tests/features/tags/test_tag_suggester.py`. Test file names say what they test. Tests never call OpenRouter. Frontend tests do the same under `frontend/tests/` (`src/features/grid/monthRange.ts` → `tests/features/grid/monthRange.test.ts`), run with `npm test`; keep logic worth testing in its own plain `.ts` file, not inside a component.
+7. **Tests mirror the code.** Tests for `backend/app/features/tags/tag_suggester.py` live in `backend/tests/features/tags/test_tag_suggester.py`. Test file names say what they test. Tests never call OpenRouter.
 8. **Keep it minimal.** Before adding a feature, page, setting or style, ask whether the site works without it. If it does, leave it out or ask first.
