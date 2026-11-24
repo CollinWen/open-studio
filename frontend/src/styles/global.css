@@ -39,7 +39,8 @@
  * be picked, icons, search), page (the page grid, header, footer, graph
  * paper, section line, control band), board (browsing a board), sketches
  * (/sketch), entry-page, studio (the owner's form and lists), ledger,
- * agents (the log), entry-sheet (the form's window), motion (arriving,
+ * agents (the log), paper-window (the window the entry, agent
+ * and token forms open in), motion (arriving,
  * waiting, reduced motion; last, so its reduced-motion rules win).
  */
 
@@ -53,5 +54,5 @@
 @import "./studio.css";
 @import "./ledger.css";
 @import "./agents.css";
-@import "./entry-sheet.css";
+@import "./paper-window.css";
 @import "./motion.css";

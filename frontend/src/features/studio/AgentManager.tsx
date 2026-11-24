@@ -1,32 +1,39 @@
 /**
- * AgentManager: the studio's "agents". The control band adds one (a name,
- * what it's for, a plus); its token is then shown once in the band, with
- * the line that connects a Claude session, and never again. Below, a Ledger
- * of every agent: the boards it may add to (an oval per board, filled when
- * it's on), the outside tools its runs may be given (web, code, github; an
- * oval each, filled when granted), when it was last seen, and pause / resume, a new token (the old
- * one stops working) and remove.
+ * AgentManager: the studio's "agents". The control band holds "add agent"
+ * and "agents.yaml" (every agent's setup as one file to download, no tokens).
+ * Below, a Ledger of every agent: what it's for, the boards it may add to,
+ * its outside tools and skills, when it was last seen, and "edit", "issue
+ * token", its runs, pause / resume and remove.
+ *
+ * Adding or changing an agent opens AgentForm in a window (?add-agent,
+ * ?agent=<name>); "issue token" opens TokenForm (?issue=<name>), and once a
+ * token is issued the same window shows it once (TokenNotice). Closing that
+ * window forgets the token. Agents have no token of their own: every token
+ * is a run, listed under runs.
  *
  * Used by StudioPage, which loads the agents and boards. What agents are
  * doing is public at /agents.
  */
 
 import { useState } from "react";
-import { addAgent, removeAgent, renewAgentToken, updateAgent } from "../../api/agentsApi";
-import { setBoardAgents } from "../../api/boardsApi";
+import { Link } from "react-router-dom";
+import { fetchAgentsYaml, removeAgent, updateAgent } from "../../api/agentsApi";
 import { ControlBand } from "../../components/ControlBand";
 import { Icon } from "../../components/Icon";
 import { LabelRow } from "../../components/LabelRow";
 import { Ledger } from "../../components/Ledger";
 import { LedgerRow } from "../../components/LedgerRow";
+import { PaperWindow } from "../../components/PaperWindow";
 import { WordChoice } from "../../components/WordChoice";
-import { OUTSIDE_TOOLS, type Agent, type AgentWithToken, type OutsideTool } from "../../types/agent";
+import type { Agent } from "../../types/agent";
 import type { Board } from "../../types/entry";
+import type { RunKit } from "../../types/run";
 import { formatTimeAgo } from "../agents/formatTimeAgo";
-import { HOME_BOARD } from "../grid/boardPath";
-
-// Where agents connect: the backend's own address (in development, the backend on port 8000).
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+import { AgentForm } from "./AgentForm";
+import { downloadText } from "./downloadText";
+import { TokenForm } from "./TokenForm";
+import { TokenNotice } from "./TokenNotice";
+import { useAgentWindowParam } from "./useAgentWindowParam";
 
 interface Props {
   agents: Agent[];
@@ -37,16 +44,17 @@ interface Props {
 const COLUMNS = [
   { label: "agent", span: 3 },
   { label: "boards it may add to", span: 3 },
-  { label: "outside tools", span: 2 },
+  { label: "tools · skills", span: 2 },
   { label: "last seen", span: 2 },
   { label: "manage", span: 2 },
 ];
 
 export function AgentManager({ agents, boards, onChanged }: Props) {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [shownToken, setShownToken] = useState<AgentWithToken | null>(null);
+  const windows = useAgentWindowParam();
+  const [issued, setIssued] = useState<RunKit | null>(null);
   const [message, setMessage] = useState("");
+  const editing = agents.find((agent) => agent.name === windows.editingAgent) ?? null;
+  const issuingTo = agents.find((agent) => agent.name === windows.issuingFor) ?? null;
 
   /** Run an owner action, then show what went wrong (if anything) and reload. */
   const act = (action: () => Promise<unknown>) =>
@@ -55,57 +63,31 @@ export function AgentManager({ agents, boards, onChanged }: Props) {
       .catch((error) => setMessage(error instanceof Error ? error.message : String(error)))
       .finally(onChanged);
 
-  const toggleBoard = (agent: Agent, board: Board) => {
-    const on = board.agents.includes(agent.name);
-    const next = on ? board.agents.filter((one) => one !== agent.name) : [...board.agents, agent.name];
-    act(() => setBoardAgents(board.slug, next));
+  const saved = () => {
+    windows.closeAgentWindows();
+    onChanged();
   };
-
-  const toggleTool = (agent: Agent, tool: OutsideTool) => {
-    const next = agent.tools.includes(tool) ? agent.tools.filter((one) => one !== tool) : [...agent.tools, tool];
-    act(() => updateAgent(agent.name, { tools: next }));
-  };
-
-  const otherBoards = boards.filter((board) => board.slug !== HOME_BOARD);
 
   return (
     <>
       <ControlBand
-        label="Add"
+        label="Agents"
         controls={
-          <form
-            className="browse-controls"
-            onSubmit={(event) => {
-              event.preventDefault();
-              act(() =>
-                addAgent({ name: name.trim().toLowerCase(), description: description.trim(), boards: [] }).then(
-                  setShownToken,
-                ),
-              );
-              setName("");
-              setDescription("");
-            }}
-          >
-            <input placeholder="name" value={name} onChange={(event) => setName(event.target.value)} />
-            <input
-              className="is-long"
-              placeholder="what it's for"
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
-            />
-            <button type="submit" className="icon-button" aria-label="add agent" disabled={!name.trim()}>
-              <Icon name="plus" />
+          <div className="browse-controls">
+            <button type="button" className="square quiet" onClick={windows.openNewAgent}>
+              <Icon name="plus" /> add agent
+            </button>
+            <button
+              type="button"
+              className="square quiet"
+              onClick={() => act(() => fetchAgentsYaml().then((text) => downloadText("agents.yaml", text)))}
+            >
+              agents.yaml
             </button>
             {message && <span>{message}</span>}
-          </form>
+          </div>
         }
-      >
-        {shownToken && (
-          <LabelRow label="Token">
-            <TokenNotice shown={shownToken} onDone={() => setShownToken(null)} />
-          </LabelRow>
-        )}
-      </ControlBand>
+      />
       <LabelRow wide>
         <Ledger columns={COLUMNS}>
           {agents.map((agent) => (
@@ -117,30 +99,22 @@ export function AgentManager({ agents, boards, onChanged }: Props) {
                   {agent.name}
                   {agent.description && <span className="quiet ledger-note">{agent.description}</span>}
                 </>,
-                <span className="word-list is-ovals">
-                  {otherBoards.map((board) => (
-                    <WordChoice
-                      key={board.slug}
-                      label={board.slug}
-                      look="oval"
-                      active={board.agents.includes(agent.name)}
-                      onPick={() => toggleBoard(agent, board)}
-                    />
-                  ))}
-                </span>,
-                <span className="word-list is-ovals">
-                  {OUTSIDE_TOOLS.map((tool) => (
-                    <WordChoice
-                      key={tool}
-                      label={tool}
-                      look="oval"
-                      active={agent.tools.includes(tool)}
-                      onPick={() => toggleTool(agent, tool)}
-                    />
-                  ))}
+                <span className="quiet">{agent.boards.join(", ") || "none yet"}</span>,
+                <span className="quiet">
+                  {agent.tools.join(", ") || "no outside tools"}
+                  {agent.skills.length > 0 && <span className="ledger-note">{agent.skills.join(", ")}</span>}
                 </span>,
                 <span className="quiet">{agent.last_seen_at ? formatTimeAgo(agent.last_seen_at) : "never seen"}</span>,
                 <span className="word-list">
+                  <button type="button" className="quiet" onClick={() => windows.openAgentEdit(agent.name)}>
+                    edit
+                  </button>
+                  <button type="button" onClick={() => windows.openTokenIssue(agent.name)} disabled={!agent.active}>
+                    issue token
+                  </button>
+                  <Link className="quiet" to={`/studio/runs?agent=${encodeURIComponent(agent.name)}`}>
+                    runs
+                  </Link>
                   <WordChoice
                     label={agent.active ? "pause" : "resume"}
                     active={!agent.active}
@@ -149,15 +123,9 @@ export function AgentManager({ agents, boards, onChanged }: Props) {
                   <button
                     type="button"
                     className="quiet"
-                    onClick={() => act(() => renewAgentToken(agent.name).then(setShownToken))}
-                  >
-                    new token
-                  </button>
-                  <button
-                    type="button"
-                    className="quiet"
                     onClick={() =>
-                      window.confirm(`Remove ${agent.name}? What it added stays.`) && act(() => removeAgent(agent.name))
+                      window.confirm(`Remove ${agent.name}? Its tokens stop working; what it added stays.`) &&
+                      act(() => removeAgent(agent.name))
                     }
                   >
                     remove
@@ -168,19 +136,45 @@ export function AgentManager({ agents, boards, onChanged }: Props) {
           ))}
         </Ledger>
       </LabelRow>
-    </>
-  );
-}
 
-function TokenNotice({ shown, onDone }: { shown: AgentWithToken; onDone: () => void }) {
-  const command = `claude mcp add --transport http open-studio ${API_URL}/mcp --header "Authorization: Bearer ${shown.token}"`;
-  return (
-    <div className="agent-token-notice">
-      <p>{shown.agent.name}'s token, shown only this once. Connect a Claude session with:</p>
-      <pre>{command}</pre>
-      <button type="button" onClick={onDone}>
-        done
-      </button>
-    </div>
+      <PaperWindow
+        open={windows.isAddingAgent || editing !== null}
+        title={editing ? `Change ${editing.name}` : "Add an agent"}
+        onClose={windows.closeAgentWindows}
+      >
+        {(windows.isAddingAgent || editing) && (
+          <AgentForm
+            key={editing?.name ?? "new"}
+            agent={editing}
+            boards={boards}
+            onSaved={saved}
+            onCancel={windows.closeAgentWindows}
+          />
+        )}
+      </PaperWindow>
+
+      <PaperWindow
+        open={issuingTo !== null}
+        title={issued ? "Token, shown once" : `Issue ${issuingTo?.name ?? ""} a token`}
+        onClose={windows.closeAgentWindows}
+        onClosed={() => setIssued(null)}
+      >
+        {issued ? (
+          <TokenNotice kit={issued} onDone={windows.closeAgentWindows} />
+        ) : (
+          issuingTo && (
+            <TokenForm
+              key={issuingTo.name}
+              agent={issuingTo}
+              onIssued={(kit) => {
+                setIssued(kit);
+                onChanged();
+              }}
+              onCancel={windows.closeAgentWindows}
+            />
+          )
+        )}
+      </PaperWindow>
+    </>
   );
 }

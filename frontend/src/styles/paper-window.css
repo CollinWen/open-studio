@@ -1,17 +1,15 @@
 /*
- * Entry sheet: the one overlay, the window of paper the entry form opens in
- * over any page (features/studio/EntryFormModal.tsx), and the page fading
- * back behind it.
+ * Paper window: the one kind of overlay, a window of paper over any page
+ * (components/PaperWindow.tsx), and the page fading back behind it. The
+ * entry form opens in one, and so do the studio's agent and token windows.
  *
- * Part of global.css. The form's own lines are studio.css.
+ * Part of global.css. The forms' own lines are studio.css.
  */
-
-/* ---- Entry sheet: the add / edit form over the page (features/studio/EntryFormModal.tsx) ---- */
 
 /* A window of paper in the middle of the screen, edged by a thin rule (no
    shadow), that you can resize from its bottom-right corner. The page
    behind fades back toward paper. A thin × closes it from the top corner. */
-.entry-sheet {
+.paper-window {
   position: fixed;
   inset: 0;
   width: min(var(--sheet-width), calc(100vw - 2 * var(--margin)));
@@ -32,14 +30,14 @@
   animation: sheet-drop var(--motion-standard) var(--ease-enter) both;
 }
 
-.entry-sheet-top {
+.paper-window-top {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
   margin-bottom: var(--line);
 }
 
-.entry-sheet-title {
+.paper-window-title {
   margin: 0;
   font-size: var(--size-small);
   line-height: var(--leading-small);
@@ -47,7 +45,7 @@
 }
 
 /* The × sits in the corner, a little larger than other icons. */
-.entry-sheet-close {
+.paper-window-close {
   position: absolute;
   top: calc(var(--line) / 2);
   right: calc(var(--line) / 2);
@@ -55,33 +53,33 @@
   font-size: var(--size-large);
 }
 
-.entry-sheet-close:hover {
+.paper-window-close:hover {
   background: var(--ink-faint);
 }
 
-.entry-sheet::backdrop {
+.paper-window::backdrop {
   background: var(--paper);
   opacity: 0.82;
   animation: backdrop-fade var(--motion-quick) var(--ease-enter) both;
 }
 
-.entry-sheet.is-closing {
+.paper-window.is-closing {
   animation: sheet-lift var(--motion-exit) var(--ease-exit) both;
 }
 
-.entry-sheet.is-closing::backdrop {
+.paper-window.is-closing::backdrop {
   animation: backdrop-fade var(--motion-exit) var(--ease-exit) reverse both;
 }
 
-/* The form's lines follow the window up, in reading order. */
-.entry-sheet .entry-form > * {
+/* A form's lines follow the window up, in reading order. */
+.paper-window form > * {
   animation: arrive var(--motion-standard) var(--ease-enter) both;
 }
 
-.entry-sheet .entry-form > :nth-child(1) { animation-delay: calc(2 * var(--stagger)); }
-.entry-sheet .entry-form > :nth-child(2) { animation-delay: calc(3 * var(--stagger)); }
-.entry-sheet .entry-form > :nth-child(3) { animation-delay: calc(4 * var(--stagger)); }
-.entry-sheet .entry-form > :nth-child(n + 4) { animation-delay: calc(5 * var(--stagger)); }
+.paper-window form > :nth-child(1) { animation-delay: calc(2 * var(--stagger)); }
+.paper-window form > :nth-child(2) { animation-delay: calc(3 * var(--stagger)); }
+.paper-window form > :nth-child(3) { animation-delay: calc(4 * var(--stagger)); }
+.paper-window form > :nth-child(n + 4) { animation-delay: calc(5 * var(--stagger)); }
 
 @keyframes sheet-drop {
   from {

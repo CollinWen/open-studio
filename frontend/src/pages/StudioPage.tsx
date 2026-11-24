@@ -9,8 +9,9 @@
  *   tags     ( /studio/tags )    describe and rank each tag
  *   agents   ( /studio/agents )  add, pause, re-key, remove; which boards
  *                                and outside tools each may use
- *   runs     ( /studio/runs )    every run: its task, agent, board, state,
- *                                and a link to watch its harness's session
+ *   runs     ( /studio/runs )    every token issued (each is a run): its task,
+ *                                agent, boards, state, and a link to watch its
+ *                                harness's session; ?agent= narrows to one agent
  *
  * This page loads all five lists (for the counts) and reloads them after
  * any change; the large studio mark holds the section until its own list
@@ -51,6 +52,7 @@ export function StudioPage() {
   const section: Section = asked && SECTIONS.includes(asked) ? asked : "entries";
   const [params, setParams] = useSearchParams();
   const query = params.get("q") ?? "";
+  const runAgent = params.get("agent") ?? "";
   const [signedIn, setSignedIn] = useState(isOwnerSignedIn());
   // null until loaded, so a section's count only shows once it's known.
   const [entries, setEntries] = useState<Entry[] | null>(null);
@@ -129,7 +131,13 @@ export function StudioPage() {
             {section === "agents" && agents && boards && (
               <AgentManager agents={agents} boards={boards} onChanged={reload} />
             )}
-            {section === "runs" && runs && entries && <RunList runs={runs} entries={entries} />}
+            {section === "runs" && runs && entries && (
+              <RunList
+                runs={runAgent ? runs.filter((run) => run.agent === runAgent) : runs}
+                entries={entries}
+                agent={runAgent || undefined}
+              />
+            )}
           </>
         )}
       </main>
