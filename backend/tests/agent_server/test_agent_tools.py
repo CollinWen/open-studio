@@ -36,6 +36,9 @@ def test_tools_are_listed(running_client):
         "write_to_log",
         "set_status",
         "read_log",
+        "get_my_run",
+        "set_run_session",
+        "finish_run",
     } <= names
 
 
@@ -122,6 +125,11 @@ def test_an_agent_on_a_run_reads_its_task_and_finishes_it(running_client):
     task = _tool(running_client, "get_my_run", {}, run_headers)["structuredContent"]
     assert task["brief"] == "find prior work"
     assert task["scopes"] == [f"board:{AGENT_BOARD}", "web"]
+
+    link = "https://claude.ai/code/session_abc"
+    noted = _tool(running_client, "set_run_session", {"url": link}, run_headers)["structuredContent"]
+    assert noted["session_url"] == link
+    assert _tool(running_client, "set_run_session", {"url": "file:///etc"}, run_headers)["isError"]
 
     finished = _tool(running_client, "finish_run", {"summary": "three avenues"}, run_headers)
     assert finished["structuredContent"]["state"] == "finished"

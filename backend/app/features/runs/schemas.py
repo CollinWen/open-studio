@@ -1,6 +1,6 @@
 """
 Run API shapes: what's sent to start a run, what anyone allowed gets back
-about one, and the kit: everything any harness needs to set an agent to work,
+about one, the link to the harness's session an agent leaves on its run, and the kit: everything any harness needs to set an agent to work,
 plus optional ready-made setups for particular harnesses.
 A run token only goes over the wire once, in the kit.
 """
@@ -8,10 +8,11 @@ A run token only goes over the wire once, in the kit.
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 RunKindName = Literal["study", "references", "prototype"]
 OutsideToolName = Literal["web", "code", "github"]
+SESSION_URL_MAX_LENGTH = 500
 
 
 class RunCreate(BaseModel):
@@ -30,6 +31,20 @@ class RunFinish(BaseModel):
     summary: str = ""
 
 
+class RunSession(BaseModel):
+    """Where the harness keeps its own record of the run, e.g. a claude.ai/code session."""
+
+    url: str = Field(max_length=SESSION_URL_MAX_LENGTH)
+
+    @field_validator("url")
+    @classmethod
+    def _web_address(cls, value: str) -> str:
+        value = value.strip()
+        if not value.startswith(("https://", "http://")):
+            raise ValueError("A session link must start with https:// or http://")
+        return value
+
+
 class RunOut(BaseModel):
     id: str
     agent: str
@@ -42,6 +57,8 @@ class RunOut(BaseModel):
     created_at: datetime
     expires_at: datetime
     finished_at: datetime | None
+    # Where to watch the agent work, in its harness; empty until the agent sets it.
+    session_url: str
     summary: str
     state: Literal["running", "finished", "expired"]
     # What it may do, as written in its token.

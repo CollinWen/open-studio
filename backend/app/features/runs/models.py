@@ -4,7 +4,9 @@ start a project), what it may do, and how it ended.
 
 The run's token is never stored; it is signed (auth/run_tokens.py) and
 carries the same scopes as `tools` and `board` here. This row is the record:
-who started it, the brief, and the summary the agent leaves when it finishes.
+who started it, the brief, where to watch the agent work (its harness's own
+session link, set by the agent; owner-only), and the summary it leaves when
+it finishes.
 Entries and agent log lines made during a run carry its id (run_id).
 """
 
@@ -43,5 +45,8 @@ class Run(SQLModel, table=True):
     expires_at: datetime
     # Set when the agent (or the owner) finishes it; its token stops working then.
     finished_at: datetime | None = None
+    # A link to the harness's own record of this run (e.g. a claude.ai/code session),
+    # so the owner can watch how the agent works. Set by the agent; may stay empty.
+    session_url: str = ""
     # What the agent says it did, left when it finishes.
     summary: str = ""

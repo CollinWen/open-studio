@@ -6,10 +6,15 @@ Run endpoints:
   GET  /api/runs?agent=        runs, newest first (owner only)
   GET  /api/runs/{id}          one run: its brief, state, scopes, what it added
                                (the owner, or the run's agent)
+  POST /api/runs/{id}/session  note where the harness keeps its session (a link the
+                               owner can follow to watch the agent work)
+                               (the owner, or the run's agent, while it's live; only
+                               to a site in SESSION_LINK_SITES)
   POST /api/runs/{id}/finish   end it with a summary; its token stops working
                                (the owner, or the run's agent)
 
-Agents on a run read and finish it with the get_my_run and finish_run tools
+Agents on a run read it, leave their session link and finish it with the
+get_my_run, set_run_session and finish_run tools
 (agent_server/run_tools.py).
 """
 
@@ -21,7 +26,7 @@ from app.auth.viewer import Viewer, current_viewer
 from app.database import get_db
 from app.features.runs import service
 from app.features.runs.models import Run
-from app.features.runs.schemas import RunCreate, RunFinish, RunKit, RunOut
+from app.features.runs.schemas import RunCreate, RunFinish, RunKit, RunOut, RunSession
 
 router = APIRouter(prefix="/runs", tags=["runs"])
 
@@ -50,6 +55,17 @@ def list_runs(agent: str | None = None, db: Session = Depends(get_db)):
 @router.get("/{run_id}", response_model=RunOut)
 def get_run(run_id: str, viewer: Viewer = Depends(current_viewer), db: Session = Depends(get_db)):
     return service.describe_run(db, _visible(run_id, viewer, db))
+
+
+@router.post("/{run_id}/session", response_model=RunOut)
+def set_run_session(run_id: str, data: RunSession, viewer: Viewer = Depends(current_viewer), db: Session = Depends(get_db)):
+    try:
+        run = service.set_run_session(db, _visible(run_id, viewer, db), data.url)
+    except service.SessionSiteNotAllowedError as error:
+        raise HTTPException(status_code=422, detail=str(error))
+    except service.RunNotAllowedError as error:
+        raise HTTPException(status_code=409, detail=str(error))
+    return service.describe_run(db, run)
 
 
 @router.post("/{run_id}/finish", response_model=RunOut)
