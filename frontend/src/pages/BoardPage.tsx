@@ -14,7 +14,8 @@
  *
  * Entries load a page at a time (useEntryPages): the first page fades in
  * whole and the rest rise in behind it. Only a few screens of them are
- * drawn at first, more as the visitor scrolls (useShownCount). Switching
+ * drawn at first, more as the visitor scrolls (useShownCount); going Back
+ * to a board returns to the same place on it (useBoardPlace). Switching
  * boards fades the one on screen out until the next board's first page is
  * in, then fades that in, so nothing empties and refills. Until a board's
  * first page is in (or a search's results), the large studio mark sweeps
@@ -41,6 +42,7 @@ import { EntryRows } from "../features/grid/EntryRows";
 import { sortEntries } from "../features/grid/sortEntries";
 import { useBrowseParams } from "../features/grid/useBrowseParams";
 import { useEntryPages } from "../features/grid/useEntryPages";
+import { useBoardPlace, useSavedBoardPlace } from "../features/grid/useBoardPlace";
 import { useShownCount } from "../features/grid/useShownCount";
 import { useOnEntrySaved } from "../features/studio/entrySavedEvent";
 import { NotFoundPage } from "./NotFoundPage";
@@ -85,8 +87,10 @@ export function BoardPage() {
   // Kept stable between renders so the views don't redo work on every hover.
   const shown = useMemo(() => entries && sortEntries(entries, sort), [entries, sort]);
   const highlight = useMemo(() => ({ tag, range }), [tag, range]);
-  const { shownCount, markerRef } = useShownCount(shown?.length ?? 0, `${board} ${query} ${sort}`);
+  const savedPlace = useSavedBoardPlace();
+  const { shownCount, markerRef } = useShownCount(shown?.length ?? 0, `${board} ${query} ${sort}`, savedPlace?.count);
   const drawn = useMemo(() => shown?.slice(0, shownCount), [shown, shownCount]);
+  useBoardPlace(savedPlace, shownCount, drawn?.length ?? 0);
 
   if (boards && !current) return <NotFoundPage />;
 
