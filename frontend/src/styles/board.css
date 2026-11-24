@@ -9,7 +9,7 @@
 
 /* The time slider: month bars on a hairline, two handles laid over them. */
 .time-filter {
-  max-width: 640px;
+  max-width: var(--time-filter-width);
   font-size: var(--size-small);
   line-height: var(--leading-small);
 }

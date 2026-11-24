@@ -165,7 +165,7 @@
 
 /* The entry page's Related: a ruled list of titles, kind on the right. */
 .related-list {
-  max-width: 720px;
+  max-width: var(--related-width);
 }
 
 .related-line {
