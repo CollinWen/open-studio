@@ -44,7 +44,7 @@ def describe_agent(db: Session, agent: Agent) -> AgentOut:
 def create_agent(db: Session, data: AgentCreate) -> Agent:
     if db.get(Agent, data.name) is not None:
         raise AgentExistsError(f"Agent {data.name} already exists")
-    agent = Agent(name=data.name, description=data.description, tools=data.tools)
+    agent = Agent(name=data.name, description=data.description, tools=data.tools, skills=data.skills)
     db.add(agent)
     db.commit()
     _sign_on_to_boards(db, agent.name, data.boards)

@@ -94,7 +94,8 @@ def make_kit(db: Session, run: Run, token: str, api_url: str) -> RunKit:
     agent_viewer = Viewer(role="agent", agent_name=run.agent)
     start = entries_service.get_entry(db, run.entry_id, agent_viewer) if run.entry_id else None
     api_url = settings.public_api_url or api_url
-    return build_kit(describe_run(db, run), run, token, api_url, start)
+    agent = agents_service.get_agent(db, run.agent)
+    return build_kit(describe_run(db, run), run, token, api_url, start, agent.skills if agent else [])
 
 
 def scopes_of(run: Run) -> list[str]:

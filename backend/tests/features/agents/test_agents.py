@@ -67,3 +67,31 @@ def test_removing_an_agent_takes_it_off_its_boards(client):
     assert client.get(f"/api/agents/{name}").status_code == 404
     assert name not in client.get(f"/api/boards/{AGENT_BOARD}").json()["agents"]
     assert client.post("/api/entries", json=_entry(), headers=headers).status_code == 401
+
+
+def test_an_agents_skills_are_kept_and_named_in_its_runs(client):
+    name = f"a-{uuid.uuid4().hex[:8]}"
+    body = {"name": name, "boards": [AGENT_BOARD], "skills": ["gathering-sources", "exa-search"]}
+    assert client.post("/api/agents", json=body, headers=OWNER_HEADERS).json()["skills"] == body["skills"]
+    assert client.post("/api/agents", json={"name": "x-bad", "skills": ["Not A Name"]}, headers=OWNER_HEADERS).status_code == 422
+    kit = client.post("/api/runs", json={"agent": name, "boards": ["*"]}, headers=OWNER_HEADERS).json()
+    assert "open-studio, studio-collaborator, gathering-sources, exa-search" in kit["prompt"]
+
+
+def test_the_owner_exports_every_agent_as_yaml_without_tokens(client):
+    name, _ = _add_agent(client)
+    client.patch(f"/api/agents/{name}", json={"description": 'says "hi"', "skills": ["building"]}, headers=OWNER_HEADERS)
+    assert client.get("/api/agents/export").status_code == 401
+    response = client.get("/api/agents/export", headers=OWNER_HEADERS)
+    assert response.status_code == 200
+    assert "agents.yaml" in response.headers["content-disposition"]
+    text = response.text
+    assert "version: 1" in text and "run." not in text
+    block = text[text.index(f"  - name: {name}"):]
+    assert block.splitlines()[1:6] == [
+        '    description: "says \\"hi\\""',
+        "    active: true",
+        f'    boards: ["{AGENT_BOARD}"]',
+        "    tools: []",
+        '    skills: ["building"]',
+    ]

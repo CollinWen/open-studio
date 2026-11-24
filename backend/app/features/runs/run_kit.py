@@ -1,7 +1,8 @@
 """
 Run kit: everything a harness needs to set an agent to work on a run, in one
 reply. The token, the studio's MCP and API addresses (how to connect) and the
-prompt (the task kind's instructions, the owner's brief, the run's limits)
+prompt (the task kind's instructions, the owner's brief, the run's limits,
+the skills to load: the kind's and the agent's own)
 work with any harness: an MCP client, a box that calls an LLM with these
 tools, or plain HTTP. Ready-made setups for particular harnesses ride along
 in `setups`; each comes from its own file (claude_code_setup.py).
@@ -16,10 +17,12 @@ from app.features.runs.schemas import ALL_BOARDS, RunKit, RunOut
 from app.features.runs.task_kinds import OUTSIDE_TOOLS, SOURCE_TESTS, TASK_KINDS
 
 
-def build_kit(run_out: RunOut, run: Run, token: str, api_url: str, start: Entry | None) -> RunKit:
+def build_kit(
+    run_out: RunOut, run: Run, token: str, api_url: str, start: Entry | None, agent_skills: list[str]
+) -> RunKit:
     api_url = api_url.rstrip("/")
     mcp_url = f"{api_url}/mcp"
-    prompt = _prompt(run, start, api_url)
+    prompt = _prompt(run, start, api_url, agent_skills)
     return RunKit(
         run=run_out,
         token=token,
@@ -30,7 +33,7 @@ def build_kit(run_out: RunOut, run: Run, token: str, api_url: str, start: Entry 
     )
 
 
-def _prompt(run: Run, start: Entry | None, api_url: str) -> str:
+def _prompt(run: Run, start: Entry | None, api_url: str, agent_skills: list[str]) -> str:
     kind = TASK_KINDS[run.kind]
     starting_point = (
         f'Starting entry: "{start.title}" (id {start.id}){f", {start.source_url}" if start.source_url else ""}. '
@@ -49,7 +52,7 @@ def _prompt(run: Run, start: Entry | None, api_url: str) -> str:
         first_read = f"Start with {first_read}, then read_log for each."
         reach = f"{boards} only"
     session_sites = f" (on {', '.join(settings.session_link_sites)})" if settings.session_link_sites else ""
-    skills = ", ".join(["open-studio", "studio-collaborator", *kind.skills])
+    skills = ", ".join(dict.fromkeys(["open-studio", "studio-collaborator", *kind.skills, *agent_skills]))
     return f"""\
 You are {run.agent}, an agent working for an Open Studio (one person's collection of their
 work and interests, split into boards), on run {run.id}: {kind.title.lower()}.

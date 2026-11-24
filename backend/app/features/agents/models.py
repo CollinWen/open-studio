@@ -29,6 +29,10 @@ class Agent(SQLModel, table=True):
     # The owner grants these; a run gets at most these.
     tools: list[str] = Field(default_factory=list, sa_column=Column(JSON))
 
+    # The skills it works with, by name (folders in the agent resources, e.g.
+    # "gathering-sources"); every run's prompt tells it to load them.
+    skills: list[str] = Field(default_factory=list, sa_column=Column(JSON))
+
     # A paused agent can still read, like any visitor, but can't add or log anything.
     active: bool = True
 

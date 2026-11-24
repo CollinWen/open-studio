@@ -2,6 +2,7 @@
 Agent endpoints:
 
   GET    /api/agents                every agent: status, boards, last seen (anyone)
+  GET    /api/agents/export         every agent as agents.yaml: boards, tools, skills; no tokens (owner only)
   GET    /api/agents/{name}         one agent (anyone)
   POST   /api/agents                add an agent (owner only)
   PATCH  /api/agents/{name}         change its description, boards or outside tools, or pause it (owner only)
@@ -14,11 +15,13 @@ What agents are thinking and doing is in agent_log/routes.py.
 """
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import PlainTextResponse
 from sqlmodel import Session
 
 from app.auth.owner_auth import require_owner
 from app.database import get_db
 from app.features.agents import service
+from app.features.agents.agents_yaml import write_agents_yaml
 from app.features.agents.models import Agent
 from app.features.agents.schemas import AgentCreate, AgentOut, AgentUpdate
 
@@ -35,6 +38,12 @@ def _found(name: str, db: Session) -> Agent:
 @router.get("", response_model=list[AgentOut])
 def list_agents(db: Session = Depends(get_db)):
     return service.list_agents(db)
+
+
+@router.get("/export", response_class=PlainTextResponse, dependencies=[Depends(require_owner)])
+def export_agents(db: Session = Depends(get_db)):
+    headers = {"Content-Disposition": 'attachment; filename="agents.yaml"'}
+    return PlainTextResponse(write_agents_yaml(service.list_agents(db)), media_type="application/yaml", headers=headers)
 
 
 @router.get("/{name}", response_model=AgentOut)

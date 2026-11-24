@@ -34,6 +34,7 @@ MIGRATIONS: list[str] = [
     "ALTER TABLE run DROP COLUMN board",
     "DROP INDEX IF EXISTS ix_agent_token_hash",
     "ALTER TABLE agent DROP COLUMN token_hash",
+    "ALTER TABLE agent ADD COLUMN skills JSON NOT NULL DEFAULT '[]'",
 ]
 
 
