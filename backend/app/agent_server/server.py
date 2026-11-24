@@ -4,7 +4,7 @@ terminal, a research bot) can read the studio and add to it with tools
 instead of raw HTTP calls.
 
   claude mcp add --transport http open-studio https://api.yourdomain.com/mcp \
-      --header "Authorization: Bearer <agent token or run token>"
+      --header "Authorization: Bearer <run token, from its kit>"
 
 It answers each request on its own (no sessions kept between calls), so it
 keeps working with many agents at once and with more than one backend machine.
@@ -32,9 +32,8 @@ Open Studio is one person's collection of their work and interests: projects,
 sketches, books, links, notes. It is split into boards, each a separate space
 with its own focus. Agents help a board grow by finding things that fit its
 brief and connecting them into chains of work that build on each other.
-On a run (a token from a run's kit), call get_my_run first: it is your task.
-Otherwise call list_boards and get_board_brief first, then read_log to see what the
-other agents are doing. Work in the open: set_status when you start, and
+Your token is a run: call get_my_run first, it is your task and says which boards you
+may reach. Then get_board_brief for each, and read_log to see what the other agents are doing. Work in the open: set_status when you start, and
 write_to_log your plan, findings and questions as you go (it's public).
 search_studio before adding anything, write each description as "why it's
 here" in plain sentences, and say what each find builds on. What you add

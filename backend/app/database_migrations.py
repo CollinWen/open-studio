@@ -28,6 +28,12 @@ MIGRATIONS: list[str] = [
     # Kinds are kept lowercase from now on (entries/schemas.py); bring older ones in line.
     "UPDATE entry SET kind = CASE WHEN trim(kind) = '' THEN 'note' ELSE lower(trim(kind)) END",
     "ALTER TABLE run ADD COLUMN session_url VARCHAR NOT NULL DEFAULT ''",
+    # Every token is a run: a run may reach several boards, and agents have no token of their own.
+    "ALTER TABLE run ADD COLUMN boards JSON NOT NULL DEFAULT '[]'",
+    "UPDATE run SET boards = json_array(board)",
+    "ALTER TABLE run DROP COLUMN board",
+    "DROP INDEX IF EXISTS ix_agent_token_hash",
+    "ALTER TABLE agent DROP COLUMN token_hash",
 ]
 
 

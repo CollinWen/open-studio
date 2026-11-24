@@ -1,9 +1,10 @@
 """
 Agent table: every agent the owner has let into the studio (a Claude session,
-a research bot), whether it may work right now, and what it says it's doing.
+a research bot, any harness), whether it may work right now, and what it says
+it's doing.
 
-Its token is never stored, only a fingerprint of it (agent_tokens.py), so a
-copy of the database can't be used to act as an agent. Which boards an agent
+An agent has no token of its own: it works on run tokens the owner issues,
+one per session (features/runs/). Which boards an agent
 may add to is kept on the board (boards/models.py, Board.agents); which
 outside tools its runs may use (web, code, github) is kept here.
 """
@@ -23,9 +24,6 @@ class Agent(SQLModel, table=True):
 
     # What this agent is and what it's for, in the owner's words.
     description: str = ""
-
-    # A fingerprint of the agent's token (see agent_tokens.py), never the token itself.
-    token_hash: str = Field(index=True)
 
     # Outside tools its runs may be given (runs/task_kinds.py: web, code, github).
     # The owner grants these; a run gets at most these.

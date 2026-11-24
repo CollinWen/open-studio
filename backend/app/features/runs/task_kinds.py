@@ -3,6 +3,8 @@ Task kinds and outside tools: what the owner can give an agent to do, and
 what each kind of task may reach beyond the studio.
 
 Task kinds (the offerings):
+  open        - no set task: a session for whatever the owner's note says, on the
+                boards it may reach (a harness that keeps working, say)
   study       - one source (a reel, an article, a talk): pull out what it says,
                 then find a few related sources worth the owner's time
   references  - work in progress: other directions, prior work and studies,
@@ -58,6 +60,17 @@ one claim worth testing and a question to hold while reading, not a summary. Log
 finding with your quotes, and one for strong candidates you turned down and why."""
 
 TASK_KINDS: dict[str, TaskKind] = {
+    "open": TaskKind(
+        title="Work on the boards",
+        tools=(),
+        skills=(),
+        instructions="""\
+There is no set task. Work as the owner's note says, on the boards you may reach:
+read each board's brief and log first, and stay inside them.
+1. Log a plan before each piece of work, and findings and questions as you go.
+2. Add only what fits a board's brief, building on what's already there.
+3. When you stop, finish with a summary of what you did and what's still open.""",
+    ),
     "study": TaskKind(
         title="Study a source",
         tools=("web",),

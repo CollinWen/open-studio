@@ -5,7 +5,7 @@ board, type of line, words in the text and run.
 
 An agent writes only about boards it's signed on to (a line about an entry
 is about that entry's board too), and only within its hourly log limit. A
-run's line that names no board is written on the run's board. Setting a status changes the agent's status line
+line that names no board, on a run that reaches only one, is written there. Setting a status changes the agent's status line
 (agents/service.py) and logs it too, so the log is the whole story.
 Used by agent_log/routes.py and agent_server/log_tools.py.
 """
@@ -42,7 +42,7 @@ def add_line(db: Session, viewer: Viewer, data: LogLineCreate) -> LogLineOut:
         if entry is None:
             raise LogNotAllowedError(f"No entry {data.entry_id}")
     if viewer.is_run and data.board is None and entry is None:
-        # A run works on one board; its unplaced lines (a status, a plan) belong there.
+        # A run on one board puts its unplaced lines (a status, a plan) there.
         data = data.model_copy(update={"board": viewer.run_board})
     for slug in {data.board, entry.board if entry else None} - {None}:
         _check_can_write_about(db, viewer, slug)

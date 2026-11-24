@@ -1,6 +1,7 @@
 """
 Agent API shapes: what the owner sends to add or change an agent, and what
-anyone gets back. A token only ever goes over the wire once, in AgentWithToken.
+anyone gets back. Agents have no token of their own; their tokens are runs
+(runs/schemas.py).
 """
 
 from datetime import datetime
@@ -26,6 +27,8 @@ class AgentUpdate(BaseModel):
     """Every field is optional: only the fields sent are changed."""
 
     description: str | None = None
+    # The boards it's signed on to, all at once (each board keeps its own list).
+    boards: list[str] | None = None
     active: bool | None = None
     tools: list[OutsideToolName] | None = None
 
@@ -42,9 +45,3 @@ class AgentOut(BaseModel):
     # Boards it's signed on to (from each board's agents list).
     boards: list[str]
 
-
-class AgentWithToken(BaseModel):
-    """Returned when an agent is added or given a new token: the only time the token is shown."""
-
-    agent: AgentOut
-    token: str
