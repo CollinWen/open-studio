@@ -18,6 +18,16 @@ run token (`GET /api/runs/<id>/sandbox.sh?harness=pi`, see
 `backend/app/features/runs/sandbox_setup.py`). The script writes everything
 into `./open-studio-run-<id>/` and starts Pi there.
 
+## Keys: the agent gets tools, not keys
+
+| What the agent needs | Where its key lives |
+|---|---|
+| Its model (OpenRouter, ...) | The harness layer: this container's environment (`docker run -e`, or the sandbox app's Fly secrets) |
+| The studio | The run token, in `OPEN_STUDIO_TOKEN`; it stops working when the run ends |
+| Outside services' APIs (GitHub, Exa, ...) | Composio, never the sandbox: the agent calls them as toolkits through the studio (`backend/README.md`, Toolkits) |
+| A program in the sandbox that reads a key itself (a CLI) | The harness layer too, kept apart per agent: run each agent's sandboxes from its own Fly app (or image) holding only that agent's keys. The studio never stores them |
+| `git push` | Planned: one-hour GitHub App tokens limited to a grant's repositories, which a git credential helper asks the studio for with the run token. Until then, Composio's GitHub tools (new repositories, files, issues), or a harness-layer key for a bot account that can reach only those repositories |
+
 ## Files
 
 | File | What it does |
