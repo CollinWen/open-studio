@@ -11,17 +11,20 @@ import { ownerAuthorization } from "./ownerSignIn";
 
 export const API_URL = import.meta.env.VITE_API_URL ?? "";
 
-export async function backendRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const headers = new Headers(init.headers);
+/** `asText` reads the reply as plain text instead of JSON (e.g. a file to download). */
+export async function backendRequest<T>(path: string, init: RequestInit & { asText?: boolean } = {}): Promise<T> {
+  const { asText, ...request } = init;
+  const headers = new Headers(request.headers);
   const authorization = await ownerAuthorization();
   if (authorization) headers.set("Authorization", authorization);
-  if (init.body && !(init.body instanceof FormData)) headers.set("Content-Type", "application/json");
+  if (request.body && !(request.body instanceof FormData)) headers.set("Content-Type", "application/json");
 
-  const response = await fetch(`${API_URL}${path}`, { ...init, headers });
+  const response = await fetch(`${API_URL}${path}`, { ...request, headers });
   if (!response.ok) {
     throw new Error(await readErrorMessage(response));
   }
-  return response.status === 204 ? (undefined as T) : response.json();
+  if (response.status === 204) return undefined as T;
+  return asText ? ((await response.text()) as T) : response.json();
 }
 
 /**

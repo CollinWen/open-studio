@@ -1,9 +1,11 @@
 """
-Run table: one task given to one agent (study a source, gather references,
-start a project), what it may do, and how it ended.
+Run table: one session of one agent, which is one token: what it was asked
+to do (an open session, or a task: study a source, gather references, start
+a project), what it may do, and how it ended. Every token an agent works
+with is a run; only the owner issues them.
 
 The run's token is never stored; it is signed (auth/run_tokens.py) and
-carries the same scopes as `tools` and `board` here. This row is the record:
+carries the same scopes as `tools` and `boards` here. This row is the record:
 who started it, the brief, where to watch the agent work (its harness's own
 session link, set by the agent; owner-only), and the summary it leaves when
 it finishes.
@@ -28,10 +30,11 @@ class Run(SQLModel, table=True):
     id: str = Field(default_factory=_new_id, primary_key=True)
     agent: str = Field(index=True)
 
-    # One of task_kinds.TASK_KINDS: study, references, prototype.
+    # One of task_kinds.TASK_KINDS: open (no set task), study, references, prototype.
     kind: str
-    # The one board it may add to and log on.
-    board: str
+    # The boards it may add to and log on: slugs, or ["*"] for every board its agent is
+    # signed on to. Either way, each call is also checked against the agent's boards then.
+    boards: list[str] = Field(default_factory=list, sa_column=Column(JSON))
     # The owner's note: what to do, in their words (may hold a link).
     brief: str = ""
     # Where to start, e.g. the entry holding the link to study.

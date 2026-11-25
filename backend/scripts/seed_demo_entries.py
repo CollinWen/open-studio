@@ -6,8 +6,9 @@ demo_boards.py) and the home board, each with its own topics (demo_entries.py).
 Pictures are generated gradients and patterns. Within each topic, some
 entries build on the one before ("builds on" chains). Two demo agents
 (demo_agents.py) are signed on to the boards, with a status, a log of what
-they planned, found and asked, and a few unlisted finds to publish; their
-tokens are printed at the end, so a Claude session can be connected as one.
+they planned, found and asked, and a few unlisted finds to publish. Each is
+issued a token for all its boards (an open run, for a week), printed at the
+end, so any harness can be connected as one.
 
   .venv/Scripts/python scripts/seed_demo_entries.py             wipe and refill
   .venv/Scripts/python scripts/seed_demo_entries.py --offline   same, without OpenRouter
@@ -46,6 +47,8 @@ from app.features.entries import service as entries_service  # noqa: E402
 from app.features.entries.schemas import EntryCreate, MediaItem  # noqa: E402
 from app.features.entry_links import models as _link_models  # noqa: E402,F401  (so the wipe drops links too)
 from app.features.entry_links import service as links_service  # noqa: E402
+from app.features.runs import service as runs_service  # noqa: E402
+from app.features.runs.schemas import ALL_BOARDS, RunCreate  # noqa: E402
 from app.features.tags import service as tags_service  # noqa: E402
 from app.features.tags.schemas import TagNotes  # noqa: E402
 from scripts import sample_images as draw  # noqa: E402
@@ -67,6 +70,8 @@ TAG_DESCRIPTIONS = {
 ALL_TOPICS = TOPICS + EXTRA_TOPICS
 # How often an entry builds on the one before it in its topic, and what the link says.
 CHAIN_CHANCE = 0.45
+# How long the demo agents' printed tokens work: a week, enough to try a harness.
+DEMO_TOKEN_MINUTES = 7 * 24 * 60
 CHAIN_NOTES = [
     "tried again with what this taught me",
     "picks up where this left off",
@@ -141,11 +146,15 @@ def link_chains(db: Session, made: list[list], rng: random.Random) -> int:
 
 
 def add_demo_agents(db: Session, by_title: dict, now: datetime) -> dict[str, str]:
-    """The demo agents, their unlisted finds and their log, spread back in time. Returns their tokens."""
+    """The demo agents, their unlisted finds and their log, spread back in time. Returns a token
+    issued to each (an open run on all its boards)."""
     tokens = {}
     for name, agent in AGENTS.items():
-        made, tokens[name] = agents_service.create_agent(
+        made = agents_service.create_agent(
             db, AgentCreate(name=name, description=agent["description"], boards=agent["boards"])
+        )
+        _, tokens[name] = runs_service.start_run(
+            db, RunCreate(agent=name, boards=[ALL_BOARDS], minutes=DEMO_TOKEN_MINUTES), OWNER
         )
         made.status = agent["status"]
         made.last_seen_at = now - timedelta(hours=agent["seen_hours_ago"])

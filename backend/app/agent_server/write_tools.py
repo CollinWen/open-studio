@@ -1,7 +1,7 @@
 """
 Write tools: how an agent adds entries to the studio through the MCP server.
 
-Needs an owner or agent token. An agent adds only to boards it's signed on
+Needs the owner token or an agent's run token. An agent adds only to boards it's signed on
 to; its entries are saved unlisted and signed with its name, a link already
 in the studio isn't added again, and agents may only edit agents' entries the
 owner hasn't published yet. All of that is decided in entries/service.py and

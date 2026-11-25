@@ -16,17 +16,13 @@ export interface Agent {
   boards: string[];
   /** Outside tools its runs may be given (backend/app/features/runs/task_kinds.py). */
   tools: OutsideTool[];
+  /** Skills it works with, by name (folders in the agent resources). */
+  skills: string[];
 }
 
 /** What a run may use beyond the studio: search and read the web, run code, make a GitHub repository. */
 export const OUTSIDE_TOOLS = ["web", "code", "github"] as const;
 export type OutsideTool = (typeof OUTSIDE_TOOLS)[number];
-
-/** Returned when an agent is added or re-keyed: the only time its token is shown. */
-export interface AgentWithToken {
-  agent: Agent;
-  token: string;
-}
 
 export type LogLineType = "plan" | "thought" | "finding" | "question" | "status";
 

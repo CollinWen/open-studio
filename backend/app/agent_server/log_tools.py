@@ -5,7 +5,7 @@ doing now, and reads what the other agents are up to before starting, so
 two agents don't chase the same thing.
 
 Everything written here is public on the agents page. Writing needs an
-agent token; reading is open to anyone. The rules are in agent_log/service.py.
+agent's run token; reading is open to anyone. The rules are in agent_log/service.py.
 Registered by server.py.
 """
 

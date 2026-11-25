@@ -1,19 +1,17 @@
 """
-Agent service: the owner adding, pausing, re-keying and removing agents and
-granting them outside tools, and an agent setting its own status line.
+Agent service: the owner adding, changing, pausing and removing agents
+(their description, boards and outside tools), and an agent setting its own
+status line.
 
-Which boards an agent may add to is kept on each board, so adding an agent
-with boards, and removing one, go through boards/service.py. AGENT_TOKENS in
-backend/.env is only a starting list: on startup any agent named there that
-isn't in the studio yet is added with that token. After that the studio
-page is where agents are managed.
-Used by agents/routes.py, agent_server/log_tools.py and main.py.
+Which boards an agent may add to is kept on each board, so setting an
+agent's boards, and removing one, go through boards/service.py. Agents have
+no token of their own: the owner issues each session's token as a run
+(runs/service.py).
+Used by agents/routes.py and agent_server/log_tools.py.
 """
 
 from sqlmodel import Session, select
 
-from app.config import settings
-from app.features.agents.agent_tokens import fingerprint, make_token
 from app.features.agents.models import Agent
 from app.features.agents.schemas import AgentCreate, AgentOut, AgentUpdate
 from app.features.boards import service as boards_service
@@ -24,13 +22,6 @@ STATUS_MAX_LENGTH = 200
 
 class AgentExistsError(Exception):
     """An agent with this name is already there."""
-
-
-def ensure_agents_from_settings(db: Session) -> None:
-    for token, name in settings.agent_tokens.items():
-        if db.get(Agent, name) is None:
-            db.add(Agent(name=name, token_hash=fingerprint(token)))
-    db.commit()
 
 
 def list_agents(db: Session) -> list[AgentOut]:
@@ -47,49 +38,47 @@ def get_agent(db: Session, name: str) -> Agent | None:
 
 def describe_agent(db: Session, agent: Agent) -> AgentOut:
     boards = [board.slug for board in boards_service.list_boards(db) if agent.name in board.agents]
-    return AgentOut(**agent.model_dump(exclude={"token_hash"}), boards=boards)
+    return AgentOut(**agent.model_dump(), boards=boards)
 
 
-def create_agent(db: Session, data: AgentCreate) -> tuple[Agent, str]:
-    """The new agent and its token (shown to the owner once)."""
+def create_agent(db: Session, data: AgentCreate) -> Agent:
     if db.get(Agent, data.name) is not None:
         raise AgentExistsError(f"Agent {data.name} already exists")
-    token = make_token()
-    agent = Agent(name=data.name, description=data.description, tools=data.tools, token_hash=fingerprint(token))
+    agent = Agent(name=data.name, description=data.description, tools=data.tools, skills=data.skills)
     db.add(agent)
     db.commit()
-    for slug in data.boards:
-        board = boards_service.get_board(db, slug)
-        if board is not None and agent.name not in board.agents:
-            boards_service.update_board(db, board, BoardUpdate(agents=[*board.agents, agent.name]))
-    db.refresh(agent)
-    return agent, token
-
-
-def update_agent(db: Session, agent: Agent, changes: AgentUpdate) -> Agent:
-    for field, value in changes.model_dump(exclude_unset=True).items():
-        setattr(agent, field, value)
-    db.add(agent)
-    db.commit()
+    _sign_on_to_boards(db, agent.name, data.boards)
     db.refresh(agent)
     return agent
 
 
-def renew_token(db: Session, agent: Agent) -> str:
-    """A new token; the old one stops working at once."""
-    token = make_token()
-    agent.token_hash = fingerprint(token)
+def update_agent(db: Session, agent: Agent, changes: AgentUpdate) -> Agent:
+    fields = changes.model_dump(exclude_unset=True)
+    boards = fields.pop("boards", None)
+    for field, value in fields.items():
+        setattr(agent, field, value)
     db.add(agent)
     db.commit()
-    return token
+    if boards is not None:
+        _sign_on_to_boards(db, agent.name, boards)
+    db.refresh(agent)
+    return agent
+
+
+def _sign_on_to_boards(db: Session, name: str, slugs: list[str]) -> None:
+    """Put the agent on exactly these boards (unknown slugs are skipped)."""
+    for board in boards_service.list_boards(db):
+        on = name in board.agents
+        if board.slug in slugs and not on:
+            boards_service.update_board(db, board, BoardUpdate(agents=[*board.agents, name]))
+        elif board.slug not in slugs and on:
+            boards_service.update_board(db, board, BoardUpdate(agents=[n for n in board.agents if n != name]))
 
 
 def remove_agent(db: Session, agent: Agent) -> None:
-    """Take it off every board and forget it. What it added and logged stays, signed with its name."""
-    for board in boards_service.list_boards(db):
-        if agent.name in board.agents:
-            remaining = [name for name in board.agents if name != agent.name]
-            boards_service.update_board(db, board, BoardUpdate(agents=remaining))
+    """Take it off every board and forget it; its tokens stop working. What it added and
+    logged stays, signed with its name."""
+    _sign_on_to_boards(db, agent.name, [])
     db.delete(agent)
     db.commit()
 

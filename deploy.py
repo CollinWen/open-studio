@@ -83,10 +83,6 @@ def send_fly_secrets(config: dict, stage: bool) -> None:
     # Optional: the key run tokens are signed with. Without it one is made from owner_token.
     if secrets.get("run_token_secret"):
         settings["RUN_TOKEN_SECRET"] = secrets["run_token_secret"]
-    # Optional [agents] section: name = token for each agent allowed to add entries.
-    # To cut off every agent, leave one line with an empty token rather than deleting the section.
-    if "agents" in config:
-        settings["AGENT_TOKENS"] = ",".join(f"{name}={token}" for name, token in config["agents"].items())
     # Secrets go in through stdin so they never show up in the command line or shell history.
     secret_lines = "\n".join(f"{key}={value}" for key, value in settings.items())
     command = ["flyctl", "secrets", "import", "--app", config["fly"]["app"]]

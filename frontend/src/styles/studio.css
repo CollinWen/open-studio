@@ -1,41 +1,41 @@
 /*
- * Studio: the owner's pieces (features/studio/). The entry form's lines,
- * the media list editor, and an agent's token, shown once.
+ * Studio: the owner's pieces (features/studio/). The lines of the studio's
+ * forms (entry, agent, token), the media list editor, and a token, shown once.
  *
- * Part of global.css. The window the entry form opens in is entry-sheet.css.
+ * Part of global.css. The window the forms open in is paper-window.css.
  */
 
 /* ---- Studio (owner) ---- */
 
-.entry-form {
+.studio-form {
   display: flex;
   flex-direction: column;
   gap: calc(var(--line) / 2);
 }
 
-/* The form's gap spaces its lines, so its lines of words keep no margin of their own. */
-.entry-form > p {
+/* A form's gap spaces its lines, so its lines of words keep no margin of their own. */
+.studio-form > p {
   margin: 0;
 }
 
 /* "add" / "save" and "cancel": a line of room above them. */
-.entry-form-actions {
+.studio-form-actions {
   margin-top: calc(var(--line) / 2);
 }
 
-.entry-form input,
-.entry-form textarea {
+.studio-form input,
+.studio-form textarea {
   width: 100%;
   resize: vertical;
   box-shadow: var(--underline-faint);
 }
 
-.entry-form input:focus,
-.entry-form textarea:focus {
+.studio-form input:focus,
+.studio-form textarea:focus {
   box-shadow: var(--underline);
 }
 
-.entry-form label {
+.studio-form label {
   cursor: pointer;
 }
 
@@ -67,8 +67,8 @@
   flex: 1;
 }
 
-/* An agent's token, shown once in the studio. */
-.agent-token-notice pre {
+/* A token, shown once in its window, and the setups beside it. */
+.token-notice pre {
   margin: 0 0 calc(var(--line) / 2);
   font-size: var(--size-small);
   line-height: var(--leading-small);

@@ -3,7 +3,7 @@ Read tools: how an agent looks at entries through the MCP server. Search by
 meaning, recent changes, one entry, and the entries related to it, on one
 board or across all of them.
 
-Anyone may call these; an agent token also shows other agents' unlisted
+Anyone may call these; an agent's run token also shows other agents' unlisted
 entries (see entries/visibility_rules.py). Board briefs are in board_tools.py,
 chains in chain_tools.py. Registered by server.py.
 """

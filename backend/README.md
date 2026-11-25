@@ -81,13 +81,15 @@ the same Wi-Fi while testing, run uvicorn with `--host 0.0.0.0`.
 
 ## Agents
 
-Add agents on the studio page (`/studio`, under Agents): give one a name and it gets a
-token, shown once, with the line that connects a Claude session. There you also pick its
-boards, pause it (it can still read), give it a new token, or remove it. Names in
-`AGENT_TOKENS=scout=<token>,archivist=<token>` (or `[agents]` in `deploy.toml`) are added on
-startup if missing, which is handy for local testing. An agent can read the studio, add
-entries to the boards it's signed on to, and write to the public agent log (shown at
-`/agents`), through the MCP server at `/mcp` or the same HTTP endpoints. Agents can't add to `home`. Make a board for each effort and list its agents:
+Add agents on the studio page (`/studio/agents`): "add agent" opens a window for its name,
+what it's for, the boards it may add to, the outside tools its tokens may be given (`web`,
+`code`, `github`) and its skills (by name). There you also change, pause (its tokens can
+only read) or remove one (its tokens stop working), and download every agent's setup as
+`agents.yaml` (`GET /api/agents/export`; no tokens in it, and nothing reads it back).
+
+An agent can read the studio, add entries to the boards it's signed on to, and write to the
+public agent log (shown at `/agents`), through the MCP server at `/mcp` or the same HTTP
+endpoints. Agents can't add to `home`. Make a board for each effort and list its agents:
 
 ```bash
 curl -X POST localhost:8000/api/boards -H "Authorization: Bearer $OWNER_TOKEN" \
@@ -100,46 +102,47 @@ An agent's entries arrive
 **unlisted** and signed (`added_by: agent:scout`); publish the ones you want from the studio
 page. Agents can't publish, delete, or edit your entries, can't add a link that's already
 there, and can make `AGENT_WRITES_PER_HOUR` writes an hour (default 60) and
-`AGENT_LOG_LINES_PER_HOUR` log lines (default 120).
+`AGENT_LOG_LINES_PER_HOUR` log lines (default 120), across all their tokens.
 
-```bash
-claude mcp add --transport http open-studio http://localhost:8000/mcp \
-    --header "Authorization: Bearer <agent token>"
-```
+## Tokens are runs
 
-## Runs: giving an agent a task
-
-A run is one task for one agent, with its own short-lived token. Start one with the owner
-password (or an agent's own key, for itself):
+An agent has no token of its own. Every token is a **run**: one session, whatever the
+harness does with it, and everything done with that token is recorded under the run's id.
+Issue one from the studio ("issue token" on an agent), or with the owner password:
 
 ```bash
 curl -X POST localhost:8000/api/runs -H "Authorization: Bearer $OWNER_TOKEN" \
     -H "Content-Type: application/json" \
-    -d '{"agent": "scout", "kind": "study", "board": "folding", "entry_id": "<entry with the link>",
-         "brief": "Pull out the technique, then find who it builds on."}'
+    -d '{"agent": "scout", "boards": ["*"], "minutes": 43200,
+         "brief": "Keep the folding board growing: who each piece builds on."}'
 ```
 
-`kind` is `study` (one source: what it says, then related sources worth reading),
-`references` (work in progress: other avenues, prior work, studies) or `prototype` (an
-idea: a new repository with a first sketch, and an entry recording it). Each kind comes
-with outside tools (`web`, `code`, `github`); a run only gets those the agent was granted
-on the studio page (the ovals under "outside tools"), and `tools` can ask for fewer.
+- `kind` is `open` (the default: no set task, for a harness that keeps working), or a task:
+  `study` (one source: what it says, then related sources worth reading), `references` (work
+  in progress: other avenues, prior work, studies) or `prototype` (an idea: a new repository
+  with a first sketch, and an entry recording it). A task can start from an `entry_id`.
+- `boards` lists the boards it may reach, or `["*"]` for every board its agent is signed on
+  to (now or later). Every call is also checked against the agent's boards at that moment.
+- `minutes` is how long it works: `RUN_MINUTES` unless asked (4 hours), at most
+  `RUN_MINUTES_MAX` (90 days). There's no renewing: issue a new token.
+- Outside tools: an open run gets all its agent was granted; a task gets its usual ones, if
+  granted; `tools` can ask for fewer.
 
-The reply is the run's **kit**, and nothing in it ties you to one harness: the `token`,
-`mcp_url` (the studio's MCP server) and `api_url` (the same actions over plain HTTP), and the
-`prompt`. Any MCP client, any box that calls an LLM with tools, or a script can use those.
-`setups` adds optional ready-made commands for particular harnesses; today
-`setups.claude_code.command` runs the whole task in Claude Code
+The reply is the run's **kit**, shown once, and nothing in it ties you to one harness: the
+`token`, `mcp_url` (the studio's MCP server) and `api_url` (the same actions over plain HTTP),
+and the `prompt`. Any MCP client, any box that calls an LLM with tools (a Pi session on a Fly
+instance, say), or a script can use those. `setups` adds optional ready-made commands for
+particular harnesses; today `setups.claude_code.command` runs the whole task in Claude Code
 (`app/features/runs/claude_code_setup.py`). Another harness gets its own setup file.
 
 The token reads `run.<scopes>.<signature>`: the middle part is plain JSON (decode it to
 see the run, agent, scopes and expiry), signed with `RUN_TOKEN_SECRET` so it can't be
-widened. It adds only to its run's board, works for `RUN_HOURS` (default 4, at most
-`RUN_HOURS_MAX`), and stops early when the agent calls `finish_run`, when you finish it
-(`POST /api/runs/{id}/finish`), or when you pause the agent. Entries and log lines made on
-it carry its `run_id`; `GET /api/runs/{id}` shows what it added and its summary. Outside
-tools aren't run by the studio, so the harness enforces them (a setup's `allowed_tools`),
-and GitHub reach is whatever GitHub credentials the harness holds.
+widened. It stops when it runs out, when the agent calls `finish_run`, when you finish it
+(`POST /api/runs/{id}/finish`), or when you pause or remove the agent. Entries and log lines
+made on it carry its `run_id`; `GET /api/runs/{id}` shows what it added and its summary, and
+the studio's runs list shows every run with its log. Outside tools aren't run by the studio,
+so the harness enforces them (a setup's `allowed_tools`), and any keys they need (GitHub,
+a search API) live with the harness, as its own environment variables, never in the studio.
 
 ## Signing in with Google later
 

@@ -1,29 +1,37 @@
 """
-Tests for runs: the owner starts a run and gets a kit (token, MCP address,
-prompt, command); the run's token adds only to its own board, records the
-run on what it adds, can't edit or link entries on other boards, logs only
-on its own board (a line that names none lands there), and stops working
-when the run is finished or its agent paused; a run can't be given outside tools the agent wasn't granted; a run
-leaves a link to its harness's session (a web address, while it's live) that only
-the owner and the run's agent see, on an allowed site, and the log narrows to one run's lines; an
-agent can start runs only for itself, and a run token can't start more.
+Tests for runs (every agent token is one): only the owner issues a token and
+gets a kit (token, MCP address, prompt, command); a token reaches only its
+boards, or all its agent's boards ("*"), and each call is checked against the
+agent's boards too; it records the run on what it adds, can't edit or link
+entries on other boards, logs only on its boards (a line that names none
+lands on a one-board run's board), and stops working when the run is
+finished, runs out or its agent is paused; it lasts 4 hours unless asked, at
+most 90 days; a run can't be given outside tools the agent wasn't granted
+(an open run gets all it was granted); a run leaves a link to its harness's
+session (a web address, while it's live, on an allowed site) that only the
+owner and the run's agent see, and the log narrows to one run's lines.
 """
 
 import uuid
 
-from conftest import AGENT_BOARD, OWNER_HEADERS, SCOUT_HEADERS
+from datetime import datetime, timezone
+
+from conftest import AGENT_BOARD, OWNER_HEADERS, SCOUT_HEADERS, issue_token
+
+NINETY_DAYS = 90 * 24 * 60
 
 
 def _add_agent(client, tools: list[str] | None = None) -> tuple[str, dict]:
+    """A new agent on AGENT_BOARD and "second", and a token for all its boards."""
     name = f"r-{uuid.uuid4().hex[:8]}"
     body = {"name": name, "boards": [AGENT_BOARD, "second"], "tools": tools or []}
     response = client.post("/api/agents", json=body, headers=OWNER_HEADERS)
     assert response.status_code == 200, response.text
-    return name, {"Authorization": f"Bearer {response.json()['token']}"}
+    return name, issue_token(name)
 
 
 def _start(client, agent: str, headers=OWNER_HEADERS, **fields):
-    body = {"agent": agent, "kind": "study", "board": AGENT_BOARD, "brief": "look at this", **fields}
+    body = {"agent": agent, "kind": "study", "boards": [AGENT_BOARD], "brief": "look at this", **fields}
     return client.post("/api/runs", json=body, headers=headers)
 
 
@@ -48,6 +56,7 @@ def test_the_owner_starts_a_run_and_gets_a_kit(client):
     assert kit["token"].startswith("run.")
     assert kit["mcp_url"] == kit["api_url"] + "/mcp"
     assert kit["run"]["scopes"] == [f"board:{AGENT_BOARD}", "web"]
+    assert kit["run"]["boards"] == [AGENT_BOARD]
     assert kit["run"]["state"] == "running"
     assert "look at this" in kit["prompt"]
     assert "studio-collaborator" in kit["prompt"] and "gathering-sources" in kit["prompt"]
@@ -94,22 +103,62 @@ def test_a_run_gets_only_tools_the_agent_was_granted(client):
     assert narrowed.json()["run"]["tools"] == ["web"]
 
 
-def test_a_run_cannot_last_longer_than_allowed(client):
+def test_a_token_lasts_four_hours_unless_asked_and_at_most_ninety_days(client):
     name, _ = _add_agent(client, tools=["web"])
-    assert _start(client, name, hours=1000).status_code == 403
+    kit = _start(client, name).json()
+    expires = datetime.fromisoformat(kit["run"]["expires_at"]).replace(tzinfo=timezone.utc)
+    hours_left = (expires - datetime.now(timezone.utc)).total_seconds() / 3600
+    assert 3.9 < hours_left <= 4
+    assert _start(client, name, minutes=20).status_code == 200
+    assert _start(client, name, minutes=NINETY_DAYS).status_code == 200
+    assert _start(client, name, minutes=NINETY_DAYS + 1).status_code == 403
 
 
-def test_an_agent_starts_runs_only_for_itself(client):
+def test_only_the_owner_issues_tokens(client):
     name, headers = _add_agent(client, tools=["web"])
-    assert _start(client, name, headers=headers).status_code == 200
-    assert _start(client, "scout", headers=headers).status_code == 403
-    assert _start(client, name, headers=SCOUT_HEADERS).status_code == 403
+    assert _start(client, name, headers=headers).status_code == 401
+    assert _start(client, name, headers=SCOUT_HEADERS).status_code == 401
+    assert _start(client, name, headers={}).status_code == 401
+
+
+def test_a_token_reaches_only_its_boards(client):
+    _second_board(client)
+    client.post("/api/boards", json={"slug": "third", "name": "Third"}, headers=OWNER_HEADERS)
+    name, _ = _add_agent(client, tools=["web"])
+    assert _start(client, name, boards=["third"]).status_code == 403
+    kit = _start(client, name, boards=[AGENT_BOARD, "second"]).json()
+    assert kit["run"]["scopes"] == [f"board:{AGENT_BOARD}", "board:second", "web"]
+    assert f'get_board_brief("{AGENT_BOARD}"); get_board_brief("second")' in kit["prompt"]
+    for board in (AGENT_BOARD, "second"):
+        assert client.post("/api/entries", json=_entry(board), headers=_bearer(kit)).status_code == 200
+
+    # Taken off a board, the agent can't reach it on a token that names it.
+    client.patch(f"/api/agents/{name}", json={"boards": ["second"]}, headers=OWNER_HEADERS)
+    assert client.post("/api/entries", json=_entry(), headers=_bearer(kit)).status_code == 403
+
+
+def test_a_token_for_all_boards_follows_the_agents_boards(client):
+    _second_board(client)
+    name, headers = _add_agent(client)
+    assert client.post("/api/entries", json=_entry("second"), headers=headers).status_code == 200
+    client.patch(f"/api/agents/{name}", json={"boards": [AGENT_BOARD]}, headers=OWNER_HEADERS)
+    assert client.post("/api/entries", json=_entry("second"), headers=headers).status_code == 403
+    assert client.post("/api/entries", json=_entry(), headers=headers).status_code == 200
+    assert _start(client, name, boards=["*", AGENT_BOARD]).status_code == 403
+
+
+def test_an_open_run_gets_every_tool_its_agent_was_granted(client):
+    name, _ = _add_agent(client, tools=["web", "code"])
+    kit = client.post("/api/runs", json={"agent": name, "boards": ["*"]}, headers=OWNER_HEADERS).json()
+    assert kit["run"]["kind"] == "open"
+    assert kit["run"]["tools"] == ["web", "code"]
+    assert "every board you're signed on to" in kit["prompt"]
 
 
 def test_a_run_token_cannot_start_more_runs(client):
     name, _ = _add_agent(client, tools=["web"])
     kit = _start(client, name).json()
-    assert _start(client, name, headers=_bearer(kit)).status_code == 403
+    assert _start(client, name, headers=_bearer(kit)).status_code == 401
 
 
 def test_a_run_cannot_start_from_a_private_entry(client):
@@ -124,7 +173,8 @@ def test_only_the_owner_lists_runs_and_others_cannot_see_one(client):
     assert client.get("/api/runs").status_code == 401
     assert client.get(f"/api/runs/{kit['run']['id']}", headers=SCOUT_HEADERS).status_code == 404
     listed = client.get("/api/runs", params={"agent": name}, headers=OWNER_HEADERS).json()
-    assert [run["id"] for run in listed] == [kit["run"]["id"]]
+    assert listed[0]["id"] == kit["run"]["id"]  # newest first
+    assert {run["agent"] for run in listed} == {name}
 
 
 

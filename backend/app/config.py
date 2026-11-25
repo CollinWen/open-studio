@@ -34,23 +34,19 @@ class Settings:
     # Owner access: the password-like token for the admin page and capture API.
     owner_token: str = os.environ.get("OWNER_TOKEN", "")
 
-    # Agents: other programs (a Claude session, a research bot) that may read the
-    # studio and add entries. They're managed on the studio page; this is only a
-    # starting list, added on startup when missing. Comma-separated name=token
-    # pairs, e.g. "scout=long-random-token,archivist=another-token".
-    agent_tokens_setting: str = os.environ.get("AGENT_TOKENS", "")
     # How many entries one agent may add or edit per hour. Each write costs an LLM call.
     agent_writes_per_hour: int = int(os.environ.get("AGENT_WRITES_PER_HOUR", "60"))
     # How many lines one agent may write to the agent log per hour (plans, thoughts, findings).
     agent_log_lines_per_hour: int = int(os.environ.get("AGENT_LOG_LINES_PER_HOUR", "120"))
 
-    # Runs: one task given to one agent, with a short-lived token that says what it may do
-    # (features/runs/). Tokens are signed with RUN_TOKEN_SECRET; left empty, a secret is
-    # made from OWNER_TOKEN, so changing the password also ends every run.
+    # Runs: every token an agent works with is a run (features/runs/): one session, with
+    # what it may do written into it. Tokens are signed with RUN_TOKEN_SECRET; left empty, a
+    # secret is made from OWNER_TOKEN, so changing the password also ends every run.
     run_token_secret_setting: str = os.environ.get("RUN_TOKEN_SECRET", "")
-    # How long a run's token works unless asked otherwise, and the most it may be given.
-    run_hours: int = int(os.environ.get("RUN_HOURS", "4"))
-    run_hours_max: int = int(os.environ.get("RUN_HOURS_MAX", "24"))
+    # How long a run's token works unless asked otherwise (4 hours), and the most it may be
+    # given (90 days), in minutes.
+    run_minutes: int = int(os.environ.get("RUN_MINUTES", str(4 * 60)))
+    run_minutes_max: int = int(os.environ.get("RUN_MINUTES_MAX", str(90 * 24 * 60)))
     # Sites a run's session link may go to (the harness's own page for the session), comma
     # separated. A site also covers its subdomains. Empty: any web address.
     session_link_sites: tuple[str, ...] = tuple(
@@ -100,12 +96,6 @@ class Settings:
     @property
     def frontend_origins(self) -> list[str]:
         return [origin.strip() for origin in self.frontend_origin.split(",") if origin.strip()]
-
-    @property
-    def agent_tokens(self) -> dict[str, str]:
-        """Each agent's token mapped to its name."""
-        pairs = (pair.split("=", 1) for pair in self.agent_tokens_setting.split(",") if "=" in pair)
-        return {token.strip(): name.strip() for name, token in pairs if name.strip() and token.strip()}
 
     @property
     def run_token_secret(self) -> bytes:

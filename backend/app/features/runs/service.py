@@ -1,15 +1,15 @@
 """
-Run service: starting a run (one task for one agent, with a short-lived token
-that says what it may do), describing one, noting where its harness keeps the
-session, and finishing it.
+Run service: issuing a token, which starts a run (one session of one agent,
+open or with a task, with a token that says what it may do), describing one,
+noting where its harness keeps the session, and finishing it.
 
 The rules for what a run may be given:
-  - the owner may start a run for any agent; an agent (on its own key) only
-    for itself; a run token can't start more runs
-  - the agent must be active and signed on to the run's board
+  - only the owner issues tokens; a run token can't start more runs
+  - the agent must be active and signed on to each of the run's boards (or
+    the run reaches all its boards, "*")
   - its outside tools must be among those the owner granted the agent
   - it may start from an entry only if the agent can open that entry
-  - its token works for RUN_HOURS (or as asked, up to RUN_HOURS_MAX)
+  - its token works for RUN_MINUTES (or as asked, up to RUN_MINUTES_MAX)
   - its session link may only go to a site in SESSION_LINK_SITES, and only
     while the run is live
 
@@ -30,7 +30,7 @@ from app.features.boards import service as boards_service
 from app.features.entries import service as entries_service
 from app.features.runs.models import Run
 from app.features.runs.run_kit import build_kit
-from app.features.runs.schemas import RunCreate, RunKit, RunOut
+from app.features.runs.schemas import ALL_BOARDS, RunCreate, RunKit, RunOut
 from app.features.runs.task_kinds import TASK_KINDS
 
 LIST_LIMIT = 100
@@ -47,17 +47,18 @@ class SessionSiteNotAllowedError(RunNotAllowedError):
 
 def start_run(db: Session, data: RunCreate, starter: Viewer) -> tuple[Run, str]:
     """The new run and its token (shown once, in the kit)."""
-    _check_starter(starter, data.agent)
+    if not starter.is_owner:
+        raise RunNotAllowedError("Only the owner issues tokens")
     agent = agents_service.get_agent(db, data.agent)
     if agent is None or not agent.active:
         raise RunNotAllowedError(f"No active agent {data.agent}")
     agent_viewer = Viewer(role="agent", agent_name=agent.name)
+    boards = _checked_boards(db, agent_viewer, data.boards)
 
-    board = boards_service.get_board(db, data.board)
-    if board is None or not boards_service.can_add_to_board(agent_viewer, board):
-        raise RunNotAllowedError(f"{agent.name} isn't signed on to board {data.board}")
-
-    tools = list(data.tools) if data.tools is not None else list(TASK_KINDS[data.kind].tools)
+    if data.tools is not None:
+        tools = list(data.tools)
+    else:
+        tools = list(agent.tools) if data.kind == "open" else list(TASK_KINDS[data.kind].tools)
     missing = [tool for tool in tools if tool not in agent.tools]
     if missing:
         raise RunNotAllowedError(f"{agent.name} hasn't been granted: {', '.join(missing)}")
@@ -65,21 +66,21 @@ def start_run(db: Session, data: RunCreate, starter: Viewer) -> tuple[Run, str]:
     if data.entry_id and entries_service.get_entry(db, data.entry_id, agent_viewer) is None:
         raise RunNotAllowedError(f"{agent.name} can't open entry {data.entry_id} (missing or private)")
 
-    hours = data.hours or settings.run_hours
-    if hours > settings.run_hours_max:
-        raise RunNotAllowedError(f"A run can last at most {settings.run_hours_max} hours")
+    minutes = data.minutes or settings.run_minutes
+    if minutes > settings.run_minutes_max:
+        raise RunNotAllowedError(f"A token can last at most {settings.run_minutes_max // (24 * 60)} days")
     if not settings.run_token_secret:
         raise RunNotAllowedError("Set RUN_TOKEN_SECRET (or OWNER_TOKEN) to start runs")
 
     run = Run(
         agent=agent.name,
         kind=data.kind,
-        board=board.slug,
+        boards=boards,
         brief=data.brief.strip(),
         entry_id=data.entry_id or None,
         tools=tools,
         started_by=starter.added_by,
-        expires_at=datetime.now(timezone.utc) + timedelta(hours=hours),
+        expires_at=datetime.now(timezone.utc) + timedelta(minutes=minutes),
     )
     db.add(run)
     db.commit()
@@ -93,12 +94,13 @@ def make_kit(db: Session, run: Run, token: str, api_url: str) -> RunKit:
     agent_viewer = Viewer(role="agent", agent_name=run.agent)
     start = entries_service.get_entry(db, run.entry_id, agent_viewer) if run.entry_id else None
     api_url = settings.public_api_url or api_url
-    return build_kit(describe_run(db, run), run, token, api_url, start)
+    agent = agents_service.get_agent(db, run.agent)
+    return build_kit(describe_run(db, run), run, token, api_url, start, agent.skills if agent else [])
 
 
 def scopes_of(run: Run) -> list[str]:
-    """What the run's token allows, as written in it."""
-    return sorted([f"board:{run.board}", *run.tools])
+    """What the run's token allows, as written in it: "board:<slug>" (or "board:*") and its tools."""
+    return sorted([*(f"board:{board}" for board in run.boards), *run.tools])
 
 
 def get_run(db: Session, run_id: str) -> Run | None:
@@ -106,10 +108,8 @@ def get_run(db: Session, run_id: str) -> Run | None:
 
 
 def can_see_run(viewer: Viewer, run: Run) -> bool:
-    """The owner, or the agent the run is for (on a run token, only that run)."""
-    if viewer.is_owner:
-        return True
-    return viewer.is_agent and viewer.agent_name == run.agent and viewer.run_id in ("", run.id)
+    """The owner, or the agent on this run's own token."""
+    return viewer.is_owner or (viewer.is_agent and viewer.run_id == run.id)
 
 
 def list_runs(db: Session, agent: str | None = None) -> list[RunOut]:
@@ -154,13 +154,19 @@ def finish_run(db: Session, run: Run, summary: str) -> Run:
     return run
 
 
-def _check_starter(starter: Viewer, agent_name: str) -> None:
-    if starter.is_owner:
-        return
-    if not starter.is_agent or starter.is_run:
-        raise RunNotAllowedError("Only the owner, or an agent on its own key, can start a run")
-    if starter.agent_name != agent_name:
-        raise RunNotAllowedError("An agent can only start runs for itself")
+def _checked_boards(db: Session, agent_viewer: Viewer, asked: list[str]) -> list[str]:
+    """The boards as asked, once each is one the agent is signed on to; ["*"] stays as it is."""
+    if ALL_BOARDS in asked:
+        if len(asked) > 1:
+            raise RunNotAllowedError('Give either "*" (all its boards) or a list of boards, not both')
+        return [ALL_BOARDS]
+    boards: list[str] = []
+    for slug in dict.fromkeys(asked):
+        board = boards_service.get_board(db, slug)
+        if board is None or not boards_service.can_add_to_board(agent_viewer, board):
+            raise RunNotAllowedError(f"{agent_viewer.agent_name} isn't signed on to board {slug}")
+        boards.append(board.slug)
+    return boards
 
 
 def _is_allowed_session_site(url: str) -> bool:

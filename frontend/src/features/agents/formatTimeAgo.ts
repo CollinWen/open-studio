@@ -4,7 +4,8 @@
  * it's more than a week old. For the agents page, where "when" matters
  * more as "how recently" than as a date.
  *
- * The backend sends times without a zone; they're always UTC.
+ * The backend's times are always UTC, sometimes without saying so;
+ * parseServerTime reads them either way.
  */
 
 const MINUTE = 60_000;
@@ -21,6 +22,7 @@ export function formatTimeAgo(iso: string, now = Date.now()): string {
   return then.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
 }
 
-function parseServerTime(iso: string): Date {
+/** A time from the backend, read as UTC when it carries no zone. */
+export function parseServerTime(iso: string): Date {
   return new Date(/Z|[+-]\d\d:\d\d$/.test(iso) ? iso : `${iso}Z`);
 }

@@ -128,9 +128,9 @@ main {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .entry-sheet,
-  .entry-sheet.is-closing,
-  .entry-sheet .entry-form > *,
+  .paper-window,
+  .paper-window.is-closing,
+  .paper-window form > *,
   main,
   .control-band-more > * {
     animation-name: backdrop-fade;
@@ -149,7 +149,7 @@ main {
     animation: none;
   }
 
-  .entry-sheet.is-closing {
+  .paper-window.is-closing {
     animation-direction: reverse;
   }
 

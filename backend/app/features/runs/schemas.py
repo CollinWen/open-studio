@@ -1,7 +1,8 @@
 """
-Run API shapes: what's sent to start a run, what anyone allowed gets back
-about one, the link to the harness's session an agent leaves on its run, and the kit: everything any harness needs to set an agent to work,
-plus optional ready-made setups for particular harnesses.
+Run API shapes: what the owner sends to issue a token (start a run), what
+anyone allowed gets back about one, the link to the harness's session an
+agent leaves on its run, and the kit: everything any harness needs to set an
+agent to work, plus optional ready-made setups for particular harnesses.
 A run token only goes over the wire once, in the kit.
 """
 
@@ -10,21 +11,26 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
-RunKindName = Literal["study", "references", "prototype"]
+RunKindName = Literal["open", "study", "references", "prototype"]
+# In a run's boards: every board its agent is signed on to, now or later.
+ALL_BOARDS = "*"
 OutsideToolName = Literal["web", "code", "github"]
 SESSION_URL_MAX_LENGTH = 500
 
 
 class RunCreate(BaseModel):
     agent: str
-    kind: RunKindName
-    board: str
+    # "open" (no set task) unless it's one of the task kinds.
+    kind: RunKindName = "open"
+    # The boards it may add to and log on: slugs, or ["*"] for all its agent's boards.
+    boards: list[str] = Field(min_length=1)
     brief: str = ""
     entry_id: str | None = None
-    # Leave out for the kind's usual tools; a narrower list gives fewer.
+    # Leave out for the kind's usual tools (an open run: all its agent was granted);
+    # a narrower list gives fewer.
     tools: list[OutsideToolName] | None = None
     # How long its token works; the default and the most allowed are in config.py.
-    hours: int | None = Field(default=None, ge=1)
+    minutes: int | None = Field(default=None, ge=1)
 
 
 class RunFinish(BaseModel):
@@ -49,7 +55,8 @@ class RunOut(BaseModel):
     id: str
     agent: str
     kind: str
-    board: str
+    # Slugs, or ["*"]: every board its agent is signed on to.
+    boards: list[str]
     brief: str
     entry_id: str | None
     tools: list[str]

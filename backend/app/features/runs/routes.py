@@ -1,8 +1,9 @@
 """
 Run endpoints:
 
-  POST /api/runs               start a run; its kit (with the token) comes back once
-                               (the owner for any agent, or an agent for itself)
+  POST /api/runs               issue a token for an agent, which starts a run (one
+                               session); its kit (with the token) comes back once
+                               (owner only)
   GET  /api/runs?agent=        runs, newest first (owner only)
   GET  /api/runs/{id}          one run: its brief, state, scopes, what it added
                                (the owner, or the run's agent)
@@ -38,7 +39,7 @@ def _visible(run_id: str, viewer: Viewer, db: Session) -> Run:
     return run
 
 
-@router.post("", response_model=RunKit)
+@router.post("", response_model=RunKit, dependencies=[Depends(require_owner)])
 def start_run(data: RunCreate, request: Request, viewer: Viewer = Depends(current_viewer), db: Session = Depends(get_db)):
     try:
         run, token = service.start_run(db, data, viewer)

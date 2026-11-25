@@ -74,7 +74,7 @@ export function EntryForm({ editing, boards, defaultBoard, onSaved, onCancel }: 
   }
 
   return (
-    <form className="entry-form" onSubmit={(event) => (event.preventDefault(), save())}>
+    <form className="studio-form" onSubmit={(event) => (event.preventDefault(), save())}>
       <input
         autoFocus={!editing}
         placeholder="title"
@@ -164,7 +164,7 @@ export function EntryForm({ editing, boards, defaultBoard, onSaved, onCancel }: 
         ))}
       </p>
 
-      <p className="word-list entry-form-actions">
+      <p className="word-list studio-form-actions">
         <button type="submit" className="square is-primary" disabled={status === SAVING}>
           {editing ? "save" : "add"}
         </button>
