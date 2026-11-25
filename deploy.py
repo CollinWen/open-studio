@@ -81,8 +81,11 @@ def send_fly_secrets(config: dict, stage: bool) -> None:
         "PUBLIC_API_URL": f"https://api.{domain}",
     }
     # Where agents' skills are read from; the deployed backend has no copy of skills/.
-    if config.get("agents", {}).get("resources"):
-        settings["AGENT_RESOURCES"] = config["agents"]["resources"]
+    resources = config.get("agents", {}).get("resources") or this_commits_skills()
+    if resources:
+        settings["AGENT_RESOURCES"] = resources
+    else:
+        print("Note: no [agents] resources in deploy.toml, so the deployed studio has no skills to give agents.")
     # Optional: Composio, which runs the toolkit tools agents call through the studio.
     composio = config.get("composio", {})
     if composio.get("api_key"):
@@ -96,6 +99,13 @@ def send_fly_secrets(config: dict, stage: bool) -> None:
     secret_lines = "\n".join(f"{key}={value}" for key, value in settings.items())
     command = ["flyctl", "secrets", "import", "--app", config["fly"]["app"]]
     run(command + (["--stage"] if stage else []), cwd="backend", stdin=secret_lines)
+
+
+def this_commits_skills() -> str:
+    """This repo's skills/ at the commit being deployed, when GitHub Actions is deploying it,
+    so the studio gives agents exactly the skills that match it. Empty otherwise."""
+    repository, commit = os.environ.get("GITHUB_REPOSITORY"), os.environ.get("GITHUB_SHA")
+    return f"github:{repository}@{commit}/skills" if repository and commit else ""
 
 
 def deploy_frontend(config: dict) -> None:

@@ -148,9 +148,10 @@ own parts file beside `pi_setup.py`.
 
 **Skills** come from the agent resources: `AGENT_RESOURCES` lists folders on this machine or
 in public GitHub repositories (`github:owner/repo@ref/path`), first one winning a name. Left
-empty, it's this repo's `skills/` folder, which works locally; the deployed backend has no
-copy of it, so set `[agents] resources` in deploy.toml (e.g.
-`github:CollinWen/open-studio@main/skills`). `GET /api/skills` lists them; an agent's skills
+empty, it's this repo's `skills/` folder, which works locally. The deployed backend has no
+copy of it: a deploy from GitHub Actions points it at this repo's `skills/` at the commit
+being deployed, so the skills always match the server; `[agents] resources` in deploy.toml
+overrides that (e.g. `github:CollinWen/agent-resources@main/skills`). `GET /api/skills` lists them; an agent's skills
 must be among them.
 
 The token reads `run.<scopes>.<signature>`: the middle part is plain JSON (decode it to

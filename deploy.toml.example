@@ -19,7 +19,8 @@ bucket = "open-studio-media"
 
 [agents]
 # Where agents' skills are read from (AGENT_RESOURCES): GitHub folders at a branch, comma separated.
-resources = "github:CollinWen/open-studio@main/skills"
+# Left out, a deploy from GitHub Actions uses this repo's skills/ at the commit it deploys.
+# resources = "github:CollinWen/open-studio@main/skills"
 
 [composio]
 # Optional: toolkits (outside services' tools agents use through the studio). Leave empty for none.

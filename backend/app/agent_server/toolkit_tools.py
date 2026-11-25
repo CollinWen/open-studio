@@ -35,13 +35,13 @@ def register_toolkit_tools(server: MCPServer) -> None:
                 raise ToolError(str(error))
 
     @server.tool()
-    def call_toolkit_tool(tool: str, arguments: dict[str, Any], ctx: Context) -> ToolkitCallResult:
+    def call_toolkit_tool(tool: str, ctx: Context, arguments: dict[str, Any] | None = None) -> ToolkitCallResult:
         """Run one of your toolkit tools (from list_toolkit_tools) with its arguments. It runs as the
         account the owner chose, so you need no keys. Keep pinned arguments to their values. Each
         call counts against your hourly limit; a tool that ran but failed says why in `error`."""
         viewer = viewer_for(ctx)
         with Session(engine) as db:
             try:
-                return toolkits_service.call_run_tool(db, viewer, tool, arguments)
+                return toolkits_service.call_run_tool(db, viewer, tool, arguments or {})
             except (toolkits_service.ToolkitRefusedError, toolkits_service.ToolkitUnavailableError) as error:
                 raise ToolError(str(error))

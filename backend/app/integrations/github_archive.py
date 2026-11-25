@@ -59,7 +59,8 @@ def files_in_archive(archive: bytes, folder: str) -> dict[str, bytes]:
                     if not path.startswith(f"{folder}/"):
                         continue
                     path = path[len(folder) + 1 :]
-                if not path or ".." in path.split("/"):
+                parts = path.split("/")
+                if not path or "" in parts or ".." in parts:
                     continue
                 extracted = tar.extractfile(member)
                 if extracted is not None:
