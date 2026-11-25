@@ -315,3 +315,23 @@ def test_a_session_link_goes_only_to_an_allowed_site(client, monkeypatch):
 
     _allow_session_sites(monkeypatch)
     assert client.post(url, json={"url": "https://example.com/s"}, headers=_bearer(kit)).status_code == 200
+
+
+def test_a_session_link_a_browser_would_open_elsewhere_is_refused(client, monkeypatch):
+    # Python reads each of these as claude.ai (or a subdomain of it); a browser opens evil.example.
+    _allow_session_sites(monkeypatch, "claude.ai")
+    _second_board(client)
+    name, _ = _add_agent(client, tools=["web"])
+    kit = _start(client, name).json()
+    url = f"/api/runs/{kit['run']['id']}/session"
+    for disguised in [
+        "https://evil.example\\@claude.ai/code/s",
+        "https://evil.example\\.claude.ai/code/s",
+        "https://evil.example:443\\@claude.ai/code/s",
+        "https://claude.ai@evil.example/s",
+        "https://me@claude.ai/code/s",
+        "https://evil.example%5C@claude.ai/s",
+    ]:
+        response = client.post(url, json={"url": disguised}, headers=_bearer(kit))
+        assert response.status_code == 422, disguised
+    assert client.post(url, json={"url": "https://claude.ai/code/session_01abc"}, headers=_bearer(kit)).status_code == 200
