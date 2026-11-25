@@ -1,10 +1,12 @@
 /**
  * AgentForm: add an agent or change one, in plain fields: its name (only
  * when adding; it can't change later), what it's for, the boards it may add
- * to, the outside tools its tokens may be given (web, code, github) and the
- * skills it works with, picked from the agent resources (SkillPicker).
- * Boards, tools and skills are ovals, filled when on. The last line holds
- * "add" (or "save"), a solid ink square, and "cancel".
+ * to, the outside tools its tokens may be given (web, code, github), the
+ * skills it works with, picked from the agent resources (SkillPicker), and
+ * the toolkits it may use through the studio, each with its tools, account
+ * and pinned arguments (ToolkitGrantsEditor). Boards, tools and skills are
+ * ovals, filled when on. The last line holds "add" (or "save"), a solid ink
+ * square, and "cancel".
  *
  * Used by AgentManager, in a PaperWindow. Tokens are issued separately
  * (TokenForm); an agent has none of its own.
@@ -17,7 +19,9 @@ import { WordChoice } from "../../components/WordChoice";
 import { OUTSIDE_TOOLS, type Agent, type OutsideTool } from "../../types/agent";
 import type { Board } from "../../types/entry";
 import { HOME_BOARD } from "../grid/boardPath";
+import type { ToolkitGrant } from "../../types/toolkit";
 import { SkillPicker } from "./SkillPicker";
+import { ToolkitGrantsEditor } from "./ToolkitGrantsEditor";
 
 interface Props {
   /** The agent to change, or null to add one. */
@@ -35,6 +39,7 @@ export function AgentForm({ agent, boards, onSaved, onCancel }: Props) {
   const [onBoards, setOnBoards] = useState<string[]>(agent?.boards ?? []);
   const [tools, setTools] = useState<OutsideTool[]>(agent?.tools ?? []);
   const [skills, setSkills] = useState<string[]>(agent?.skills ?? []);
+  const [toolkits, setToolkits] = useState<Record<string, ToolkitGrant>>(agent?.toolkits ?? {});
   const [status, setStatus] = useState("");
 
   const toggle = <T,>(list: T[], item: T) =>
@@ -46,6 +51,7 @@ export function AgentForm({ agent, boards, onSaved, onCancel }: Props) {
       boards: onBoards,
       tools,
       skills,
+      toolkits,
     };
     setStatus(SAVING);
     const saved = agent
@@ -87,6 +93,7 @@ export function AgentForm({ agent, boards, onSaved, onCancel }: Props) {
         ))}
       </p>
       <SkillPicker picked={skills} onChange={setSkills} />
+      <ToolkitGrantsEditor grants={toolkits} onChange={setToolkits} />
       <p className="word-list studio-form-actions">
         <button type="submit" className="square is-primary" disabled={status === SAVING || (!agent && !name.trim())}>
           {agent ? "save" : "add"}

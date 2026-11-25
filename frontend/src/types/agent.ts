@@ -3,6 +3,8 @@
  * backend/app/features/agent_log/schemas.py.
  */
 
+import type { ToolkitGrant } from "./toolkit";
+
 export interface Agent {
   name: string;
   description: string;
@@ -18,6 +20,8 @@ export interface Agent {
   tools: OutsideTool[];
   /** Skills it works with, by name (folders in the agent resources). */
   skills: string[];
+  /** Toolkits it may use through the studio, by name. Only the owner sees them; others get {}. */
+  toolkits: Record<string, ToolkitGrant>;
 }
 
 /** What a run may use beyond the studio: search and read the web, run code, make a GitHub repository. */

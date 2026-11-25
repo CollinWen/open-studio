@@ -80,6 +80,13 @@ def build_prompt(run: Run, start: Entry | None, api_url: str, agent_skills: list
         first_read = f"Start with {first_read}, then read_log for each."
         reach = f"{boards} only"
     session_sites = f" (on {', '.join(settings.session_link_sites)})" if settings.session_link_sites else ""
+    toolkits = (
+        f"Through the studio, the tools of these toolkits: {', '.join(run.toolkits)}. list_toolkit_tools shows\n"
+        "them and their pinned arguments, call_toolkit_tool runs one as the account the owner chose (over HTTP:\n"
+        "GET /toolkits/tools, POST /toolkits/tools/{tool}); you never need their keys. "
+        if run.toolkits
+        else ""
+    )
     skills = ", ".join(run_skill_names(run, agent_skills))
     return f"""\
 You are {run.agent}, an agent working for an Open Studio (one person's collection of their
@@ -99,7 +106,7 @@ What you may use: the open-studio tools (add entries, link them and log on {reac
 Without MCP, the same actions are plain HTTP under {api_url}/api, with your token as
 "Authorization: Bearer <token>": GET /boards, /search?q=, /entries/{{id}}, /runs/{run.id};
 POST /entries, /entries/{{id}}/builds-on, /agent-log, /runs/{run.id}/session, /runs/{run.id}/finish.
-Outside the studio: {outside}. Nothing more.
+Outside the studio: {outside}. {toolkits}Nothing more.
 Work in the open: set_status when you start, log your plan and findings as you go.
 If your harness has a link to this session{session_sites}, a page where it can be watched,
 leave it once with set_run_session; only the owner sees it. Skip it if there's none.

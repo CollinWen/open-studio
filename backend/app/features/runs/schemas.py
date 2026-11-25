@@ -33,6 +33,8 @@ class RunCreate(BaseModel):
     # Leave out for the kind's usual tools (an open run: all its agent was granted);
     # a narrower list gives fewer.
     tools: list[OutsideToolName] | None = None
+    # Leave out for all the toolkits its agent was granted; a narrower list gives fewer.
+    toolkits: list[str] | None = None
     # How long its token works; the default and the most allowed are in config.py.
     minutes: int | None = Field(default=None, ge=1)
 
@@ -64,6 +66,8 @@ class RunOut(BaseModel):
     brief: str
     entry_id: str | None
     tools: list[str]
+    # Toolkits it may use through the studio, by name.
+    toolkits: list[str]
     started_by: str
     created_at: datetime
     expires_at: datetime

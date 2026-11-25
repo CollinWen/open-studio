@@ -1,6 +1,7 @@
 /*
  * Studio: the owner's pieces (features/studio/). The lines of the studio's
- * forms (entry, agent, token), the media list editor, and a token, shown once.
+ * forms (entry, agent with its toolkit grants, token), the media list
+ * editor, and a token, shown once.
  *
  * Part of global.css. The window the forms open in is paper-window.css.
  */
@@ -64,6 +65,28 @@
 }
 
 .media-editor-item > div {
+  flex: 1;
+}
+
+/* One toolkit grant being changed in the agent window: its own lines, set off by a faint rule. */
+.toolkit-grant {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--line) / 2);
+  padding-top: calc(var(--line) / 2);
+  background: var(--rule-above-faint);
+}
+
+.toolkit-grant > p {
+  margin: 0;
+}
+
+/* A field with its caption on the same line: "acts as ____", "pinned ____". */
+.toolkit-grant-field {
+  flex-wrap: nowrap;
+}
+
+.toolkit-grant-field input {
   flex: 1;
 }
 

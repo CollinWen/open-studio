@@ -1,11 +1,11 @@
 """
 Agent endpoints:
 
-  GET    /api/agents                every agent: status, boards, last seen (anyone)
-  GET    /api/agents/export         every agent as agents.yaml: boards, tools, skills; no tokens (owner only)
-  GET    /api/agents/{name}         one agent (anyone)
+  GET    /api/agents                every agent: status, boards, last seen (anyone; its toolkits only for the owner)
+  GET    /api/agents/export         every agent as agents.yaml: boards, tools, skills, toolkits; no tokens (owner only)
+  GET    /api/agents/{name}         one agent (anyone; its toolkits only for the owner)
   POST   /api/agents                add an agent (owner only)
-  PATCH  /api/agents/{name}         change its description, boards, outside tools or skills, or pause it (owner only)
+  PATCH  /api/agents/{name}         change its description, boards, outside tools, skills or toolkits, or pause it (owner only)
   DELETE /api/agents/{name}         remove it; its tokens stop working (owner only)
 
 Skills must be in the agent resources (GET /api/skills); an unknown name is
@@ -20,6 +20,7 @@ from fastapi.responses import PlainTextResponse
 from sqlmodel import Session
 
 from app.auth.owner_auth import require_owner
+from app.auth.viewer import Viewer, current_viewer
 from app.database import get_db
 from app.features.agents import service
 from app.features.agents.agents_yaml import write_agents_yaml
@@ -38,19 +39,20 @@ def _found(name: str, db: Session) -> Agent:
 
 
 @router.get("", response_model=list[AgentOut])
-def list_agents(db: Session = Depends(get_db)):
-    return service.list_agents(db)
+def list_agents(viewer: Viewer = Depends(current_viewer), db: Session = Depends(get_db)):
+    return service.list_agents(db, for_owner=viewer.is_owner)
 
 
 @router.get("/export", response_class=PlainTextResponse, dependencies=[Depends(require_owner)])
 def export_agents(db: Session = Depends(get_db)):
     headers = {"Content-Disposition": 'attachment; filename="agents.yaml"'}
-    return PlainTextResponse(write_agents_yaml(service.list_agents(db)), media_type="application/yaml", headers=headers)
+    agents = service.list_agents(db, for_owner=True)
+    return PlainTextResponse(write_agents_yaml(agents), media_type="application/yaml", headers=headers)
 
 
 @router.get("/{name}", response_model=AgentOut)
-def get_agent(name: str, db: Session = Depends(get_db)):
-    return service.describe_agent(db, _found(name, db))
+def get_agent(name: str, viewer: Viewer = Depends(current_viewer), db: Session = Depends(get_db)):
+    return service.describe_agent(db, _found(name, db), for_owner=viewer.is_owner)
 
 
 @router.post("", response_model=AgentOut, dependencies=[Depends(require_owner)])
@@ -63,7 +65,7 @@ def create_agent(data: AgentCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=422, detail=str(error))
     except SkillsUnavailableError as error:
         raise HTTPException(status_code=503, detail=str(error))
-    return service.describe_agent(db, agent)
+    return service.describe_agent(db, agent, for_owner=True)
 
 
 @router.patch("/{name}", response_model=AgentOut, dependencies=[Depends(require_owner)])
@@ -74,7 +76,7 @@ def update_agent(name: str, changes: AgentUpdate, db: Session = Depends(get_db))
         raise HTTPException(status_code=422, detail=str(error))
     except SkillsUnavailableError as error:
         raise HTTPException(status_code=503, detail=str(error))
-    return service.describe_agent(db, agent)
+    return service.describe_agent(db, agent, for_owner=True)
 
 
 @router.delete("/{name}", status_code=204, dependencies=[Depends(require_owner)])

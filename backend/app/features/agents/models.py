@@ -6,7 +6,8 @@ it's doing.
 An agent has no token of its own: it works on run tokens the owner issues,
 one per session (features/runs/). Which boards an agent
 may add to is kept on the board (boards/models.py, Board.agents); which
-outside tools its runs may use (web, code, github) is kept here.
+outside tools its runs may use (web, code, github), its skills and its
+toolkits (the outside services it may use through the studio) are kept here.
 """
 
 from datetime import datetime, timezone
@@ -32,6 +33,10 @@ class Agent(SQLModel, table=True):
     # The skills it works with, by name (folders in the agent resources, e.g.
     # "gathering-sources"); every run's prompt tells it to load them.
     skills: list[str] = Field(default_factory=list, sa_column=Column(JSON))
+
+    # Toolkits it may use through the studio (features/toolkits/), by toolkit name: each a
+    # toolkits/schemas.py ToolkitGrant (its tools, the account it acts as, pinned arguments).
+    toolkits: dict = Field(default_factory=dict, sa_column=Column(JSON))
 
     # A paused agent can still read, like any visitor, but can't add or log anything.
     active: bool = True

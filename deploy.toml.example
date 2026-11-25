@@ -21,6 +21,11 @@ bucket = "open-studio-media"
 # Where agents' skills are read from (AGENT_RESOURCES): GitHub folders at a branch, comma separated.
 resources = "github:CollinWen/open-studio@main/skills"
 
+[composio]
+# Optional: toolkits (outside services' tools agents use through the studio). Leave empty for none.
+api_key = ""                     # Composio project → Settings → API key
+# user_id = "open-studio"        # the Composio user your connected accounts belong to
+
 [secrets]
 owner_token = ""                 # your admin password; long and random
 openrouter_api_key = ""

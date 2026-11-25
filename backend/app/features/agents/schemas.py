@@ -11,6 +11,7 @@ from typing import Annotated
 from pydantic import BaseModel, Field, StringConstraints
 
 from app.features.runs.schemas import OutsideToolName
+from app.features.toolkits.schemas import ToolkitGrant, ToolkitGrants
 
 # Lowercase letters, digits and dashes, like a board's slug.
 NAME_PATTERN = r"^[a-z0-9][a-z0-9-]{0,39}$"
@@ -27,6 +28,8 @@ class AgentCreate(BaseModel):
     tools: list[OutsideToolName] = []
     # Skills it works with, by name.
     skills: list[SkillName] = []
+    # Toolkits it may use through the studio, by name (e.g. "github").
+    toolkits: ToolkitGrants = {}
 
 
 class AgentUpdate(BaseModel):
@@ -38,6 +41,8 @@ class AgentUpdate(BaseModel):
     active: bool | None = None
     tools: list[OutsideToolName] | None = None
     skills: list[SkillName] | None = None
+    # All its toolkit grants at once.
+    toolkits: ToolkitGrants | None = None
 
 
 class AgentOut(BaseModel):
@@ -49,6 +54,9 @@ class AgentOut(BaseModel):
     tools: list[str]
     # Skills it works with, by name.
     skills: list[str]
+    # Its toolkit grants, by toolkit name. Only the owner sees them (they can name private
+    # repositories and accounts); everyone else gets {}.
+    toolkits: dict[str, ToolkitGrant]
     last_seen_at: datetime | None
     created_at: datetime
     # Boards it's signed on to (from each board's agents list).

@@ -3,8 +3,9 @@
  * Pick what it's for (open: no set task, or study, references, prototype),
  * leave a note in your own words, pick the boards it may reach (all its
  * boards, which follows the agent's boards later, or some of them), the
- * outside tools it may use (the task's usual ones unless you pick) and how
- * long it lasts (20 minutes to 90 days; 4 hours unless you pick).
+ * outside tools it may use (the task's usual ones unless you pick), the
+ * toolkits it may use through the studio (all its agent's unless you pick)
+ * and how long it lasts (20 minutes to 90 days; 4 hours unless you pick).
  * "issue token", a solid ink square, sends it; the kit comes back to onIssued.
  *
  * Used by AgentManager, in a PaperWindow; TokenNotice then shows the token once.
@@ -32,6 +33,9 @@ export function TokenForm({ agent, onIssued, onCancel }: Props) {
   const [boards, setBoards] = useState<string[]>([ALL_BOARDS]);
   // null: the task's usual tools (an open run: all the agent was granted).
   const [tools, setTools] = useState<OutsideTool[] | null>(null);
+  // null: all the toolkits its agent was granted.
+  const [toolkits, setToolkits] = useState<string[] | null>(null);
+  const agentToolkits = Object.keys(agent.toolkits);
   const [minutes, setMinutes] = useState(DEFAULT_TOKEN_LENGTH.minutes);
   const [status, setStatus] = useState("");
 
@@ -46,9 +50,15 @@ export function TokenForm({ agent, onIssued, onCancel }: Props) {
     setTools(current.includes(tool) ? current.filter((one) => one !== tool) : [...current, tool]);
   };
 
+  const toggleToolkit = (toolkit: string) => {
+    const current = toolkits ?? agentToolkits;
+    setToolkits(current.includes(toolkit) ? current.filter((one) => one !== toolkit) : [...current, toolkit]);
+  };
+
   const issue = () => {
     setStatus(ISSUING);
-    issueToken({ agent: agent.name, kind, boards, brief: brief.trim(), minutes, ...(tools ? { tools } : {}) })
+    const narrowed = { ...(tools ? { tools } : {}), ...(toolkits ? { toolkits } : {}) };
+    issueToken({ agent: agent.name, kind, boards, brief: brief.trim(), minutes, ...narrowed })
       .then(onIssued)
       .catch((error) => setStatus(error instanceof Error ? error.message : String(error)));
   };
@@ -95,6 +105,21 @@ export function TokenForm({ agent, onIssued, onCancel }: Props) {
               look="oval"
               active={!!tools?.includes(tool)}
               onPick={() => toggleTool(tool)}
+            />
+          ))}
+        </p>
+      )}
+      {agentToolkits.length > 0 && (
+        <p className="word-list is-ovals" role="group" aria-label="toolkits">
+          <span className="quiet">toolkits</span>
+          <WordChoice label="all of them" look="oval" active={toolkits === null} onPick={() => setToolkits(null)} />
+          {agentToolkits.map((toolkit) => (
+            <WordChoice
+              key={toolkit}
+              label={toolkit}
+              look="oval"
+              active={!!toolkits?.includes(toolkit)}
+              onPick={() => toggleToolkit(toolkit)}
             />
           ))}
         </p>

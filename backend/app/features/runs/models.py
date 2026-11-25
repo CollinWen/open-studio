@@ -5,7 +5,7 @@ a project), what it may do, and how it ended. Every token an agent works
 with is a run; only the owner issues them.
 
 The run's token is never stored; it is signed (auth/run_tokens.py) and
-carries the same scopes as `tools` and `boards` here. This row is the record:
+carries the same scopes as `tools`, `boards` and `toolkits` here. This row is the record:
 who started it, the brief, where to watch the agent work (its harness's own
 session link, set by the agent; owner-only), and the summary it leaves when
 it finishes.
@@ -41,6 +41,9 @@ class Run(SQLModel, table=True):
     entry_id: str | None = Field(default=None, foreign_key="entry.id", ondelete="SET NULL")
     # Outside tools it may use (task_kinds.OUTSIDE_TOOLS).
     tools: list[str] = Field(default_factory=list, sa_column=Column(JSON))
+    # Toolkits it may use through the studio (features/toolkits/), by name; which of their tools
+    # is up to its agent's grants, checked on every call.
+    toolkits: list[str] = Field(default_factory=list, sa_column=Column(JSON))
 
     # "owner" or "agent:<name>": who started it.
     started_by: str

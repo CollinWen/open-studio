@@ -1,7 +1,8 @@
 """
 Agents as YAML: every agent written out as one agents.yaml file, so the
 owner can see (and keep) the whole setup in one place: each agent's
-description, whether it's active, its boards, outside tools and skills.
+description, whether it's active, its boards, outside tools, skills and
+toolkits (in Composio's terms: tools, connected account, plus pinned arguments).
 
 Export only, for visibility; the database stays the truth, and nothing reads
 this file back in. Tokens are never in it (they're runs, issued one per
@@ -33,5 +34,6 @@ def write_agents_yaml(agents: list[AgentOut]) -> str:
             f"    boards: {json.dumps(sorted(agent.boards))}",
             f"    tools: {json.dumps(agent.tools)}",
             f"    skills: {json.dumps(agent.skills)}",
+            f"    toolkits: {json.dumps({name: grant.model_dump() for name, grant in agent.toolkits.items()})}",
         ]
     return "\n".join(lines) + "\n"

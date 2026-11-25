@@ -1,8 +1,10 @@
 """
 Agent service: the owner adding, changing, pausing and removing agents
-(their description, boards, outside tools and skills), and an agent setting
-its own status line. An agent's skills must be in the skill catalog
-(skills/service.py), so a run can always write them into its sandbox.
+(their description, boards, outside tools, skills and toolkits), and an
+agent setting its own status line. An agent's skills must be in the skill
+catalog (skills/service.py), so a run can always write them into its
+sandbox. Its toolkit grants are shown only to the owner: they can name
+private repositories and accounts.
 
 Which boards an agent may add to is kept on each board, so setting an
 agent's boards, and removing one, go through boards/service.py. Agents have
@@ -26,28 +28,38 @@ class AgentExistsError(Exception):
     """An agent with this name is already there."""
 
 
-def list_agents(db: Session) -> list[AgentOut]:
+def list_agents(db: Session, for_owner: bool = False) -> list[AgentOut]:
     """Most recently seen first; agents never seen yet at the end, newest first."""
     agents = list(db.exec(select(Agent).order_by(Agent.created_at.desc())))
     seen = sorted((agent for agent in agents if agent.last_seen_at), key=lambda a: a.last_seen_at, reverse=True)
     never_seen = [agent for agent in agents if not agent.last_seen_at]
-    return [describe_agent(db, agent) for agent in [*seen, *never_seen]]
+    return [describe_agent(db, agent, for_owner) for agent in [*seen, *never_seen]]
 
 
 def get_agent(db: Session, name: str) -> Agent | None:
     return db.get(Agent, name)
 
 
-def describe_agent(db: Session, agent: Agent) -> AgentOut:
+def describe_agent(db: Session, agent: Agent, for_owner: bool = False) -> AgentOut:
+    """The agent as the owner sees it, or (for_owner False) as everyone else does: no toolkits."""
     boards = [board.slug for board in boards_service.list_boards(db) if agent.name in board.agents]
-    return AgentOut(**agent.model_dump(), boards=boards)
+    fields = agent.model_dump()
+    if not for_owner:
+        fields["toolkits"] = {}
+    return AgentOut(**fields, boards=boards)
 
 
 def create_agent(db: Session, data: AgentCreate) -> Agent:
     if db.get(Agent, data.name) is not None:
         raise AgentExistsError(f"Agent {data.name} already exists")
     skills_service.check_skill_names(data.skills)
-    agent = Agent(name=data.name, description=data.description, tools=data.tools, skills=data.skills)
+    agent = Agent(
+        name=data.name,
+        description=data.description,
+        tools=data.tools,
+        skills=data.skills,
+        toolkits={toolkit: grant.model_dump() for toolkit, grant in data.toolkits.items()},
+    )
     db.add(agent)
     db.commit()
     _sign_on_to_boards(db, agent.name, data.boards)

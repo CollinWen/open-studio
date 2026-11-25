@@ -26,6 +26,8 @@ export interface Run {
   brief: string;
   entry_id: string | null;
   tools: OutsideTool[];
+  /** Toolkits it may use through the studio, by name. */
+  toolkits: string[];
   /** "owner" or "agent:<name>". */
   started_by: string;
   created_at: string;
@@ -49,6 +51,8 @@ export interface RunCreate {
   brief: string;
   /** Leave out for the kind's usual tools (an open run: all its agent was granted). */
   tools?: OutsideTool[];
+  /** Leave out for all its agent's toolkits. */
+  toolkits?: string[];
   minutes: number;
 }
 

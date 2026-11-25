@@ -29,6 +29,7 @@ from app.features.runs.routes import router as runs_router
 from app.features.search.routes import router as search_router
 from app.features.skills.routes import router as skills_router
 from app.features.tags.routes import router as tags_router
+from app.features.toolkits.routes import router as toolkits_router
 
 app = FastAPI(title="Open Studio", lifespan=run_agent_server)
 
@@ -55,6 +56,7 @@ app.include_router(agents_router, prefix="/api")
 app.include_router(agent_log_router, prefix="/api")
 app.include_router(runs_router, prefix="/api")
 app.include_router(skills_router, prefix="/api")
+app.include_router(toolkits_router, prefix="/api")
 app.include_router(auth_router, prefix="/api")
 mount_agent_server(app)
 

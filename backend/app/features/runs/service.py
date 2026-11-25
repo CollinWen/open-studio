@@ -8,7 +8,8 @@ The rules for what a run may be given:
   - only the owner issues tokens; a run token can't start more runs
   - the agent must be active and signed on to each of the run's boards (or
     the run reaches all its boards, "*")
-  - its outside tools must be among those the owner granted the agent
+  - its outside tools must be among those the owner granted the agent, and
+    so must its toolkits (all the agent's unless asked for fewer)
   - it may start from an entry only if the agent can open that entry
   - its token works for RUN_MINUTES (or as asked, up to RUN_MINUTES_MAX)
   - its session link may only go to a site in SESSION_LINK_SITES, and only
@@ -67,6 +68,12 @@ def start_run(db: Session, data: RunCreate, starter: Viewer) -> tuple[Run, str]:
     if missing:
         raise RunNotAllowedError(f"{agent.name} hasn't been granted: {', '.join(missing)}")
 
+    granted_toolkits = list(agent.toolkits or {})
+    toolkits = list(dict.fromkeys(data.toolkits)) if data.toolkits is not None else granted_toolkits
+    missing = [toolkit for toolkit in toolkits if toolkit not in granted_toolkits]
+    if missing:
+        raise RunNotAllowedError(f"{agent.name} hasn't been granted the toolkits: {', '.join(missing)}")
+
     if data.entry_id and entries_service.get_entry(db, data.entry_id, agent_viewer) is None:
         raise RunNotAllowedError(f"{agent.name} can't open entry {data.entry_id} (missing or private)")
 
@@ -83,6 +90,7 @@ def start_run(db: Session, data: RunCreate, starter: Viewer) -> tuple[Run, str]:
         brief=data.brief.strip(),
         entry_id=data.entry_id or None,
         tools=tools,
+        toolkits=toolkits,
         started_by=starter.added_by,
         expires_at=datetime.now(timezone.utc) + timedelta(minutes=minutes),
     )
@@ -112,8 +120,9 @@ def make_sandbox_setup(db: Session, run: Run, harness: str, api_url: str) -> San
 
 
 def scopes_of(run: Run) -> list[str]:
-    """What the run's token allows, as written in it: "board:<slug>" (or "board:*") and its tools."""
-    return sorted([*(f"board:{board}" for board in run.boards), *run.tools])
+    """What the run's token allows, as written in it: "board:<slug>" (or "board:*"), its outside
+    tools, and "toolkit:<name>" for each of its toolkits."""
+    return sorted([*(f"board:{board}" for board in run.boards), *run.tools, *(f"toolkit:{name}" for name in run.toolkits)])
 
 
 def get_run(db: Session, run_id: str) -> Run | None:

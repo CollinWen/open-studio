@@ -2,7 +2,7 @@
  * AgentManager: the studio's "agents". The control band holds "add agent"
  * and "agents.yaml" (every agent's setup as one file to download, no tokens).
  * Below, a Ledger of every agent: what it's for, the boards it may add to,
- * its outside tools and skills, when it was last seen, and "edit", "issue
+ * its outside tools, skills and toolkits, when it was last seen, and "edit", "issue
  * token", its runs, pause / resume and remove.
  *
  * Adding or changing an agent opens AgentForm in a window (?add-agent,
@@ -103,6 +103,9 @@ export function AgentManager({ agents, boards, onChanged }: Props) {
                 <span className="quiet">
                   {agent.tools.join(", ") || "no outside tools"}
                   {agent.skills.length > 0 && <span className="ledger-note">{agent.skills.join(", ")}</span>}
+                  {Object.keys(agent.toolkits).length > 0 && (
+                    <span className="ledger-note">through the studio: {Object.keys(agent.toolkits).join(", ")}</span>
+                  )}
                 </span>,
                 <span className="quiet">{agent.last_seen_at ? formatTimeAgo(agent.last_seen_at) : "never seen"}</span>,
                 <span className="word-list">
