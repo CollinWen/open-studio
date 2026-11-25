@@ -54,7 +54,9 @@ export interface RunCreate {
 
 /** A ready way to run the kit in one particular harness. */
 export interface HarnessSetup {
+  /** Lines to paste where that harness is installed: they set up the run's sandbox folder and start it. */
   command: string;
+  /** That harness's names for the tools the run may use. */
   allowed_tools: string[];
 }
 
@@ -65,6 +67,8 @@ export interface RunKit {
   mcp_url: string;
   api_url: string;
   prompt: string;
-  /** By harness name ("claude_code"): optional ready-made commands. */
+  /** The script that sets up a sandbox for this run, fetched with the token (?harness=claude_code for Claude Code). */
+  sandbox_url: string;
+  /** By harness name ("pi", "claude_code"): lines that set up a sandbox and run the task. */
   setups: Record<string, HarnessSetup>;
 }

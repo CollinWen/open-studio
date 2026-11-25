@@ -7,6 +7,14 @@ Run endpoints:
   GET  /api/runs?agent=        runs, newest first (owner only)
   GET  /api/runs/{id}          one run: its brief, state, scopes, what it added
                                (the owner, or the run's agent)
+  GET  /api/runs/{id}/sandbox?harness=pi|claude_code
+                               what a fresh sandbox needs to start the run in that
+                               harness: the files for the run's folder (prompt,
+                               skills, studio connection) and the start command
+                               (the owner, or the run's agent, while it's live)
+  GET  /api/runs/{id}/sandbox.sh?harness=pi|claude_code
+                               the same, as the shell script the kit's lines run;
+                               a refusal is a script too, which says why
   POST /api/runs/{id}/session  note where the harness keeps its session (a link the
                                owner can follow to watch the agent work)
                                (the owner, or the run's agent, while it's live; only
@@ -20,6 +28,7 @@ get_my_run, set_run_session and finish_run tools
 """
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import PlainTextResponse
 from sqlmodel import Session
 
 from app.auth.owner_auth import require_owner
@@ -27,7 +36,9 @@ from app.auth.viewer import Viewer, current_viewer
 from app.database import get_db
 from app.features.runs import service
 from app.features.runs.models import Run
-from app.features.runs.schemas import RunCreate, RunFinish, RunKit, RunOut, RunSession
+from app.features.runs.sandbox_script import write_refusal_script, write_sandbox_script
+from app.features.runs.schemas import HarnessName, RunCreate, RunFinish, RunKit, RunOut, RunSession, SandboxSetup
+from app.features.skills.service import SkillsUnavailableError, UnknownSkillsError
 
 router = APIRouter(prefix="/runs", tags=["runs"])
 
@@ -56,6 +67,46 @@ def list_runs(agent: str | None = None, db: Session = Depends(get_db)):
 @router.get("/{run_id}", response_model=RunOut)
 def get_run(run_id: str, viewer: Viewer = Depends(current_viewer), db: Session = Depends(get_db)):
     return service.describe_run(db, _visible(run_id, viewer, db))
+
+
+@router.get("/{run_id}/sandbox", response_model=SandboxSetup)
+def get_sandbox_setup(
+    run_id: str,
+    request: Request,
+    harness: HarnessName = "pi",
+    viewer: Viewer = Depends(current_viewer),
+    db: Session = Depends(get_db),
+):
+    if viewer.role == "visitor":
+        raise HTTPException(
+            status_code=401,
+            detail="No live run token: set OPEN_STUDIO_TOKEN to the token from the run's kit "
+            "(a token stops working when its run finishes or runs out, or its agent is paused)",
+        )
+    run = _visible(run_id, viewer, db)
+    try:
+        return service.make_sandbox_setup(db, run, harness, str(request.base_url))
+    except service.RunNotAllowedError as error:
+        raise HTTPException(status_code=409, detail=str(error))
+    except UnknownSkillsError as error:
+        raise HTTPException(status_code=409, detail=f"{error}. Check AGENT_RESOURCES or the agent's skills")
+    except SkillsUnavailableError as error:
+        raise HTTPException(status_code=503, detail=str(error))
+
+
+@router.get("/{run_id}/sandbox.sh", response_class=PlainTextResponse)
+def get_sandbox_script(
+    run_id: str,
+    request: Request,
+    harness: HarnessName = "pi",
+    viewer: Viewer = Depends(current_viewer),
+    db: Session = Depends(get_db),
+):
+    try:
+        setup = get_sandbox_setup(run_id, request, harness, viewer, db)
+    except HTTPException as error:
+        return PlainTextResponse(write_refusal_script(str(error.detail)), status_code=error.status_code)
+    return PlainTextResponse(write_sandbox_script(setup), media_type="text/x-shellscript")
 
 
 @router.post("/{run_id}/session", response_model=RunOut)

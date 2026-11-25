@@ -1,7 +1,8 @@
 """
 Agent service: the owner adding, changing, pausing and removing agents
-(their description, boards and outside tools), and an agent setting its own
-status line.
+(their description, boards, outside tools and skills), and an agent setting
+its own status line. An agent's skills must be in the skill catalog
+(skills/service.py), so a run can always write them into its sandbox.
 
 Which boards an agent may add to is kept on each board, so setting an
 agent's boards, and removing one, go through boards/service.py. Agents have
@@ -16,6 +17,7 @@ from app.features.agents.models import Agent
 from app.features.agents.schemas import AgentCreate, AgentOut, AgentUpdate
 from app.features.boards import service as boards_service
 from app.features.boards.schemas import BoardUpdate
+from app.features.skills import service as skills_service
 
 STATUS_MAX_LENGTH = 200
 
@@ -44,6 +46,7 @@ def describe_agent(db: Session, agent: Agent) -> AgentOut:
 def create_agent(db: Session, data: AgentCreate) -> Agent:
     if db.get(Agent, data.name) is not None:
         raise AgentExistsError(f"Agent {data.name} already exists")
+    skills_service.check_skill_names(data.skills)
     agent = Agent(name=data.name, description=data.description, tools=data.tools, skills=data.skills)
     db.add(agent)
     db.commit()
@@ -54,6 +57,8 @@ def create_agent(db: Session, data: AgentCreate) -> Agent:
 
 def update_agent(db: Session, agent: Agent, changes: AgentUpdate) -> Agent:
     fields = changes.model_dump(exclude_unset=True)
+    if fields.get("skills"):
+        skills_service.check_skill_names(fields["skills"])
     boards = fields.pop("boards", None)
     for field, value in fields.items():
         setattr(agent, field, value)

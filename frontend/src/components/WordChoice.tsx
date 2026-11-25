@@ -19,13 +19,15 @@ interface Props {
   look?: "square" | "oval";
   /** Overrides the unpicked ink, e.g. key tags in full ink. */
   className?: string;
+  /** Shown when pointed at, e.g. what a skill is for. */
+  hint?: string;
 }
 
-export function WordChoice({ label, active, onPick, look = "square", className = "quiet" }: Props) {
+export function WordChoice({ label, active, onPick, look = "square", className = "quiet", hint }: Props) {
   const classes =
     look === "oval" ? ["oval", active ? "is-picked" : className] : ["square", active ? "is-picked" : className];
   return (
-    <button type="button" className={classes.join(" ")} aria-pressed={active} onClick={onPick}>
+    <button type="button" className={classes.join(" ")} aria-pressed={active} title={hint} onClick={onPick}>
       {label}
     </button>
   );

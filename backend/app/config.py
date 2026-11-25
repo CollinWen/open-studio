@@ -11,6 +11,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 BACKEND_DIR = Path(__file__).resolve().parent.parent
+# This repository's own skills folder: where skills are read from when AGENT_RESOURCES is empty.
+REPO_SKILLS_DIR = BACKEND_DIR.parent / "skills"
 
 
 def _load_dotenv() -> None:
@@ -57,6 +59,17 @@ class Settings:
     # This API's public address, put in each run's kit so the agent knows where to connect
     # (e.g. https://api.yourdomain.com). Empty: the address the request came in on.
     public_api_url: str = os.environ.get("PUBLIC_API_URL", "")
+
+    # Agent resources: where the skills agents can be given are read from (features/skills/),
+    # comma separated, first source winning when two hold the same skill. Each is a folder
+    # on this machine, or a folder in a public GitHub repository at a branch, tag or commit:
+    # "github:owner/repo@ref/path" (e.g. github:CollinWen/open-studio@main/skills).
+    # Empty: this repository's own skills/ folder, when it's there (local development).
+    agent_resources: tuple[str, ...] = tuple(
+        source.strip() for source in os.environ.get("AGENT_RESOURCES", "").split(",") if source.strip()
+    ) or ((str(REPO_SKILLS_DIR),) if REPO_SKILLS_DIR.is_dir() else ())
+    # How long the skills read from those sources are kept before they're read again.
+    agent_resources_cache_minutes: int = int(os.environ.get("AGENT_RESOURCES_CACHE_MINUTES", "10"))
 
     # OpenRouter: one key covers both the tag model and the embedding model.
     openrouter_api_key: str = os.environ.get("OPENROUTER_API_KEY", "")

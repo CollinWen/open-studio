@@ -4,36 +4,64 @@ reply. The token, the studio's MCP and API addresses (how to connect) and the
 prompt (the task kind's instructions, the owner's brief, the run's limits,
 the skills to load: the kind's and the agent's own)
 work with any harness: an MCP client, a box that calls an LLM with these
-tools, or plain HTTP. Ready-made setups for particular harnesses ride along
-in `setups`; each comes from its own file (claude_code_setup.py).
+tools, or plain HTTP. Per harness (Pi, Claude Code), `setups` holds two
+lines to paste where that harness is installed: they fetch the run's
+sandbox setup with the token (sandbox_setup.py) and start the task.
 Used by runs/service.py. What each task kind says is in task_kinds.py.
 """
 
+import shlex
+
 from app.config import settings
 from app.features.entries.models import Entry
-from app.features.runs.claude_code_setup import build_claude_code_setup
 from app.features.runs.models import Run
-from app.features.runs.schemas import ALL_BOARDS, RunKit, RunOut
+from app.features.runs.sandbox_setup import HARNESSES, TOKEN_VARIABLE
+from app.features.runs.schemas import ALL_BOARDS, HarnessSetup, RunKit, RunOut
 from app.features.runs.task_kinds import OUTSIDE_TOOLS, SOURCE_TESTS, TASK_KINDS
+
+# Every run gets these skills, before its task's and its agent's own.
+CORE_SKILLS = ("open-studio", "studio-collaborator")
 
 
 def build_kit(
     run_out: RunOut, run: Run, token: str, api_url: str, start: Entry | None, agent_skills: list[str]
 ) -> RunKit:
     api_url = api_url.rstrip("/")
-    mcp_url = f"{api_url}/mcp"
-    prompt = _prompt(run, start, api_url, agent_skills)
+    sandbox_url = f"{api_url}/api/runs/{run.id}/sandbox.sh"
+    setups = {
+        harness: HarnessSetup(
+            command=_sandbox_lines(token, f"{sandbox_url}?harness={harness}"),
+            allowed_tools=parts.allowed_tools(run.tools),
+        )
+        for harness, parts in HARNESSES.items()
+    }
     return RunKit(
         run=run_out,
         token=token,
-        mcp_url=mcp_url,
+        mcp_url=f"{api_url}/mcp",
         api_url=api_url,
-        prompt=prompt,
-        setups={"claude_code": build_claude_code_setup(prompt, mcp_url, token, run.tools)},
+        prompt=build_prompt(run, start, api_url, agent_skills),
+        sandbox_url=sandbox_url,
+        setups=setups,
     )
 
 
-def _prompt(run: Run, start: Entry | None, api_url: str, agent_skills: list[str]) -> str:
+def run_skill_names(run: Run, agent_skills: list[str]) -> list[str]:
+    """The skills a run works with: the core two, its task's, then its agent's own."""
+    return list(dict.fromkeys([*CORE_SKILLS, *TASK_KINDS[run.kind].skills, *agent_skills]))
+
+
+def _sandbox_lines(token: str, script_url: str) -> str:
+    """Set the token, then fetch the run's setup script with it and run it. Without curl's
+    --fail, a refusal arrives as a script too, which says why."""
+    return "\n".join([
+        f"export {TOKEN_VARIABLE}={shlex.quote(token)}",
+        f'curl -sS -H "Authorization: Bearer ${TOKEN_VARIABLE}" {shlex.quote(script_url)} | sh',
+    ])
+
+
+def build_prompt(run: Run, start: Entry | None, api_url: str, agent_skills: list[str]) -> str:
+    """The run's instructions, given to the model as its first message."""
     kind = TASK_KINDS[run.kind]
     starting_point = (
         f'Starting entry: "{start.title}" (id {start.id}){f", {start.source_url}" if start.source_url else ""}. '
@@ -52,7 +80,7 @@ def _prompt(run: Run, start: Entry | None, api_url: str, agent_skills: list[str]
         first_read = f"Start with {first_read}, then read_log for each."
         reach = f"{boards} only"
     session_sites = f" (on {', '.join(settings.session_link_sites)})" if settings.session_link_sites else ""
-    skills = ", ".join(dict.fromkeys(["open-studio", "studio-collaborator", *kind.skills, *agent_skills]))
+    skills = ", ".join(run_skill_names(run, agent_skills))
     return f"""\
 You are {run.agent}, an agent working for an Open Studio (one person's collection of their
 work and interests, split into boards), on run {run.id}: {kind.title.lower()}.

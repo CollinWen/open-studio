@@ -1,9 +1,10 @@
 /**
  * TokenNotice: a token just issued, shown this once. It says which run it
  * is, what it reaches and when it stops working, shows the token with
- * "copy", then the ways to hand it to a harness (environment, mcp, http,
- * the prompt, and ready-made setups such as a claude command), one at a
- * time, each with "copy". Closing the window forgets the token for good.
+ * "copy", then the ways to hand it to a harness, one at a time, each with
+ * "copy": first the lines that set up a sandbox for Pi or Claude Code, then
+ * environment, mcp, http and the prompt. Closing the window forgets the
+ * token for good.
  *
  * Used by AgentManager, in a PaperWindow, after TokenForm. The setups'
  * text is built in tokenSetups.ts.

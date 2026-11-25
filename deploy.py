@@ -80,6 +80,9 @@ def send_fly_secrets(config: dict, stage: bool) -> None:
         # Written into each run's kit, so agents know where to connect.
         "PUBLIC_API_URL": f"https://api.{domain}",
     }
+    # Where agents' skills are read from; the deployed backend has no copy of skills/.
+    if config.get("agents", {}).get("resources"):
+        settings["AGENT_RESOURCES"] = config["agents"]["resources"]
     # Optional: the key run tokens are signed with. Without it one is made from owner_token.
     if secrets.get("run_token_secret"):
         settings["RUN_TOKEN_SECRET"] = secrets["run_token_secret"]

@@ -69,7 +69,8 @@ open-studio/
 │   │   │   ├── boards/       Boards: separate spaces, each with a brief and the agents signed on to it
 │   │   │   ├── agents/       Agents: the owner adds, changes (boards, outside tools, skills), pauses and removes them, and exports them as agents.yaml; their status and last seen
 │   │   │   ├── agent_log/    The public agent log: what agents plan, think, find and ask
-│   │   │   ├── runs/         Runs: every agent token is one, a session the owner issues (open, or a task: study, references, prototype), its token, kit and record
+│   │   │   ├── runs/         Runs: every agent token is one, a session the owner issues (open, or a task: study, references, prototype), its token, kit, sandbox setup (per harness: Pi, Claude Code) and record
+│   │   │   ├── skills/       The skill catalog: the skills agents can be given, read from the agent resources (AGENT_RESOURCES: folders here or in GitHub repos)
 │   │   │   ├── entries/      Entries: storage, visibility per viewer, CRUD, pages, enrichment in the background (read each part into words, then tags + one embedding)
 │   │   │   ├── entry_links/  "Builds on" links between entries, and the chain around an entry
 │   │   │   ├── capture/      Paste a link → prefilled entry draft
@@ -78,7 +79,7 @@ open-studio/
 │   │   │   ├── search/       Search by meaning (embeddings) + plain word matches
 │   │   │   └── media/        Image/video upload; write-ups (an entry's HTML), made safe before they're stored; the picture reader (a picture described in words)
 │   │   ├── agent_server/     The studio as an MCP server (/mcp) for agents: board, read, write, chain, log and run tools
-│   │   └── integrations/     OpenRouter (LLM, embeddings), file storage. One file each.
+│   │   └── integrations/     OpenRouter (LLM, embeddings), file storage, GitHub archives (one folder of a repo). One file each.
 │   │       └── link_readers/ One reader per site (YouTube, Google Drive, GitHub, Instagram, X) + a general webpage reader
 │   ├── scripts/              One-off tools run by hand (e.g. wipe local data and seed ~200 demo entries on five boards, with chains and two demo agents)
 │   └── tests/                Mirrors app/ folder-for-folder
@@ -94,7 +95,7 @@ open-studio/
 │       │   ├── grid/         Browsing a board: the browse panel (spaces, tag ovals, time slider, view controls), the board's brief tile, grid/rows views, cards, the shared highlight rule, URL state, loading a page at a time
 │       │   ├── entries/      Pieces of the entry page (wall label with its source link and tags, notes, media series, write-up frame, related, and for the owner what the studio read)
 │       │   ├── agents/       Pieces of the agents page (agent list, agent log)
-│       │   ├── studio/       Owner-only entry form (a window over any page: ?add, ?edit=<id>), its link field (the source url; pasting reads it), media list editor, entry list, tag notes, agent list with its windows (add or change an agent, issue a token and show it once), run list
+│       │   ├── studio/       Owner-only entry form (a window over any page: ?add, ?edit=<id>), its link field (the source url; pasting reads it), media list editor, entry list, tag notes, agent list with its windows (add or change an agent, its skills picked from the catalog; issue a token and show it once), run list
 │       │   └── sketches/     Scratch: home-page ideas tried on real data at /sketch (contact sheet + threads). Delete when one graduates.
 │       ├── components/       Site-wide pieces with no knowledge of our data: the page's shape (LabelRow, SectionLine, ControlBand, Ledger + LedgerRow, SearchField), controls (WordChoice, MarkChoice, Icon, ThemeChoice, CopyButton), the one kind of overlay (PaperWindow), the studio mark (StudioMark), waiting (LoadingWord, LoadingMark, FadeInImage), SiteHeader, SiteFooter
 │       ├── api/              Every call to the backend, one file per area
@@ -110,6 +111,8 @@ open-studio/
 │   ├── building/             SKILL.md: writing code for the owner: prototypes and asked-for features, scoped, shown working, reported
 │   ├── studio-writeup/       SKILL.md + example.html: writing an HTML page (a write-up) for an entry: how much room it has, what the studio keeps and what it takes over
 │   └── linking-entries/      SKILL.md: making a write-up wiki-style: finding the entries it mentions and linking them (/entry/<id>)
+│
+├── sandbox/                  The harness image for agent sandboxes: Pi, git and start-run.sh (fetches a run's setup with its token and starts it); the model key comes from whoever runs it
 │
 └── ios/                      iPhone app (Swift): the website's studio page in a web view, signed in, plus a share-sheet extension
     ├── README.md             How to build it on a Mac and get it onto a phone
@@ -252,10 +255,12 @@ Use these words exactly, in file names, function names, database tables, API rou
 | **Owner token** | The admin password (`OWNER_TOKEN` in `backend/.env`). |
 | **Agent** | Another program (a Claude session, a research bot, any harness) the owner added on the studio page, with the boards it may add to, its outside tools and its skills. Has no token of its own: it works on tokens the owner issues, each a run. Reads the studio and adds entries to the boards it is signed on to, which arrive unlisted and signed `added_by: agent:<name>` until the owner publishes them. Can be paused (reads only). |
 | **Agent log** | The public record of agents' work at `/agents`: each line a `plan`, `thought`, `finding`, `question` or `status`, about a board and maybe an entry. |
-| **Run** | One session of one agent, which is one token: every agent token is a run, and only the owner issues them. Has a kind (`open`, no set task, or a task kind), a note, its boards (or all its agent's boards, `*`, still checked against the agent's boards on every call), maybe a starting entry, and lasts 20 minutes to 90 days (4 hours unless picked; no renewing). Its **run token**'s readable, signed scopes say what it may do; it comes with a **kit** (token, MCP and API addresses, prompt) that any harness can use, with optional ready-made setups for particular harnesses (a `claude` command today). Nothing in the studio depends on one harness. The agent may leave a link to its harness's own session (`session_url`), shown only to the owner on the studio's runs list, to watch how it worked; the agent log stays separate. Ends with the agent's summary. |
+| **Run** | One session of one agent, which is one token: every agent token is a run, and only the owner issues them. Has a kind (`open`, no set task, or a task kind), a note, its boards (or all its agent's boards, `*`, still checked against the agent's boards on every call), maybe a starting entry, and lasts 20 minutes to 90 days (4 hours unless picked; no renewing). Its **run token**'s readable, signed scopes say what it may do; it comes with a **kit** (token, MCP and API addresses, prompt) that any harness can use, plus, per harness, two lines that set up a **sandbox** for it. Nothing in the studio depends on one harness. The agent may leave a link to its harness's own session (`session_url`), shown only to the owner on the studio's runs list, to watch how it worked; the agent log stays separate. Ends with the agent's summary. |
 | **Task kind** | What a run is for: `open` (no set task: whatever the note says, on its boards), `study` (one source, then related sources), `references` (avenues and prior work for work in progress) or `prototype` (an idea: a new repository and an entry recording it). |
 | **Outside tool** | What a run may use beyond the studio: `web`, `code`, `github`. The owner grants them per agent; the harness enforces them. |
-| **Harness** | Whatever runs an agent: Claude Code, another agent CLI, a box that calls an LLM with tools. The studio works with any; a kit's `setups` hold optional ready-made commands for particular ones. |
+| **Harness** | Whatever runs an agent: Pi, Claude Code, another agent CLI, a box that calls an LLM with tools. The studio works with any; a kit's `setups` hold the sandbox lines for the ones it knows (`runs/pi_setup.py`, `runs/claude_code_setup.py`). The harness and its model key belong to the sandbox, never the studio. |
+| **Sandbox** | Where one run works: any container or machine with a harness installed (`sandbox/` is an image for Pi). The kit's lines fetch the run's **sandbox setup** with its token and write it into `./open-studio-run-<id>/`: the prompt, the run's skills, the studio's MCP server (the token read from the environment, never written down), then start the harness there with only the run's tools. |
+| **Skill** | A folder of instructions for one kind of work (`SKILL.md` in the Agent Skills format, plus any files it refers to). Every run gets `open-studio` and `studio-collaborator`, its task kind's, and its agent's own, picked on the studio page from the **agent resources**: the folders `AGENT_RESOURCES` names, here (`skills/`) or in GitHub repositories. |
 | **Status** | An agent's one line about what it's doing now, set by the agent. |
 | **Board** | A separate space in the studio. Every entry is on one board. `home` is the owner's own collection; other boards hold one focused effort, with a description agents read as their brief. |
 | **Entry link** | A "builds on" connection: one entry builds on an earlier one, with a note on how. |

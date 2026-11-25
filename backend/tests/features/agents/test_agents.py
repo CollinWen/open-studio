@@ -71,11 +71,21 @@ def test_removing_an_agent_takes_it_off_its_boards(client):
 
 def test_an_agents_skills_are_kept_and_named_in_its_runs(client):
     name = f"a-{uuid.uuid4().hex[:8]}"
-    body = {"name": name, "boards": [AGENT_BOARD], "skills": ["gathering-sources", "exa-search"]}
+    body = {"name": name, "boards": [AGENT_BOARD], "skills": ["gathering-sources", "linking-entries"]}
     assert client.post("/api/agents", json=body, headers=OWNER_HEADERS).json()["skills"] == body["skills"]
     assert client.post("/api/agents", json={"name": "x-bad", "skills": ["Not A Name"]}, headers=OWNER_HEADERS).status_code == 422
     kit = client.post("/api/runs", json={"agent": name, "boards": ["*"]}, headers=OWNER_HEADERS).json()
-    assert "open-studio, studio-collaborator, gathering-sources, exa-search" in kit["prompt"]
+    assert "open-studio, studio-collaborator, gathering-sources, linking-entries" in kit["prompt"]
+
+
+def test_an_agents_skills_must_be_in_the_agent_resources(client):
+    name = f"a-{uuid.uuid4().hex[:8]}"
+    refused = client.post("/api/agents", json={"name": name, "skills": ["building", "no-such-skill"]}, headers=OWNER_HEADERS)
+    assert refused.status_code == 422
+    assert "no-such-skill" in refused.json()["detail"] and "building" not in refused.json()["detail"]
+    client.post("/api/agents", json={"name": name}, headers=OWNER_HEADERS)
+    assert client.patch(f"/api/agents/{name}", json={"skills": ["no-such-skill"]}, headers=OWNER_HEADERS).status_code == 422
+    assert client.patch(f"/api/agents/{name}", json={"skills": ["building"]}, headers=OWNER_HEADERS).json()["skills"] == ["building"]
 
 
 def test_the_owner_exports_every_agent_as_yaml_without_tokens(client):

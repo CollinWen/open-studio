@@ -2,9 +2,9 @@
  * AgentForm: add an agent or change one, in plain fields: its name (only
  * when adding; it can't change later), what it's for, the boards it may add
  * to, the outside tools its tokens may be given (web, code, github) and the
- * skills it works with, by name, comma separated. Boards and tools are ovals,
- * filled when on. The last line holds "add" (or "save"), a solid ink square,
- * and "cancel".
+ * skills it works with, picked from the agent resources (SkillPicker).
+ * Boards, tools and skills are ovals, filled when on. The last line holds
+ * "add" (or "save"), a solid ink square, and "cancel".
  *
  * Used by AgentManager, in a PaperWindow. Tokens are issued separately
  * (TokenForm); an agent has none of its own.
@@ -17,6 +17,7 @@ import { WordChoice } from "../../components/WordChoice";
 import { OUTSIDE_TOOLS, type Agent, type OutsideTool } from "../../types/agent";
 import type { Board } from "../../types/entry";
 import { HOME_BOARD } from "../grid/boardPath";
+import { SkillPicker } from "./SkillPicker";
 
 interface Props {
   /** The agent to change, or null to add one. */
@@ -33,7 +34,7 @@ export function AgentForm({ agent, boards, onSaved, onCancel }: Props) {
   const [description, setDescription] = useState(agent?.description ?? "");
   const [onBoards, setOnBoards] = useState<string[]>(agent?.boards ?? []);
   const [tools, setTools] = useState<OutsideTool[]>(agent?.tools ?? []);
-  const [skillText, setSkillText] = useState((agent?.skills ?? []).join(", "));
+  const [skills, setSkills] = useState<string[]>(agent?.skills ?? []);
   const [status, setStatus] = useState("");
 
   const toggle = <T,>(list: T[], item: T) =>
@@ -44,10 +45,7 @@ export function AgentForm({ agent, boards, onSaved, onCancel }: Props) {
       description: description.trim(),
       boards: onBoards,
       tools,
-      skills: skillText
-        .split(",")
-        .map((skill) => skill.trim().toLowerCase())
-        .filter(Boolean),
+      skills,
     };
     setStatus(SAVING);
     const saved = agent
@@ -88,11 +86,7 @@ export function AgentForm({ agent, boards, onSaved, onCancel }: Props) {
           />
         ))}
       </p>
-      <input
-        placeholder="skills, comma separated (e.g. gathering-sources, building)"
-        value={skillText}
-        onChange={(e) => setSkillText(e.target.value)}
-      />
+      <SkillPicker picked={skills} onChange={setSkills} />
       <p className="word-list studio-form-actions">
         <button type="submit" className="square is-primary" disabled={status === SAVING || (!agent && !name.trim())}>
           {agent ? "save" : "add"}

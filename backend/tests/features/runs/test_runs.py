@@ -1,6 +1,6 @@
 """
 Tests for runs (every agent token is one): only the owner issues a token and
-gets a kit (token, MCP address, prompt, command); a token reaches only its
+gets a kit (token, MCP address, prompt, the lines that set up a sandbox per harness); a token reaches only its
 boards, or all its agent's boards ("*"), and each call is checked against the
 agent's boards too; it records the run on what it adds, can't edit or link
 entries on other boards, logs only on its boards (a line that names none
@@ -61,7 +61,11 @@ def test_the_owner_starts_a_run_and_gets_a_kit(client):
     assert "look at this" in kit["prompt"]
     assert "studio-collaborator" in kit["prompt"] and "gathering-sources" in kit["prompt"]
     assert "WebFetch" in kit["setups"]["claude_code"]["allowed_tools"]
-    assert kit["setups"]["claude_code"]["command"].startswith("claude -p ")
+    assert kit["sandbox_url"] == f"{kit['api_url']}/api/runs/{kit['run']['id']}/sandbox.sh"
+    for harness in ("pi", "claude_code"):
+        lines = kit["setups"][harness]["command"].splitlines()
+        assert lines[0] == f"export OPEN_STUDIO_TOKEN={kit['token']}"
+        assert f"{kit['sandbox_url']}?harness={harness}" in lines[1] and lines[1].endswith("| sh")
 
 
 def test_a_run_adds_only_to_its_board_and_is_recorded(client):

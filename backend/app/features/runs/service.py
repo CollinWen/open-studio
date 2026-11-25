@@ -1,7 +1,8 @@
 """
 Run service: issuing a token, which starts a run (one session of one agent,
 open or with a task, with a token that says what it may do), describing one,
-noting where its harness keeps the session, and finishing it.
+setting up a sandbox for it, noting where its harness keeps the session, and
+finishing it.
 
 The rules for what a run may be given:
   - only the owner issues tokens; a run token can't start more runs
@@ -14,7 +15,8 @@ The rules for what a run may be given:
     while the run is live
 
 Used by runs/routes.py and agent_server/run_tools.py. The token itself is
-made in auth/run_tokens.py; the kit's prompt and command in run_kit.py.
+made in auth/run_tokens.py; the kit's prompt and lines in run_kit.py; the
+sandbox's files and start command in sandbox_setup.py.
 """
 
 from datetime import datetime, timedelta, timezone
@@ -28,9 +30,11 @@ from app.config import settings
 from app.features.agents import service as agents_service
 from app.features.boards import service as boards_service
 from app.features.entries import service as entries_service
+from app.features.entries.models import Entry
 from app.features.runs.models import Run
-from app.features.runs.run_kit import build_kit
-from app.features.runs.schemas import ALL_BOARDS, RunCreate, RunKit, RunOut
+from app.features.runs.run_kit import build_kit, build_prompt, run_skill_names
+from app.features.runs.sandbox_setup import build_sandbox_setup
+from app.features.runs.schemas import ALL_BOARDS, RunCreate, RunKit, RunOut, SandboxSetup
 from app.features.runs.task_kinds import TASK_KINDS
 
 LIST_LIMIT = 100
@@ -90,12 +94,21 @@ def start_run(db: Session, data: RunCreate, starter: Viewer) -> tuple[Run, str]:
 
 
 def make_kit(db: Session, run: Run, token: str, api_url: str) -> RunKit:
-    """The kit for a run just started: its token, where to connect, and its prompt."""
-    agent_viewer = Viewer(role="agent", agent_name=run.agent)
-    start = entries_service.get_entry(db, run.entry_id, agent_viewer) if run.entry_id else None
-    api_url = settings.public_api_url or api_url
-    agent = agents_service.get_agent(db, run.agent)
-    return build_kit(describe_run(db, run), run, token, api_url, start, agent.skills if agent else [])
+    """The kit for a run just started: its token, where to connect, its prompt, and the
+    lines that set up a sandbox for it."""
+    start, agent_skills = _starting_point_and_skills(db, run)
+    return build_kit(describe_run(db, run), run, token, _public(api_url), start, agent_skills)
+
+
+def make_sandbox_setup(db: Session, run: Run, harness: str, api_url: str) -> SandboxSetup:
+    """What a fresh sandbox writes and runs to start this run in this harness. Only while the
+    run is live. Raises skills_service.UnknownSkillsError if one of its skills has gone."""
+    if _state(run) != "running":
+        raise RunNotAllowedError(f"This run has {'finished' if run.finished_at else 'run out'}")
+    start, agent_skills = _starting_point_and_skills(db, run)
+    api_url = _public(api_url)
+    prompt = build_prompt(run, start, api_url, agent_skills)
+    return build_sandbox_setup(run, harness, prompt, run_skill_names(run, agent_skills), f"{api_url}/mcp")
 
 
 def scopes_of(run: Run) -> list[str]:
@@ -152,6 +165,19 @@ def finish_run(db: Session, run: Run, summary: str) -> Run:
         db.commit()
         db.refresh(run)
     return run
+
+
+def _starting_point_and_skills(db: Session, run: Run) -> tuple[Entry | None, list[str]]:
+    """The entry the run starts from (if its agent can open it) and its agent's own skills."""
+    agent_viewer = Viewer(role="agent", agent_name=run.agent)
+    start = entries_service.get_entry(db, run.entry_id, agent_viewer) if run.entry_id else None
+    agent = agents_service.get_agent(db, run.agent)
+    return start, list(agent.skills) if agent else []
+
+
+def _public(api_url: str) -> str:
+    """The address agents reach this API at: PUBLIC_API_URL, or the one the request came in on."""
+    return (settings.public_api_url or api_url).rstrip("/")
 
 
 def _checked_boards(db: Session, agent_viewer: Viewer, asked: list[str]) -> list[str]:
