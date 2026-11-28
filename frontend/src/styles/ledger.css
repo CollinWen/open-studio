@@ -64,15 +64,12 @@
 }
 
 /* Fields inside a ledger fill their cell. */
-.ledger input,
-.ledger textarea {
+.ledger input {
   width: 100%;
-  resize: vertical;
   box-shadow: var(--underline-faint);
 }
 
-.ledger input:focus,
-.ledger textarea:focus {
+.ledger input:focus {
   box-shadow: var(--underline);
 }
 

@@ -1,8 +1,8 @@
 /**
  * AgentForm: add an agent or change one, in plain fields: its name (only
  * when adding; it can't change later), one line on what it's for, its
- * manifest (its standing job, written into every run's prompt; a starting
- * outline is offered while it's empty), the boards it may add to, the outside
+ * manifest (its standing job, written into every run's prompt, in a
+ * TextEditor; a starting outline is offered while it's empty), the boards it may add to, the outside
  * tools its tokens may be given (web, code, github) and the skills it works
  * with, picked from the list. Boards, tools and skills are ovals, filled when on. The last line holds "add" (or "save"), a solid ink square,
  * and "cancel".
@@ -14,6 +14,7 @@
 import { useState } from "react";
 import { addAgent, updateAgent } from "../../api/agentsApi";
 import { LoadingWord } from "../../components/LoadingWord";
+import { TextEditor } from "../../components/TextEditor";
 import { WordChoice } from "../../components/WordChoice";
 import { AGENT_SKILLS, OUTSIDE_TOOLS, type Agent, type AgentSkill, type OutsideTool } from "../../types/agent";
 import type { Board } from "../../types/entry";
@@ -74,12 +75,12 @@ export function AgentForm({ agent, boards, onSaved, onCancel }: Props) {
         <input placeholder="name (lowercase, used in links)" value={name} onChange={(e) => setName(e.target.value)} />
       )}
       <input placeholder="what it's for, in one line" value={description} onChange={(e) => setDescription(e.target.value)} />
-      <textarea
+      <TextEditor
         rows={7}
         placeholder={MANIFEST_OUTLINE}
-        aria-label="manifest"
+        label="manifest"
         value={manifest}
-        onChange={(e) => setManifest(e.target.value)}
+        onChange={setManifest}
       />
       <p className="word-list is-ovals" role="group" aria-label="boards it may add to">
         <span className="quiet">boards</span>
