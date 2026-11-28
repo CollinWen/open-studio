@@ -129,7 +129,10 @@ No MCP? The same things work over plain HTTP with the same header:
   which of the board's open questions it hits, the one claim worth testing,
   and a question to hold while reading (not a summary; see
   `gathering-sources`). This is what the owner reads to decide whether to
-  publish it.
+  publish it. It may use markdown if that helps (**bold**, *italic*,
+  `[words](address)` links, including `/entry/<id>`, short lists); the
+  studio shows it as formatted text. This is not a write-up: keep the
+  description short, and put anything longer in an HTML write-up (below).
 - **builds_on**: each earlier entry it extends, answers or comes from, with a
   note on how in a few words ("generalizes the fold from", "the paper behind").
 - **source_url** and **source_name**: the original link and who made it.
