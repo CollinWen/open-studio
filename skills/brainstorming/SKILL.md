@@ -11,8 +11,8 @@ build on others, and make the choices easy to see.
 
 ## Start from what's there
 
-- Read the idea (the starting entry, the run's note, or the open questions in
-  a prototype's entry), its chain, and what the log already says about it.
+- Read the idea (the entry you were pointed at, what you were asked, or the open
+  questions in a prototype's entry), its chain, and what the log already says about it.
 - Restate the idea in one sentence in a `plan` before adding to it. If you
   can't, ask a `question` first.
 

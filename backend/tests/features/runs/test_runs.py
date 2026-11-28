@@ -7,7 +7,7 @@ entries on other boards, logs only on its boards (a line that names none
 lands on a one-board run's board), and stops working when the run is
 finished, runs out or its agent is paused; it lasts 4 hours unless asked, at
 most 90 days; a run can't be given outside tools the agent wasn't granted
-(an open run gets all it was granted); a run leaves a link to its harness's
+(unless picked, it gets all it was granted); a run leaves a link to its harness's
 session (a web address, while it's live, on an allowed site) that only the
 owner and the run's agent see, and the log narrows to one run's lines.
 """
@@ -31,7 +31,7 @@ def _add_agent(client, tools: list[str] | None = None) -> tuple[str, dict]:
 
 
 def _start(client, agent: str, headers=OWNER_HEADERS, **fields):
-    body = {"agent": agent, "kind": "study", "boards": [AGENT_BOARD], "brief": "look at this", **fields}
+    body = {"agent": agent, "boards": [AGENT_BOARD], **fields}
     return client.post("/api/runs", json=body, headers=headers)
 
 
@@ -58,8 +58,7 @@ def test_the_owner_starts_a_run_and_gets_a_kit(client):
     assert kit["run"]["scopes"] == [f"board:{AGENT_BOARD}", "web"]
     assert kit["run"]["boards"] == [AGENT_BOARD]
     assert kit["run"]["state"] == "running"
-    assert "look at this" in kit["prompt"]
-    assert "studio-collaborator" in kit["prompt"] and "gathering-sources" in kit["prompt"]
+    assert "Your manifest" in kit["prompt"] and "studio-collaborator" in kit["prompt"]
     assert "WebFetch" in kit["setups"]["claude_code"]["allowed_tools"]
     assert kit["setups"]["claude_code"]["command"].startswith("claude -p ")
 
@@ -96,10 +95,10 @@ def test_pausing_the_agent_stops_its_runs(client):
 
 def test_a_run_gets_only_tools_the_agent_was_granted(client):
     name, _ = _add_agent(client, tools=["web"])
-    refused = _start(client, name, kind="prototype")
+    refused = _start(client, name, tools=["web", "code"])
     assert refused.status_code == 403
     assert "code" in refused.json()["detail"]
-    narrowed = _start(client, name, kind="prototype", tools=["web"])
+    narrowed = _start(client, name, tools=["web"])
     assert narrowed.json()["run"]["tools"] == ["web"]
 
 
@@ -147,10 +146,9 @@ def test_a_token_for_all_boards_follows_the_agents_boards(client):
     assert _start(client, name, boards=["*", AGENT_BOARD]).status_code == 403
 
 
-def test_an_open_run_gets_every_tool_its_agent_was_granted(client):
+def test_a_run_gets_every_tool_its_agent_was_granted_unless_narrowed(client):
     name, _ = _add_agent(client, tools=["web", "code"])
     kit = client.post("/api/runs", json={"agent": name, "boards": ["*"]}, headers=OWNER_HEADERS).json()
-    assert kit["run"]["kind"] == "open"
     assert kit["run"]["tools"] == ["web", "code"]
     assert "every board you're signed on to" in kit["prompt"]
 
@@ -159,12 +157,6 @@ def test_a_run_token_cannot_start_more_runs(client):
     name, _ = _add_agent(client, tools=["web"])
     kit = _start(client, name).json()
     assert _start(client, name, headers=_bearer(kit)).status_code == 401
-
-
-def test_a_run_cannot_start_from_a_private_entry(client):
-    name, _ = _add_agent(client, tools=["web"])
-    private = client.post("/api/entries", json={**_entry("home"), "visibility": "private"}, headers=OWNER_HEADERS)
-    assert _start(client, name, entry_id=private.json()["id"]).status_code == 403
 
 
 def test_only_the_owner_lists_runs_and_others_cannot_see_one(client):
@@ -208,7 +200,7 @@ def test_a_run_works_over_plain_http_without_any_harness(client):
     name, _ = _add_agent(client, tools=["web"])
     kit = _start(client, name).json()
     run_path = f"/api/runs/{kit['run']['id']}"
-    assert client.get(run_path, headers=_bearer(kit)).json()["brief"] == "look at this"
+    assert client.get(run_path, headers=_bearer(kit)).json()["boards"] == [AGENT_BOARD]
     assert client.get("/api/search", params={"q": "x"}, headers=_bearer(kit)).status_code == 200
     assert client.post("/api/entries", json=_entry(), headers=_bearer(kit)).status_code == 200
     line = {"board": AGENT_BOARD, "type": "finding", "text": "found it"}

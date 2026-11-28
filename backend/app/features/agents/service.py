@@ -1,6 +1,6 @@
 """
 Agent service: the owner adding, changing, pausing and removing agents
-(their description, boards and outside tools), and an agent setting its own
+(their description, manifest, boards, outside tools and skills), and an agent setting its own
 status line.
 
 Which boards an agent may add to is kept on each board, so setting an
@@ -44,7 +44,9 @@ def describe_agent(db: Session, agent: Agent) -> AgentOut:
 def create_agent(db: Session, data: AgentCreate) -> Agent:
     if db.get(Agent, data.name) is not None:
         raise AgentExistsError(f"Agent {data.name} already exists")
-    agent = Agent(name=data.name, description=data.description, tools=data.tools, skills=data.skills)
+    agent = Agent(
+        name=data.name, description=data.description, manifest=data.manifest, tools=data.tools, skills=data.skills
+    )
     db.add(agent)
     db.commit()
     _sign_on_to_boards(db, agent.name, data.boards)

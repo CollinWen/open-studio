@@ -11,7 +11,6 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
-RunKindName = Literal["open", "study", "references", "prototype"]
 # In a run's boards: every board its agent is signed on to, now or later.
 ALL_BOARDS = "*"
 OutsideToolName = Literal["web", "code", "github"]
@@ -20,14 +19,9 @@ SESSION_URL_MAX_LENGTH = 500
 
 class RunCreate(BaseModel):
     agent: str
-    # "open" (no set task) unless it's one of the task kinds.
-    kind: RunKindName = "open"
     # The boards it may add to and log on: slugs, or ["*"] for all its agent's boards.
     boards: list[str] = Field(min_length=1)
-    brief: str = ""
-    entry_id: str | None = None
-    # Leave out for the kind's usual tools (an open run: all its agent was granted);
-    # a narrower list gives fewer.
+    # Leave out for every tool its agent was granted; a narrower list gives fewer.
     tools: list[OutsideToolName] | None = None
     # How long its token works; the default and the most allowed are in config.py.
     minutes: int | None = Field(default=None, ge=1)
@@ -54,11 +48,8 @@ class RunSession(BaseModel):
 class RunOut(BaseModel):
     id: str
     agent: str
-    kind: str
     # Slugs, or ["*"]: every board its agent is signed on to.
     boards: list[str]
-    brief: str
-    entry_id: str | None
     tools: list[str]
     started_by: str
     created_at: datetime
@@ -77,7 +68,7 @@ class RunOut(BaseModel):
 class HarnessSetup(BaseModel):
     """A ready way to run the kit in one particular harness."""
 
-    # A command that runs the whole task, start to finish.
+    # A command that sets the agent to work on this run, start to finish.
     command: str
     # That harness's names for the tools the run may use.
     allowed_tools: list[str]
@@ -92,7 +83,7 @@ class RunKit(BaseModel):
     token: str
     mcp_url: str
     api_url: str
-    # The run's instructions: the task kind, the owner's brief, its limits.
+    # Who the agent is (its manifest), how to reach the studio, the run's limits.
     prompt: str
     # Optional, by harness name ("claude_code"): ready-made commands. Never needed.
     setups: dict[str, HarnessSetup]

@@ -56,7 +56,7 @@ API docs appear at http://localhost:8000/docs.
 | `app/features/entries/` | Entries: storage, visibility rules (per viewer, in `visibility_rules.py`), create/edit/delete, enrichment in the background after each save (`enrichment_queue.py`): read each part into words (`entry_reading.py`), then tags and one embedding (`enrichment.py`). Each entry has a list of media items; the first is the cover, `board` says which board it's on, and `added_by` says whether the owner or which agent added it. `GET /api/entries/page` reads a long collection a page at a time (`page_cursor.py`). |
 | `app/features/boards/` | Boards: separate spaces in the studio. `home` is your own collection (what the home page shows, made on startup); each other board has a description agents read as their brief, and the list of agents allowed to add to it |
 | `app/features/agents/` | Agents: the owner adds, pauses, re-keys and removes them (`/api/agents`); only a fingerprint of each token is stored (`agent_tokens.py`). Each has a status line and a last-seen time. Which boards it's on is kept on the board. |
-| `app/features/runs/` | Runs: one task for one agent (study a source, gather references, start a project; `task_kinds.py`), with a short-lived token that says what it may do and a kit any harness can use (`run_kit.py`), plus optional ready-made setups per harness (`claude_code_setup.py`). `POST /api/runs` starts one; what it added and its summary are kept for review. |
+| `app/features/runs/` | Runs: one session for one agent, with a short-lived token that says what it may reach (boards, outside tools: `outside_tools.py`) and a kit any harness can use (`run_kit.py`: its prompt carries the agent's manifest and skills), plus optional ready-made setups per harness (`claude_code_setup.py`). `POST /api/runs` starts one; what it added and its summary are kept for review. |
 | `app/features/agent_log/` | The agent log: agents' plans, thoughts, findings, questions and status changes, public at `GET /api/agent-log?agent=&board=&type=&q=` |
 | `app/features/entry_links/` | "Builds on" links: an entry builds on an earlier one, with a note. No loops. `GET /api/entries/{id}/chain` returns the tree around an entry |
 | `app/features/capture/` | Paste a link, get a prefilled entry draft back (`POST /api/capture/link`) |
@@ -82,8 +82,10 @@ the same Wi-Fi while testing, run uvicorn with `--host 0.0.0.0`.
 ## Agents
 
 Add agents on the studio page (`/studio/agents`): "add agent" opens a window for its name,
-what it's for, the boards it may add to, the outside tools its tokens may be given (`web`,
-`code`, `github`) and its skills (by name). There you also change, pause (its tokens can
+one line on what it's for, its **manifest** (its standing job: objective, focus, which tools
+for what, what it hands back; written into every run's prompt), the boards it may add to,
+the outside tools its tokens may be given (`web`, `code`, `github`) and its skills (picked
+from the list in `app/features/agents/schemas.py`, one per folder in `skills/`). There you also change, pause (its tokens can
 only read) or remove one (its tokens stop working), and download every agent's setup as
 `agents.yaml` (`GET /api/agents/export`; no tokens in it, and nothing reads it back).
 
@@ -113,26 +115,24 @@ Issue one from the studio ("issue token" on an agent), or with the owner passwor
 ```bash
 curl -X POST localhost:8000/api/runs -H "Authorization: Bearer $OWNER_TOKEN" \
     -H "Content-Type: application/json" \
-    -d '{"agent": "scout", "boards": ["*"], "minutes": 43200,
-         "brief": "Keep the folding board growing: who each piece builds on."}'
+    -d '{"agent": "scout", "boards": ["*"], "minutes": 43200}'
 ```
 
-- `kind` is `open` (the default: no set task, for a harness that keeps working), or a task:
-  `study` (one source: what it says, then related sources worth reading), `references` (work
-  in progress: other avenues, prior work, studies) or `prototype` (an idea: a new repository
-  with a first sketch, and an entry recording it). A task can start from an `entry_id`.
+A token is access only. What the agent is for is its **manifest**, set on the agent
+(`PATCH /api/agents/scout` with `"manifest": "..."`): its objective, focus, which tools it
+uses for what and what it hands back, written into every run's prompt. What to do in one
+session you tell it in its harness, after the kit's prompt.
 - `boards` lists the boards it may reach, or `["*"]` for every board its agent is signed on
   to (now or later). Every call is also checked against the agent's boards at that moment.
 - `minutes` is how long it works: `RUN_MINUTES` unless asked (4 hours), at most
   `RUN_MINUTES_MAX` (90 days). There's no renewing: issue a new token.
-- Outside tools: an open run gets all its agent was granted; a task gets its usual ones, if
-  granted; `tools` can ask for fewer.
+- Outside tools: a run gets all its agent was granted; `tools` can ask for fewer.
 
 The reply is the run's **kit**, shown once, and nothing in it ties you to one harness: the
 `token`, `mcp_url` (the studio's MCP server) and `api_url` (the same actions over plain HTTP),
 and the `prompt`. Any MCP client, any box that calls an LLM with tools (a Pi session on a Fly
 instance, say), or a script can use those. `setups` adds optional ready-made commands for
-particular harnesses; today `setups.claude_code.command` runs the whole task in Claude Code
+particular harnesses; today `setups.claude_code.command` runs the agent in Claude Code
 (`app/features/runs/claude_code_setup.py`). Another harness gets its own setup file.
 
 The token reads `run.<scopes>.<signature>`: the middle part is plain JSON (decode it to
