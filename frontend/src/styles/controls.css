@@ -2,8 +2,9 @@
  * Controls: the shapes of what can be picked, used on every page. A mode
  * word on a square, a filter in an oval, a view as a mark in a small square
  * (components/WordChoice, MarkChoice), the thin line icons and icon buttons
- * (components/Icon), the caret that opens a control band, and the search
- * field (components/SearchField). Every pick sits on the accent.
+ * (components/Icon), the caret that opens a control band, the search
+ * field (components/SearchField) and the text editor (components/TextEditor).
+ * Every pick sits on the accent.
  *
  * Part of global.css.
  */
@@ -194,5 +195,52 @@ button[type="submit"]:disabled {
 }
 
 .search-field::-webkit-search-cancel-button {
+  display: none;
+}
+
+/* The text editor: a field that grows with its text (no scrolling inside
+   it, no drag handle), underlined like every field, with a quiet line of
+   small words under it. Its preview takes the field's place and room. */
+.text-editor {
+  width: 100%;
+}
+
+.text-editor textarea,
+.text-editor-preview {
+  display: block;
+  width: 100%;
+  min-height: var(--line);
+  box-shadow: var(--underline-faint);
+}
+
+.text-editor textarea {
+  resize: none;
+  overflow: hidden;
+}
+
+.text-editor textarea:focus {
+  box-shadow: var(--underline);
+}
+
+.text-editor-preview {
+  cursor: text;
+  padding-bottom: calc(var(--line) / 2);
+}
+
+.text-editor-tools {
+  margin: 0;
+  font-size: var(--size-small);
+  line-height: var(--leading-small);
+}
+
+/* write · preview sit at the line's far end, apart from the words that change the text. */
+.text-editor-modes {
+  display: flex;
+  column-gap: 1em;
+  margin-left: auto;
+}
+
+/* Inside a list, the line of words shows only while you're writing in it. */
+.text-editor.is-compact:not(:focus-within, .is-previewing) .text-editor-tools {
   display: none;
 }

@@ -17,6 +17,7 @@ import { WordChoice } from "../../components/WordChoice";
 import type { Agent, OutsideTool } from "../../types/agent";
 import { ALL_BOARDS, RUN_KINDS, type RunKind, type RunKit } from "../../types/run";
 import { TOKEN_LENGTHS, DEFAULT_TOKEN_LENGTH } from "./tokenLengths";
+import { TextEditor } from "../../components/TextEditor";
 
 interface Props {
   agent: Agent;
@@ -60,11 +61,11 @@ export function TokenForm({ agent, onIssued, onCancel }: Props) {
           <WordChoice key={one} label={one} active={kind === one} onPick={() => setKind(one)} />
         ))}
       </p>
-      <textarea
+      <TextEditor
         rows={3}
         placeholder="a note: what to do, in your words (may hold a link)"
         value={brief}
-        onChange={(e) => setBrief(e.target.value)}
+        onChange={setBrief}
       />
       <p className="word-list is-ovals" role="group" aria-label="boards it may reach">
         <span className="quiet">boards</span>
