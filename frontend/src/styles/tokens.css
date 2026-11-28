@@ -106,6 +106,12 @@
   --dot-large: 15px;
   --time-bar-height: calc(1.5 * var(--line));
   --time-handle: 11px;
+  /* The widest the time slider and the entry page's Related list grow, so
+     a month bar or a title line stays easy to follow on a wide screen. */
+  --time-filter-width: 640px;
+  --related-width: 720px;
+  /* A picture's or write-up's thumbnail in the entry form's media list. */
+  --media-thumb-width: 96px;
   /* The studio mark (components/StudioMark.tsx), by its height: beside a
      word, and standing in for a view still on its way. */
   --mark-small: calc(0.6 * var(--line));

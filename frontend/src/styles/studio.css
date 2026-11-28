@@ -55,7 +55,7 @@
 
 .media-editor-item img,
 .media-editor-writeup {
-  width: 96px;
+  width: var(--media-thumb-width);
   height: auto;
   flex-shrink: 0;
 }
