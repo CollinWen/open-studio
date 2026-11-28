@@ -141,9 +141,12 @@ function readMark(match: RegExpMatchArray): Inline {
   return { type: "break" };
 }
 
-/** Only web and mail addresses, and paths on this site, can be links. */
+/** Only web and mail addresses, and paths on this site, can be links. A path on this site has no
+ * backslash: browsers read "\" as "/", so "/\evil.example" would open another site while
+ * looking like a link within this one. */
 export function isSafeHref(href: string): boolean {
-  return /^(https?:\/\/|mailto:)/i.test(href) || /^\/(?!\/)/.test(href) || href.startsWith("#");
+  if (/^(https?:\/\/|mailto:)/i.test(href) || href.startsWith("#")) return true;
+  return /^\/(?!\/)/.test(href) && !href.includes("\\");
 }
 
 /** The words alone, marks dropped, lines run together: for a card's one quiet line. */
