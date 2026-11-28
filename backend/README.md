@@ -177,8 +177,6 @@ Put the app name and the R2 keys in `deploy.toml` at the repo root, then from th
 python deploy.py backend
 ```
 It sends every setting as a Fly secret and deploys on one machine (SQLite needs exactly one).
-That machine stays running (`min_machines_running = 1` in `fly.toml`): a stopped one takes
-several seconds to wake on the next visit, and loses any readings still queued in memory.
 
 **3. api.yourdomain.com**
 ```bash
