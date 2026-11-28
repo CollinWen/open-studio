@@ -5,13 +5,15 @@
  * scrolling inside itself, and reads markdown: **bold**, *italic*, `code`,
  * [links](address), lists, quotes and headings.
  *
- * Under the field sits a quiet line of words: bold · italic · link · list ·
- * quote, then write · preview (preview shows the text as the site will).
+ * Under the field sits a quiet row of line icons (components/Icon): bold,
+ * italic, link, list, quote, and at the far end an eye that switches to a
+ * preview of the text as the site will show it. Each names itself (and its
+ * key) when pointed at.
  * Keys: ⌘/Ctrl B, I, K for bold, italic and link; ⌘/Ctrl Enter saves the
  * form; Enter carries a list on; Tab moves list lines in. Pasting a web
  * address over selected words links them. What each does to the text lives
  * in textEditorCommands.ts. A compact editor (inside a ledger row) shows
- * its line of words only while you're writing in it.
+ * its icons only while you're writing in it.
  *
  * Looks: .text-editor in styles/controls.css. Shown text: MarkdownText.
  */
@@ -19,7 +21,8 @@
 import { useLayoutEffect, useRef, useState, type FocusEvent, type KeyboardEvent } from "react";
 import { MarkdownText } from "./MarkdownText";
 import { continueList, indentList, makeLink, pasteAsLink, toggleLinePrefix, toggleMark } from "./textEditorCommands";
-import { WordChoice } from "./WordChoice";
+import { Icon, type IconName } from "./Icon";
+import { MarkChoice } from "./MarkChoice";
 
 interface Props {
   value: string;
@@ -34,14 +37,14 @@ interface Props {
   compact?: boolean;
 }
 
-type Tool = { label: string; run: (field: HTMLTextAreaElement) => void };
+type Tool = { icon: IconName; label: string; run: (field: HTMLTextAreaElement) => void };
 
 const TOOLS: Tool[] = [
-  { label: "bold", run: (field) => toggleMark(field, "**") },
-  { label: "italic", run: (field) => toggleMark(field, "*") },
-  { label: "link", run: makeLink },
-  { label: "list", run: (field) => toggleLinePrefix(field, "- ") },
-  { label: "quote", run: (field) => toggleLinePrefix(field, "> ") },
+  { icon: "bold", label: "bold (⌘B)", run: (field) => toggleMark(field, "**") },
+  { icon: "italic", label: "italic (⌘I)", run: (field) => toggleMark(field, "*") },
+  { icon: "link", label: "link (⌘K, or paste an address over words)", run: makeLink },
+  { icon: "list", label: "list", run: (field) => toggleLinePrefix(field, "- ") },
+  { icon: "quote", label: "quote", run: (field) => toggleLinePrefix(field, "> ") },
 ];
 
 const SHORTCUTS: Record<string, (field: HTMLTextAreaElement) => void> = {
@@ -108,25 +111,31 @@ export function TextEditor({ value, onChange, placeholder, rows = 3, onBlur, aut
           onPaste={(event) => pasteAsLink(event.currentTarget, event.clipboardData.getData("text")) && event.preventDefault()}
         />
       )}
-      <p className="word-list text-editor-tools">
+      <div className="mark-list text-editor-tools">
         {!previewing &&
           TOOLS.map((tool) => (
             <button
-              key={tool.label}
+              key={tool.icon}
               type="button"
-              className="square quiet"
-              // Keep the caret and selection in the field while the word acts on them.
+              className="mark-choice"
+              aria-label={tool.label}
+              title={tool.label}
+              // Keep the caret and selection in the field while the icon acts on them.
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => fieldRef.current && tool.run(fieldRef.current)}
             >
-              {tool.label}
+              <Icon name={tool.icon} />
             </button>
           ))}
-        <span className="text-editor-modes">
-          <WordChoice label="write" active={!previewing} onPick={showWriting} />
-          <WordChoice label="preview" active={previewing} onPick={() => setPreviewing(true)} />
+        <span className="text-editor-preview-toggle">
+          <MarkChoice
+            mark={<Icon name="preview" />}
+            label={previewing ? "back to writing" : "preview"}
+            active={previewing}
+            onPick={previewing ? showWriting : () => setPreviewing(true)}
+          />
         </span>
-      </p>
+      </div>
     </div>
   );
 }

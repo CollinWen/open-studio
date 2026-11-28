@@ -199,8 +199,8 @@ button[type="submit"]:disabled {
 }
 
 /* The text editor: a field that grows with its text (no scrolling inside
-   it, no drag handle), underlined like every field, with a quiet line of
-   small words under it. Its preview takes the field's place and room. */
+   it, no drag handle), underlined like every field, with a quiet row of
+   line icons under it, each in a small square like the view marks. Its preview takes the field's place and room. */
 .text-editor {
   width: 100%;
 }
@@ -228,15 +228,25 @@ button[type="submit"]:disabled {
 }
 
 .text-editor-tools {
-  margin: 0;
-  font-size: var(--size-small);
-  line-height: var(--leading-small);
+  display: flex;
+  /* Each icon's square is wider than its mark; the row reaches past both
+     ends by the difference, so the marks line up with the text's edges. */
+  --icon-inset: calc((var(--mark-choice) - var(--dot-large)) / 2);
+  width: calc(100% + 2 * var(--icon-inset));
+  margin: 0 calc(-1 * var(--icon-inset));
 }
 
-/* write · preview sit at the line's far end, apart from the words that change the text. */
-.text-editor-modes {
-  display: flex;
-  column-gap: 1em;
+/* The icons rest in soft ink, so the row stays quiet beside the text. */
+.text-editor-tools .mark-choice:not(.is-picked) {
+  color: var(--ink-soft);
+}
+
+.text-editor-tools .mark-choice:hover {
+  color: var(--ink);
+}
+
+/* The preview eye sits at the row's far end, apart from the icons that change the text. */
+.text-editor-preview-toggle {
   margin-left: auto;
 }
 
