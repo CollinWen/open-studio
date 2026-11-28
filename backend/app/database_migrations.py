@@ -35,9 +35,15 @@ MIGRATIONS: list[str] = [
     "DROP INDEX IF EXISTS ix_agent_token_hash",
     "ALTER TABLE agent DROP COLUMN token_hash",
     "ALTER TABLE agent ADD COLUMN skills JSON NOT NULL DEFAULT '[]'",
-    # Toolkits: what an agent may use through the studio (Composio), and which of them a run may.
-    "ALTER TABLE agent ADD COLUMN toolkits JSON NOT NULL DEFAULT '{}'",
-    "ALTER TABLE run ADD COLUMN toolkits JSON NOT NULL DEFAULT '[]'",
+    # Add-ons: an agent's outside tools (web, code, github) become its first add-ons, of the
+    # same names (made on startup as built-in add-ons), and its runs' with them.
+    "ALTER TABLE agent ADD COLUMN addons JSON NOT NULL DEFAULT '[]'",
+    "UPDATE agent SET addons = tools",
+    "ALTER TABLE agent DROP COLUMN tools",
+    "ALTER TABLE agent ADD COLUMN addon_instructions JSON NOT NULL DEFAULT '{}'",
+    "ALTER TABLE run ADD COLUMN addons JSON NOT NULL DEFAULT '[]'",
+    "UPDATE run SET addons = tools",
+    "ALTER TABLE run DROP COLUMN tools",
 ]
 
 

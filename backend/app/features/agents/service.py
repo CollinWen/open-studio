@@ -1,10 +1,10 @@
 """
 Agent service: the owner adding, changing, pausing and removing agents
-(their description, boards, outside tools, skills and toolkits), and an
-agent setting its own status line. An agent's skills must be in the skill
-catalog (skills/service.py), so a run can always write them into its
-sandbox. Its toolkit grants are shown only to the owner: they can name
-private repositories and accounts.
+(their description, boards, skills, add-ons and the instructions for each
+add-on), and an agent setting its own status line. An agent's skills must
+be in the skill catalog (skills/service.py) and its add-ons defined
+(addons/service.py), so a run can always set them up. Its instructions are
+shown only to the owner.
 
 Which boards an agent may add to is kept on each board, so setting an
 agent's boards, and removing one, go through boards/service.py. Agents have
@@ -15,6 +15,7 @@ Used by agents/routes.py and agent_server/log_tools.py.
 
 from sqlmodel import Session, select
 
+from app.features.addons import service as addons_service
 from app.features.agents.models import Agent
 from app.features.agents.schemas import AgentCreate, AgentOut, AgentUpdate
 from app.features.boards import service as boards_service
@@ -41,24 +42,29 @@ def get_agent(db: Session, name: str) -> Agent | None:
 
 
 def describe_agent(db: Session, agent: Agent, for_owner: bool = False) -> AgentOut:
-    """The agent as the owner sees it, or (for_owner False) as everyone else does: no toolkits."""
-    boards = [board.slug for board in boards_service.list_boards(db) if agent.name in board.agents]
+    """The agent as the owner sees it, or (for_owner False) as everyone else does: no instructions."""
     fields = agent.model_dump()
     if not for_owner:
-        fields["toolkits"] = {}
-    return AgentOut(**fields, boards=boards)
+        fields["addon_instructions"] = {}
+    return AgentOut(**fields, boards=agent_boards(db, agent))
+
+
+def agent_boards(db: Session, agent: Agent) -> list[str]:
+    """The boards it's signed on to (each board keeps its own list of agents)."""
+    return [board.slug for board in boards_service.list_boards(db) if agent.name in board.agents]
 
 
 def create_agent(db: Session, data: AgentCreate) -> Agent:
     if db.get(Agent, data.name) is not None:
         raise AgentExistsError(f"Agent {data.name} already exists")
     skills_service.check_skill_names(data.skills)
+    addons_service.check_addon_names(db, data.addons)
     agent = Agent(
         name=data.name,
         description=data.description,
-        tools=data.tools,
         skills=data.skills,
-        toolkits={toolkit: grant.model_dump() for toolkit, grant in data.toolkits.items()},
+        addons=list(dict.fromkeys(data.addons)),
+        addon_instructions=_kept_instructions(data.addons, data.addon_instructions),
     )
     db.add(agent)
     db.commit()
@@ -71,6 +77,13 @@ def update_agent(db: Session, agent: Agent, changes: AgentUpdate) -> Agent:
     fields = changes.model_dump(exclude_unset=True)
     if fields.get("skills"):
         skills_service.check_skill_names(fields["skills"])
+    if "addons" in fields:
+        addons_service.check_addon_names(db, fields["addons"])
+        fields["addons"] = list(dict.fromkeys(fields["addons"]))
+    if "addons" in fields or "addon_instructions" in fields:
+        fields["addon_instructions"] = _kept_instructions(
+            fields.get("addons", agent.addons), fields.get("addon_instructions", agent.addon_instructions)
+        )
     boards = fields.pop("boards", None)
     for field, value in fields.items():
         setattr(agent, field, value)
@@ -80,6 +93,11 @@ def update_agent(db: Session, agent: Agent, changes: AgentUpdate) -> Agent:
         _sign_on_to_boards(db, agent.name, boards)
     db.refresh(agent)
     return agent
+
+
+def _kept_instructions(addons: list[str], instructions: dict[str, str]) -> dict[str, str]:
+    """Only instructions for add-ons it has, and only ones with words in them."""
+    return {name: text.strip() for name, text in instructions.items() if name in addons and text.strip()}
 
 
 def _sign_on_to_boards(db: Session, name: str, slugs: list[str]) -> None:

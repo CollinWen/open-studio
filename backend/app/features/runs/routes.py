@@ -7,14 +7,17 @@ Run endpoints:
   GET  /api/runs?agent=        runs, newest first (owner only)
   GET  /api/runs/{id}          one run: its brief, state, scopes, what it added
                                (the owner, or the run's agent)
-  GET  /api/runs/{id}/sandbox?harness=pi|claude_code
-                               what a fresh sandbox needs to start the run in that
-                               harness: the files for the run's folder (prompt,
-                               skills, studio connection) and the start command
-                               (the owner, or the run's agent, while it's live)
-  GET  /api/runs/{id}/sandbox.sh?harness=pi|claude_code
-                               the same, as the shell script the kit's lines run;
+  GET  /api/runs/current/sandbox?harness=pi|claude_code
+                               what a fresh sandbox needs to start the run of the
+                               token it presents: the files for the run's folder
+                               (prompt, AGENTS.md, skills, studio connection), the
+                               studio's addresses, and the start command (a run's
+                               own token, while it's live)
+  GET  /api/runs/current/sandbox.sh?harness=pi|claude_code
+                               the same, as the shell script the kit's line runs;
                                a refusal is a script too, which says why
+  GET  /api/runs/{id}/sandbox[.sh]?harness=...
+                               the same for a named run (the owner, or the run's agent)
   POST /api/runs/{id}/session  note where the harness keeps its session (a link the
                                owner can follow to watch the agent work)
                                (the owner, or the run's agent, while it's live; only
@@ -67,6 +70,38 @@ def list_runs(agent: str | None = None, db: Session = Depends(get_db)):
 @router.get("/{run_id}", response_model=RunOut)
 def get_run(run_id: str, viewer: Viewer = Depends(current_viewer), db: Session = Depends(get_db)):
     return service.describe_run(db, _visible(run_id, viewer, db))
+
+
+@router.get("/current/sandbox", response_model=SandboxSetup)
+def get_current_sandbox_setup(
+    request: Request,
+    harness: HarnessName = "pi",
+    viewer: Viewer = Depends(current_viewer),
+    db: Session = Depends(get_db),
+):
+    """The sandbox setup for the run whose token is presented: all a sandbox needs is its token."""
+    return get_sandbox_setup(_current_run_id(viewer), request, harness, viewer, db)
+
+
+@router.get("/current/sandbox.sh", response_class=PlainTextResponse)
+def get_current_sandbox_script(
+    request: Request,
+    harness: HarnessName = "pi",
+    viewer: Viewer = Depends(current_viewer),
+    db: Session = Depends(get_db),
+):
+    try:
+        run_id = _current_run_id(viewer)
+    except HTTPException as error:
+        return PlainTextResponse(write_refusal_script(str(error.detail)), status_code=error.status_code)
+    return get_sandbox_script(run_id, request, harness, viewer, db)
+
+
+def _current_run_id(viewer: Viewer) -> str:
+    """The run of the token presented; the owner has none (they name a run instead)."""
+    if viewer.is_owner:
+        raise HTTPException(status_code=400, detail="The owner has no current run: use /api/runs/{id}/sandbox")
+    return viewer.run_id
 
 
 @router.get("/{run_id}/sandbox", response_model=SandboxSetup)

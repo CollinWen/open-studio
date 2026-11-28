@@ -86,12 +86,15 @@ def send_fly_secrets(config: dict, stage: bool) -> None:
         settings["AGENT_RESOURCES"] = resources
     else:
         print("Note: no [agents] resources in deploy.toml, so the deployed studio has no skills to give agents.")
-    # Optional: Composio, which runs the toolkit tools agents call through the studio.
+    # Optional: Composio, which runs the add-on tools agents call through the studio,
+    # with the session policy (which tools, which ask first) every run's session starts from.
     composio = config.get("composio", {})
     if composio.get("api_key"):
         settings["COMPOSIO_API_KEY"] = composio["api_key"]
     if composio.get("user_id"):
         settings["COMPOSIO_USER_ID"] = composio["user_id"]
+    if composio.get("policy"):
+        settings["COMPOSIO_POLICY"] = composio["policy"]
     # Optional: the key run tokens are signed with. Without it one is made from owner_token.
     if secrets.get("run_token_secret"):
         settings["RUN_TOKEN_SECRET"] = secrets["run_token_secret"]

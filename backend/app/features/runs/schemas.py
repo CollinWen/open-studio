@@ -16,7 +16,6 @@ from pydantic import BaseModel, Field, field_validator
 RunKindName = Literal["open", "study", "references", "prototype"]
 # In a run's boards: every board its agent is signed on to, now or later.
 ALL_BOARDS = "*"
-OutsideToolName = Literal["web", "code", "github"]
 # The harnesses a sandbox can be set up for (runs/sandbox_setup.py).
 HarnessName = Literal["pi", "claude_code"]
 SESSION_URL_MAX_LENGTH = 500
@@ -30,11 +29,8 @@ class RunCreate(BaseModel):
     boards: list[str] = Field(min_length=1)
     brief: str = ""
     entry_id: str | None = None
-    # Leave out for the kind's usual tools (an open run: all its agent was granted);
-    # a narrower list gives fewer.
-    tools: list[OutsideToolName] | None = None
-    # Leave out for all the toolkits its agent was granted; a narrower list gives fewer.
-    toolkits: list[str] | None = None
+    # Leave out for all its agent's add-ons; a narrower list gives fewer.
+    addons: list[str] | None = None
     # How long its token works; the default and the most allowed are in config.py.
     minutes: int | None = Field(default=None, ge=1)
 
@@ -65,9 +61,8 @@ class RunOut(BaseModel):
     boards: list[str]
     brief: str
     entry_id: str | None
-    tools: list[str]
-    # Toolkits it may use through the studio, by name.
-    toolkits: list[str]
+    # The add-ons it may use, by name.
+    addons: list[str]
     started_by: str
     created_at: datetime
     expires_at: datetime
@@ -85,8 +80,8 @@ class RunOut(BaseModel):
 class HarnessSetup(BaseModel):
     """A ready way to run the kit in one particular harness."""
 
-    # Lines to paste into a shell where that harness is installed: they set up a sandbox
-    # folder for the run (skills, studio connection, prompt) and run the whole task.
+    # One line to paste into a shell where that harness is installed: it sets up a sandbox
+    # folder for the run (prompt, AGENTS.md, skills, studio connection) and runs the whole task.
     command: str
     # That harness's names for the tools the run may use.
     allowed_tools: list[str]
@@ -103,10 +98,10 @@ class RunKit(BaseModel):
     api_url: str
     # The run's instructions: the task kind, the owner's brief, its limits.
     prompt: str
-    # The shell script that sets up a sandbox for this run, fetched with the token;
+    # The shell script that sets up a sandbox for the run whose token fetches it;
     # add ?harness=claude_code for Claude Code (Pi otherwise).
     sandbox_url: str
-    # By harness name ("pi", "claude_code"): lines that set up a sandbox and run the task.
+    # By harness name ("pi", "claude_code"): one line that sets up a sandbox and runs the task.
     setups: dict[str, HarnessSetup]
 
 
@@ -131,6 +126,8 @@ class SandboxSetup(BaseModel):
     # What the sandbox must already have: the harness's program and these environment variables.
     program: str
     env: list[str]
+    # What the setup sets for the harness besides the token: where the studio is, and the run.
+    exports: dict[str, str]
     # The shell command that starts the harness inside the folder.
     command: str
     # The harness's names for the tools the run may use.

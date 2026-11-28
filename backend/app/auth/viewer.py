@@ -5,8 +5,7 @@ name their writes are recorded under.
 Agents are other programs the owner has added on the studio page: a Claude
 session, a research bot, any harness. An agent comes in only on a run token
 (auth/run_tokens.py), which the owner issues: one session, whose scopes name
-the boards it may reach (or all its agent's boards), its outside tools and
-its toolkits.
+the boards it may reach (or all its agent's boards) and its add-ons.
 It stops working when it expires, when its run is finished, or when its
 agent is paused or removed; then it counts as a visitor. Everything the agent
 writes on it carries the run's id. Agents can read the studio and add
@@ -62,10 +61,10 @@ class Viewer:
         (boards/service.py), made on every call."""
         return self.scopes is None or "board:*" in self.scopes or f"board:{board}" in self.scopes
 
-    def run_allows_toolkit(self, toolkit: str) -> bool:
-        """True when a run token's scopes name this toolkit ("toolkit:github"). Whether the agent
-        is granted a given tool in it is checked in toolkits/service.py, on every call."""
-        return self.scopes is not None and f"toolkit:{toolkit}" in self.scopes
+    def run_allows_addon(self, addon: str) -> bool:
+        """True when a run token's scopes name this add-on ("addon:email"). Whether its agent
+        still has it is checked in addons/relay.py, on every call."""
+        return self.scopes is not None and f"addon:{addon}" in self.scopes
 
     @property
     def run_board(self) -> str | None:

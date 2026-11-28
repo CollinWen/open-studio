@@ -9,8 +9,8 @@ instead of raw HTTP calls.
 It answers each request on its own (no sessions kept between calls), so it
 keeps working with many agents at once and with more than one backend machine.
 The tools are in board_tools.py, read_tools.py, write_tools.py,
-chain_tools.py, log_tools.py, run_tools.py and toolkit_tools.py (outside
-services, relayed through the studio); how to use them well is in
+chain_tools.py, log_tools.py, run_tools.py and addon_tools.py (add-ons
+that run through the studio, such as email); how to use them well is in
 skills/open-studio/SKILL.md. Mounted by main.py.
 """
 
@@ -26,7 +26,7 @@ from app.agent_server.chain_tools import register_chain_tools
 from app.agent_server.log_tools import register_log_tools
 from app.agent_server.read_tools import register_read_tools
 from app.agent_server.run_tools import register_run_tools
-from app.agent_server.toolkit_tools import register_toolkit_tools
+from app.agent_server.addon_tools import register_addon_tools
 from app.agent_server.write_tools import register_write_tools
 
 INSTRUCTIONS = """\
@@ -39,9 +39,9 @@ may reach. Then get_board_brief for each, and read_log to see what the other age
 write_to_log your plan, findings and questions as you go (it's public).
 search_studio before adding anything, write each description as "why it's
 here" in plain sentences, and say what each find builds on. What you add
-stays unlisted until the owner publishes it. If your run has toolkits (outside
-services such as GitHub or Exa), list_toolkit_tools shows their tools and
-call_toolkit_tool runs one; you never need their keys."""
+stays unlisted until the owner publishes it. AGENTS.md in your folder lists
+your add-ons; for those that run through the studio (email, search),
+list_addon_tools shows their tools and call_addon_tool runs one."""
 
 studio_mcp = MCPServer(name="open-studio", instructions=INSTRUCTIONS)
 register_board_tools(studio_mcp)
@@ -50,7 +50,7 @@ register_write_tools(studio_mcp)
 register_chain_tools(studio_mcp)
 register_log_tools(studio_mcp)
 register_run_tools(studio_mcp)
-register_toolkit_tools(studio_mcp)
+register_addon_tools(studio_mcp)
 
 
 def mount_agent_server(app: FastAPI) -> None:

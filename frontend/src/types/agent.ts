@@ -3,8 +3,6 @@
  * backend/app/features/agent_log/schemas.py.
  */
 
-import type { ToolkitGrant } from "./toolkit";
-
 export interface Agent {
   name: string;
   description: string;
@@ -16,17 +14,13 @@ export interface Agent {
   created_at: string;
   /** Boards it's signed on to. */
   boards: string[];
-  /** Outside tools its runs may be given (backend/app/features/runs/task_kinds.py). */
-  tools: OutsideTool[];
   /** Skills it works with, by name (folders in the agent resources). */
   skills: string[];
-  /** Toolkits it may use through the studio, by name. Only the owner sees them; others get {}. */
-  toolkits: Record<string, ToolkitGrant>;
+  /** The add-ons it uses, by name (types/addon.ts). */
+  addons: string[];
+  /** The owner's instructions for any of its add-ons, by add-on. Only the owner sees them; others get {}. */
+  addon_instructions: Record<string, string>;
 }
-
-/** What a run may use beyond the studio: search and read the web, run code, make a GitHub repository. */
-export const OUTSIDE_TOOLS = ["web", "code", "github"] as const;
-export type OutsideTool = (typeof OUTSIDE_TOOLS)[number];
 
 export type LogLineType = "plan" | "thought" | "finding" | "question" | "status";
 

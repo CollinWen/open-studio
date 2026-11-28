@@ -6,7 +6,7 @@
  * leaves. Drag its bottom-right corner to make it bigger or smaller.
  *
  * Knows nothing of what's inside. The entry form opens in one
- * (EntryFormModal), and so do the studio's agent and token windows.
+ * (EntryFormModal), and so do the studio's add-on, agent and token windows.
  * Looks: .paper-window in styles/paper-window.css.
  */
 

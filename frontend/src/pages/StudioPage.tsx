@@ -7,13 +7,16 @@
  *                                opens the entry form (?add)
  *   boards   ( /studio/boards )  add a board, change its name or brief
  *   tags     ( /studio/tags )    describe and rank each tag
- *   agents   ( /studio/agents )  add, pause, re-key, remove; which boards
- *                                and outside tools each may use
+ *   add-ons  ( /studio/addons )  what agents can be given beyond the studio,
+ *                                each defined once: its guide, the account it
+ *                                acts as (connected on Composio's page)
+ *   agents   ( /studio/agents )  add, pause, remove, issue tokens; the boards,
+ *                                skills and add-ons of each, and its AGENTS.md
  *   runs     ( /studio/runs )    every token issued (each is a run): its task,
  *                                agent, boards, state, and a link to watch its
  *                                harness's session; ?agent= narrows to one agent
  *
- * This page loads all five lists (for the counts) and reloads them after
+ * This page loads all six lists (for the counts) and reloads them after
  * any change; the large studio mark holds the section until its own list
  * is in. "leave" (under the section words) signs the owner out. ?q=
  * searches entries or tags. Adding and editing an entry happen in the form
@@ -22,6 +25,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
+import { fetchAddons } from "../api/addonsApi";
 import { fetchAgents } from "../api/agentsApi";
 import { fetchBoards } from "../api/boardsApi";
 import { fetchEntries } from "../api/entriesApi";
@@ -32,6 +36,7 @@ import { LabelRow } from "../components/LabelRow";
 import { LoadingMark } from "../components/LoadingMark";
 import { SectionLine } from "../components/SectionLine";
 import { SiteFooter } from "../components/SiteFooter";
+import { AddonManager } from "../features/studio/AddonManager";
 import { AgentManager } from "../features/studio/AgentManager";
 import { BoardManager } from "../features/studio/BoardManager";
 import { EntryIndex } from "../features/studio/EntryIndex";
@@ -40,12 +45,15 @@ import { RunList } from "../features/studio/RunList";
 import { TagNotesEditor } from "../features/studio/TagNotesEditor";
 import { useOnEntrySaved } from "../features/studio/entrySavedEvent";
 import { useEntryFormParam } from "../features/studio/useEntryFormParam";
+import type { Addon } from "../types/addon";
 import type { Agent } from "../types/agent";
 import type { Board, Entry, Tag } from "../types/entry";
 import type { Run } from "../types/run";
 
-const SECTIONS = ["entries", "boards", "tags", "agents", "runs"] as const;
+const SECTIONS = ["entries", "boards", "tags", "addons", "agents", "runs"] as const;
 type Section = (typeof SECTIONS)[number];
+// How a section is written, where it isn't its address.
+const SECTION_LABELS: Partial<Record<Section, string>> = { addons: "add-ons" };
 
 export function StudioPage() {
   const asked = useParams().section as Section | undefined;
@@ -58,6 +66,7 @@ export function StudioPage() {
   const [entries, setEntries] = useState<Entry[] | null>(null);
   const [boards, setBoards] = useState<Board[] | null>(null);
   const [tags, setTags] = useState<Tag[] | null>(null);
+  const [addons, setAddons] = useState<Addon[] | null>(null);
   const [agents, setAgents] = useState<Agent[] | null>(null);
   const [runs, setRuns] = useState<Run[] | null>(null);
   const { openEntryEdit } = useEntryFormParam();
@@ -66,6 +75,7 @@ export function StudioPage() {
     fetchEntries().then(setEntries).catch(console.error);
     fetchBoards().then(setBoards).catch(console.error);
     fetchTags().then(setTags).catch(console.error);
+    fetchAddons().then(setAddons).catch(console.error);
     fetchAgents().then(setAgents).catch(console.error);
     fetchRuns().then(setRuns).catch(console.error);
   }, []);
@@ -80,12 +90,13 @@ export function StudioPage() {
     entries: entries?.length,
     boards: boards?.length,
     tags: tags?.length,
+    addons: addons?.length,
     agents: agents?.length,
     runs: runs?.length,
   };
   const sections = SECTIONS.map((key) => ({
     key,
-    label: key,
+    label: SECTION_LABELS[key] ?? key,
     to: key === "entries" ? "/studio" : `/studio/${key}`,
     count: counts[key],
   }));
@@ -116,7 +127,7 @@ export function StudioPage() {
                 </button>
               </p>
             </SectionLine>
-            {{ entries, boards, tags, agents, runs }[section] === null && <LoadingMark />}
+            {{ entries, boards, tags, addons, agents, runs }[section] === null && <LoadingMark />}
             {section === "entries" && entries && (
               <EntryIndex
                 entries={entries}
@@ -128,8 +139,11 @@ export function StudioPage() {
             )}
             {section === "boards" && boards && <BoardManager boards={boards} onChanged={reload} />}
             {section === "tags" && tags && <TagNotesEditor tags={tags} query={query} onSearch={search} />}
-            {section === "agents" && agents && boards && (
-              <AgentManager agents={agents} boards={boards} onChanged={reload} />
+            {section === "addons" && addons && agents && (
+              <AddonManager addons={addons} agents={agents} onChanged={reload} />
+            )}
+            {section === "agents" && agents && boards && addons && (
+              <AgentManager agents={agents} boards={boards} addons={addons} onChanged={reload} />
             )}
             {section === "runs" && runs && entries && (
               <RunList

@@ -3,11 +3,11 @@ Sandbox script: a sandbox setup written out as one POSIX shell script, the
 one the kit's line pipes into sh. It checks the sandbox has the run's token
 and the harness's program, makes the run's folder where it is run, writes
 every file into it (base64, so no file's content is ever read as shell),
-and starts the harness there. Nothing outside that folder is touched, so it
-is safe on a laptop too. A refusal is a script as well, one that says why
-and stops.
+sets the studio's addresses for the harness, and starts it there. Nothing
+outside that folder is touched, so it is safe on a laptop too. A refusal
+is a script as well, one that says why and stops.
 
-Used by runs/routes.py (GET /api/runs/{id}/sandbox.sh).
+Used by runs/routes.py (GET /api/runs/current/sandbox.sh and /{id}/sandbox.sh).
 """
 
 import shlex
@@ -33,6 +33,7 @@ def write_sandbox_script(setup: SandboxSetup) -> str:
         f"cd {folder}",
         "put() { mkdir -p \"$(dirname \"$1\")\"; printf '%s' \"$2\" | base64 -d > \"$1\"; }",
         *(f"put {shlex.quote(file.path)} '{file.content_base64}'" for file in setup.files),
+        "export " + " ".join(f"{name}={shlex.quote(value)}" for name, value in setup.exports.items()),
         f"echo 'open-studio: run {setup.run_id} is set up in ./{setup.folder}; starting {title}' >&2",
         setup.command,
     ]

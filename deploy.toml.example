@@ -23,9 +23,11 @@ bucket = "open-studio-media"
 # resources = "github:CollinWen/open-studio@main/skills"
 
 [composio]
-# Optional: toolkits (outside services' tools agents use through the studio). Leave empty for none.
+# Optional: add-ons that are outside services' tools (email, Exa, ...), which agents use through
+# the studio and Composio runs. Leave empty for none; connect accounts on the studio's add-ons page.
 api_key = ""                     # Composio project → Settings → API key
 # user_id = "open-studio"        # the Composio user your connected accounts belong to
+# policy = "sc_..."              # a saved session policy: which tools runs may call, which ask first
 
 [secrets]
 owner_token = ""                 # your admin password; long and random

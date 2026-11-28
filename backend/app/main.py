@@ -1,6 +1,6 @@
 """
-Entry point for the backend. Creates the app (and the home board, if
-missing), registers every feature's routes under /api, serves the agent
+Entry point for the backend. Creates the app (and the home board and the
+built-in add-ons, if missing), registers every feature's routes under /api, serves the agent
 server (MCP) at /mcp, and serves uploaded images under /media when they are
 stored on disk (local development; production uses R2).
 
@@ -16,6 +16,9 @@ from app.agent_server.server import mount_agent_server, run_agent_server
 from app.config import settings
 from app.database import create_tables, engine
 from app.auth.routes import router as auth_router
+from app.features.addons import service as addons_service
+from app.features.addons.routes import router as addons_router
+from app.features.addons.routes import tools_router as addon_tools_router
 from app.features.agent_log.routes import router as agent_log_router
 from app.features.agents.routes import router as agents_router
 from app.features.boards import service as boards_service
@@ -29,7 +32,6 @@ from app.features.runs.routes import router as runs_router
 from app.features.search.routes import router as search_router
 from app.features.skills.routes import router as skills_router
 from app.features.tags.routes import router as tags_router
-from app.features.toolkits.routes import router as toolkits_router
 
 app = FastAPI(title="Open Studio", lifespan=run_agent_server)
 
@@ -43,6 +45,7 @@ app.add_middleware(
 create_tables()
 with Session(engine) as db:
     boards_service.ensure_home_board(db)
+    addons_service.ensure_builtin_addons(db)
 
 app.include_router(entries_router, prefix="/api")
 app.include_router(related_router, prefix="/api")
@@ -56,7 +59,8 @@ app.include_router(agents_router, prefix="/api")
 app.include_router(agent_log_router, prefix="/api")
 app.include_router(runs_router, prefix="/api")
 app.include_router(skills_router, prefix="/api")
-app.include_router(toolkits_router, prefix="/api")
+app.include_router(addons_router, prefix="/api")
+app.include_router(addon_tools_router, prefix="/api")
 app.include_router(auth_router, prefix="/api")
 mount_agent_server(app)
 

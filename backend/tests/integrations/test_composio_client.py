@@ -1,8 +1,10 @@
 """
 Tests for the Composio client, against a stand-in transport (never the
-network): running a tool posts its arguments, the user, the account and the
-version to Composio's execute endpoint with the project key; tool details
-come back by slug; an error reply or no key at all is a ComposioError.
+network): a run's session is made from the saved policy when there is one,
+else from its toolkits, with only app tools and each account pinned; a
+session's tools are read page by page; a tool runs in its session; a
+Connect Link comes from a small session of its own; Composio's refusals
+keep its own words, and other errors or no key at all are ComposioErrors.
 """
 
 import json
@@ -14,17 +16,19 @@ import pytest
 from app.integrations import composio_client
 
 REAL_CLIENT = httpx.Client
+SESSIONS = "/api/v3.1/tool_router/session"
 
 
 @pytest.fixture
 def composio(monkeypatch):
-    """Route the client's requests to `handler`, with a key and a made-up address."""
+    """Route the client's requests to the stand-in, with a key and a made-up address."""
     seen: list[httpx.Request] = []
-    replies: dict[str, httpx.Response] = {}
+    replies: dict[str, list[httpx.Response]] = {}
 
     def handler(request: httpx.Request) -> httpx.Response:
         seen.append(request)
-        return replies.get(request.url.path, httpx.Response(404, text="no such route"))
+        waiting = replies.get(request.url.path)
+        return waiting.pop(0) if waiting else httpx.Response(404, text="no such route")
 
     monkeypatch.setattr(composio_client, "settings", replace(
         composio_client.settings, composio_api_key="test-key", composio_base_url="https://composio.test"))
@@ -33,39 +37,53 @@ def composio(monkeypatch):
     return seen, replies
 
 
-def test_running_a_tool_sends_the_account_the_version_and_the_key(composio):
+def _body(request: httpx.Request) -> dict:
+    return json.loads(request.content)
+
+
+def test_a_session_comes_from_the_policy_or_the_toolkits(composio):
     seen, replies = composio
-    replies["/api/v3.1/tools/execute/GITHUB_CREATE_AN_ISSUE"] = httpx.Response(
-        200, json={"successful": True, "data": {"number": 7}, "error": None, "log_id": "log_1"})
-    reply = composio_client.execute_tool("GITHUB_CREATE_AN_ISSUE", {"title": "t"}, "open-studio", "ca_bot", "20251101_00")
-    assert reply["data"] == {"number": 7}
-    request = seen[0]
-    assert request.method == "POST" and request.headers["x-api-key"] == "test-key"
-    assert json.loads(request.content) == {
-        "user_id": "open-studio", "arguments": {"title": "t"}, "version": "20251101_00", "connected_account_id": "ca_bot"}
+    replies[SESSIONS] = [httpx.Response(200, json={"session_id": "s1"}), httpx.Response(200, json={"session_id": "s2"})]
+    assert composio_client.create_session("open-studio", ["gmail", "exa"], {"gmail": "ca_mail"}) == "s1"
+    assert composio_client.create_session("open-studio", ["gmail"], {}, policy="sc_safe") == "s2"
+    plain, from_policy = _body(seen[0]), _body(seen[1])
+    assert seen[0].headers["x-api-key"] == "test-key"
+    assert plain["toolkits"] == {"enable": ["gmail", "exa"]} and plain["connected_accounts"] == {"gmail": ["ca_mail"]}
+    assert plain["search"] == {"enable": False} and plain["manage_connections"] == {"enable": False}
+    assert from_policy["experimental"] == {"session_config_id": "sc_safe"} and "toolkits" not in from_policy
 
 
-def test_no_account_leaves_it_to_composio(composio):
+def test_a_sessions_tools_are_read_page_by_page_and_run_there(composio):
     seen, replies = composio
-    replies["/api/v3.1/tools/execute/EXA_SEARCH"] = httpx.Response(200, json={"successful": True, "data": {}})
-    composio_client.execute_tool("EXA_SEARCH", {"query": "q"}, "open-studio")
-    assert "connected_account_id" not in json.loads(seen[0].content)
+    replies[f"{SESSIONS}/s1/tools"] = [
+        httpx.Response(200, json={"items": [{"slug": "GMAIL_FETCH_EMAILS"}], "next_cursor": "page2"}),
+        httpx.Response(200, json={"items": [{"slug": "EXA_SEARCH"}], "next_cursor": None}),
+    ]
+    replies[f"{SESSIONS}/s1/execute"] = [httpx.Response(200, json={"data": {"n": 1}, "error": None, "result_type": "completed"})]
+    assert [tool["slug"] for tool in composio_client.list_session_tools("s1")] == ["GMAIL_FETCH_EMAILS", "EXA_SEARCH"]
+    assert seen[1].url.params["cursor"] == "page2"
+    assert composio_client.run_in_session("s1", "EXA_SEARCH", {"query": "q"})["data"] == {"n": 1}
+    assert _body(seen[2]) == {"tool_slug": "EXA_SEARCH", "arguments": {"query": "q"}}
 
 
-def test_tool_details_come_back_by_slug(composio):
+def test_a_connect_link_comes_from_a_small_session_of_its_own(composio):
     seen, replies = composio
-    replies["/api/v3.1/tools"] = httpx.Response(200, json={"items": [
-        {"slug": "EXA_SEARCH", "description": "Search", "version": "20251020_01", "input_parameters": {"properties": {}}}]})
-    details = composio_client.fetch_tool_details(["EXA_SEARCH", "EXA_ANSWER"])
-    assert set(details) == {"EXA_SEARCH"} and details["EXA_SEARCH"]["version"] == "20251020_01"
-    assert seen[0].url.params["tool_slugs"] == "EXA_SEARCH,EXA_ANSWER"
+    replies[SESSIONS] = [httpx.Response(200, json={"session_id": "s9"})]
+    replies[f"{SESSIONS}/s9/link"] = [httpx.Response(200, json={"redirect_url": "https://connect.composio.test/x", "connected_account_id": "ca_new", "link_token": "t"})]
+    url = composio_client.create_connect_link("open-studio", "gmail", "http://localhost:5173/studio/addons?addon=email")
+    assert url == "https://connect.composio.test/x"
+    assert _body(seen[0]) == {"user_id": "open-studio", "toolkits": {"enable": ["gmail"]}}
+    assert _body(seen[1]) == {"toolkit": "gmail", "callback_url": "http://localhost:5173/studio/addons?addon=email"}
 
 
-def test_an_error_reply_or_no_key_is_a_composio_error(composio, monkeypatch):
+def test_refusals_keep_composios_words_and_other_failures_are_errors(composio, monkeypatch):
     seen, replies = composio
-    replies["/api/v3.1/tools/execute/EXA_SEARCH"] = httpx.Response(401, text="bad key")
-    with pytest.raises(composio_client.ComposioError, match="401"):
-        composio_client.execute_tool("EXA_SEARCH", {}, "open-studio")
+    blocked = {"error": {"message": "[Session Restriction] Tool 'GMAIL_SEND_EMAIL' is not enabled", "code": 4310}}
+    replies[f"{SESSIONS}/s1/execute"] = [httpx.Response(400, json=blocked), httpx.Response(500, text="oops")]
+    with pytest.raises(composio_client.ComposioRefusedError, match="Session Restriction"):
+        composio_client.run_in_session("s1", "GMAIL_SEND_EMAIL", {})
+    with pytest.raises(composio_client.ComposioError, match="500"):
+        composio_client.run_in_session("s1", "GMAIL_SEND_EMAIL", {})
     monkeypatch.setattr(composio_client, "settings", replace(composio_client.settings, composio_api_key=""))
     with pytest.raises(composio_client.ComposioError, match="COMPOSIO_API_KEY"):
-        composio_client.execute_tool("EXA_SEARCH", {}, "open-studio")
+        composio_client.list_session_tools("s1")

@@ -4,8 +4,6 @@
  * the owner sends to issue one; and the kit that comes back once, with the token.
  */
 
-import type { OutsideTool } from "./agent";
-
 export type RunState = "running" | "finished" | "expired";
 
 /** What a run is: no set task (open), or one of the task kinds. */
@@ -25,9 +23,8 @@ export interface Run {
   /** The owner's note: what to do, in their words. */
   brief: string;
   entry_id: string | null;
-  tools: OutsideTool[];
-  /** Toolkits it may use through the studio, by name. */
-  toolkits: string[];
+  /** The add-ons it may use, by name: its agent's, or fewer. */
+  addons: string[];
   /** "owner" or "agent:<name>". */
   started_by: string;
   created_at: string;
@@ -49,16 +46,14 @@ export interface RunCreate {
   kind: RunKind;
   boards: string[];
   brief: string;
-  /** Leave out for the kind's usual tools (an open run: all its agent was granted). */
-  tools?: OutsideTool[];
-  /** Leave out for all its agent's toolkits. */
-  toolkits?: string[];
+  /** Leave out for all its agent's add-ons. */
+  addons?: string[];
   minutes: number;
 }
 
 /** A ready way to run the kit in one particular harness. */
 export interface HarnessSetup {
-  /** Lines to paste where that harness is installed: they set up the run's sandbox folder and start it. */
+  /** One line to paste in an empty folder where that harness is installed: it sets up the run's sandbox there and starts it. */
   command: string;
   /** That harness's names for the tools the run may use. */
   allowed_tools: string[];
@@ -71,8 +66,8 @@ export interface RunKit {
   mcp_url: string;
   api_url: string;
   prompt: string;
-  /** The script that sets up a sandbox for this run, fetched with the token (?harness=claude_code for Claude Code). */
+  /** The script that sets up a sandbox for whichever run's token fetches it (?harness=claude_code for Claude Code). */
   sandbox_url: string;
-  /** By harness name ("pi", "claude_code"): lines that set up a sandbox and run the task. */
+  /** By harness name ("pi", "claude_code"): one line that sets up a sandbox and runs the task. */
   setups: Record<string, HarnessSetup>;
 }

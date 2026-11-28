@@ -3,9 +3,8 @@
  * Pick what it's for (open: no set task, or study, references, prototype),
  * leave a note in your own words, pick the boards it may reach (all its
  * boards, which follows the agent's boards later, or some of them), the
- * outside tools it may use (the task's usual ones unless you pick), the
- * toolkits it may use through the studio (all its agent's unless you pick)
- * and how long it lasts (20 minutes to 90 days; 4 hours unless you pick).
+ * add-ons it may use (all its agent's unless you pick fewer) and how long
+ * it lasts (20 minutes to 90 days; 4 hours unless you pick).
  * "issue token", a solid ink square, sends it; the kit comes back to onIssued.
  *
  * Used by AgentManager, in a PaperWindow; TokenNotice then shows the token once.
@@ -15,7 +14,7 @@ import { useState } from "react";
 import { issueToken } from "../../api/runsApi";
 import { LoadingWord } from "../../components/LoadingWord";
 import { WordChoice } from "../../components/WordChoice";
-import type { Agent, OutsideTool } from "../../types/agent";
+import type { Agent } from "../../types/agent";
 import { ALL_BOARDS, RUN_KINDS, type RunKind, type RunKit } from "../../types/run";
 import { TOKEN_LENGTHS, DEFAULT_TOKEN_LENGTH } from "./tokenLengths";
 
@@ -31,11 +30,8 @@ export function TokenForm({ agent, onIssued, onCancel }: Props) {
   const [kind, setKind] = useState<RunKind>("open");
   const [brief, setBrief] = useState("");
   const [boards, setBoards] = useState<string[]>([ALL_BOARDS]);
-  // null: the task's usual tools (an open run: all the agent was granted).
-  const [tools, setTools] = useState<OutsideTool[] | null>(null);
-  // null: all the toolkits its agent was granted.
-  const [toolkits, setToolkits] = useState<string[] | null>(null);
-  const agentToolkits = Object.keys(agent.toolkits);
+  // null: all its agent's add-ons.
+  const [addons, setAddons] = useState<string[] | null>(null);
   const [minutes, setMinutes] = useState(DEFAULT_TOKEN_LENGTH.minutes);
   const [status, setStatus] = useState("");
 
@@ -45,20 +41,15 @@ export function TokenForm({ agent, onIssued, onCancel }: Props) {
     setBoards(next.length ? next : [ALL_BOARDS]);
   };
 
-  const toggleTool = (tool: OutsideTool) => {
-    const current = tools ?? agent.tools;
-    setTools(current.includes(tool) ? current.filter((one) => one !== tool) : [...current, tool]);
-  };
-
-  const toggleToolkit = (toolkit: string) => {
-    const current = toolkits ?? agentToolkits;
-    setToolkits(current.includes(toolkit) ? current.filter((one) => one !== toolkit) : [...current, toolkit]);
+  const toggleAddon = (name: string) => {
+    const current = addons ?? [];
+    const next = current.includes(name) ? current.filter((one) => one !== name) : [...current, name];
+    setAddons(next.length ? next : null);
   };
 
   const issue = () => {
     setStatus(ISSUING);
-    const narrowed = { ...(tools ? { tools } : {}), ...(toolkits ? { toolkits } : {}) };
-    issueToken({ agent: agent.name, kind, boards, brief: brief.trim(), minutes, ...narrowed })
+    issueToken({ agent: agent.name, kind, boards, brief: brief.trim(), minutes, ...(addons ? { addons } : {}) })
       .then(onIssued)
       .catch((error) => setStatus(error instanceof Error ? error.message : String(error)));
   };
@@ -94,32 +85,17 @@ export function TokenForm({ agent, onIssued, onCancel }: Props) {
           />
         ))}
       </p>
-      {agent.tools.length > 0 && (
-        <p className="word-list is-ovals" role="group" aria-label="outside tools">
-          <span className="quiet">outside tools</span>
-          <WordChoice label="the usual" look="oval" active={tools === null} onPick={() => setTools(null)} />
-          {agent.tools.map((tool) => (
+      {agent.addons.length > 0 && (
+        <p className="word-list is-ovals" role="group" aria-label="add-ons it may use">
+          <span className="quiet">add-ons</span>
+          <WordChoice label="all its add-ons" look="oval" active={addons === null} onPick={() => setAddons(null)} />
+          {agent.addons.map((name) => (
             <WordChoice
-              key={tool}
-              label={tool}
+              key={name}
+              label={name}
               look="oval"
-              active={!!tools?.includes(tool)}
-              onPick={() => toggleTool(tool)}
-            />
-          ))}
-        </p>
-      )}
-      {agentToolkits.length > 0 && (
-        <p className="word-list is-ovals" role="group" aria-label="toolkits">
-          <span className="quiet">toolkits</span>
-          <WordChoice label="all of them" look="oval" active={toolkits === null} onPick={() => setToolkits(null)} />
-          {agentToolkits.map((toolkit) => (
-            <WordChoice
-              key={toolkit}
-              label={toolkit}
-              look="oval"
-              active={!!toolkits?.includes(toolkit)}
-              onPick={() => toggleToolkit(toolkit)}
+              active={!!addons?.includes(name)}
+              onPick={() => toggleAddon(name)}
             />
           ))}
         </p>

@@ -25,7 +25,7 @@ def register_run_tools(server: MCPServer) -> None:
     @server.tool()
     def get_my_run(ctx: Context) -> RunOut:
         """Your run: the task kind, the owner's brief (in their words), the board you may add
-        to, the entry to start from, the outside tools you may use (scopes), when your token
+        to, the entry to start from, the add-ons you may use (scopes), when your token
         stops working, and the entries you've added so far."""
         viewer = viewer_for(ctx)
         with Session(engine) as db:

@@ -2,17 +2,18 @@
  * AgentManager: the studio's "agents". The control band holds "add agent"
  * and "agents.yaml" (every agent's setup as one file to download, no tokens).
  * Below, a Ledger of every agent: what it's for, the boards it may add to,
- * its outside tools, skills and toolkits, when it was last seen, and "edit", "issue
- * token", its runs, pause / resume and remove.
+ * its add-ons and skills, when it was last seen, and "edit", "AGENTS.md",
+ * "issue token", its runs, pause / resume and remove.
  *
  * Adding or changing an agent opens AgentForm in a window (?add-agent,
- * ?agent=<name>); "issue token" opens TokenForm (?issue=<name>), and once a
- * token is issued the same window shows it once (TokenNotice). Closing that
- * window forgets the token. Agents have no token of their own: every token
- * is a run, listed under runs.
+ * ?agent=<name>); "AGENTS.md" shows what its runs get from all of it
+ * (AgentsMdView, ?agents-md=<name>); "issue token" opens TokenForm
+ * (?issue=<name>), and once a token is issued the same window shows it once
+ * (TokenNotice). Closing that window forgets the token. Agents have no
+ * token of their own: every token is a run, listed under runs.
  *
- * Used by StudioPage, which loads the agents and boards. What agents are
- * doing is public at /agents.
+ * Used by StudioPage, which loads the agents, boards and add-ons. What
+ * agents are doing is public at /agents.
  */
 
 import { useState } from "react";
@@ -25,11 +26,13 @@ import { Ledger } from "../../components/Ledger";
 import { LedgerRow } from "../../components/LedgerRow";
 import { PaperWindow } from "../../components/PaperWindow";
 import { WordChoice } from "../../components/WordChoice";
+import type { Addon } from "../../types/addon";
 import type { Agent } from "../../types/agent";
 import type { Board } from "../../types/entry";
 import type { RunKit } from "../../types/run";
 import { formatTimeAgo } from "../agents/formatTimeAgo";
 import { AgentForm } from "./AgentForm";
+import { AgentsMdView } from "./AgentsMdView";
 import { downloadText } from "./downloadText";
 import { TokenForm } from "./TokenForm";
 import { TokenNotice } from "./TokenNotice";
@@ -38,18 +41,19 @@ import { useAgentWindowParam } from "./useAgentWindowParam";
 interface Props {
   agents: Agent[];
   boards: Board[];
+  addons: Addon[];
   onChanged: () => void;
 }
 
 const COLUMNS = [
   { label: "agent", span: 3 },
   { label: "boards it may add to", span: 3 },
-  { label: "tools · skills", span: 2 },
+  { label: "add-ons · skills", span: 2 },
   { label: "last seen", span: 2 },
   { label: "manage", span: 2 },
 ];
 
-export function AgentManager({ agents, boards, onChanged }: Props) {
+export function AgentManager({ agents, boards, addons, onChanged }: Props) {
   const windows = useAgentWindowParam();
   const [issued, setIssued] = useState<RunKit | null>(null);
   const [message, setMessage] = useState("");
@@ -101,16 +105,16 @@ export function AgentManager({ agents, boards, onChanged }: Props) {
                 </>,
                 <span className="quiet">{agent.boards.join(", ") || "none yet"}</span>,
                 <span className="quiet">
-                  {agent.tools.join(", ") || "no outside tools"}
+                  {agent.addons.join(", ") || "no add-ons"}
                   {agent.skills.length > 0 && <span className="ledger-note">{agent.skills.join(", ")}</span>}
-                  {Object.keys(agent.toolkits).length > 0 && (
-                    <span className="ledger-note">through the studio: {Object.keys(agent.toolkits).join(", ")}</span>
-                  )}
                 </span>,
                 <span className="quiet">{agent.last_seen_at ? formatTimeAgo(agent.last_seen_at) : "never seen"}</span>,
                 <span className="word-list">
                   <button type="button" className="quiet" onClick={() => windows.openAgentEdit(agent.name)}>
                     edit
+                  </button>
+                  <button type="button" className="quiet" onClick={() => windows.openAgentsMd(agent.name)}>
+                    AGENTS.md
                   </button>
                   <button type="button" onClick={() => windows.openTokenIssue(agent.name)} disabled={!agent.active}>
                     issue token
@@ -150,8 +154,23 @@ export function AgentManager({ agents, boards, onChanged }: Props) {
             key={editing?.name ?? "new"}
             agent={editing}
             boards={boards}
+            addons={addons}
             onSaved={saved}
             onCancel={windows.closeAgentWindows}
+          />
+        )}
+      </PaperWindow>
+
+      <PaperWindow
+        open={windows.readingAgentsMd !== null}
+        title={`What ${windows.readingAgentsMd ?? ""}'s runs get: AGENTS.md, from its settings as saved`}
+        onClose={windows.closeAgentWindows}
+      >
+        {windows.readingAgentsMd && (
+          <AgentsMdView
+            key={windows.readingAgentsMd}
+            agent={windows.readingAgentsMd}
+            onDone={windows.closeAgentWindows}
           />
         )}
       </PaperWindow>

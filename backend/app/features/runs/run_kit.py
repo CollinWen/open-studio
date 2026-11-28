@@ -4,9 +4,9 @@ reply. The token, the studio's MCP and API addresses (how to connect) and the
 prompt (the task kind's instructions, the owner's brief, the run's limits,
 the skills to load: the kind's and the agent's own)
 work with any harness: an MCP client, a box that calls an LLM with these
-tools, or plain HTTP. Per harness (Pi, Claude Code), `setups` holds two
-lines to paste where that harness is installed: they fetch the run's
-sandbox setup with the token (sandbox_setup.py) and start the task.
+tools, or plain HTTP. Per harness (Pi, Claude Code), `setups` holds one
+line to paste where that harness is installed: it fetches the run's sandbox
+setup with the token (sandbox_setup.py) and starts the task.
 Used by runs/service.py. What each task kind says is in task_kinds.py.
 """
 
@@ -17,21 +17,22 @@ from app.features.entries.models import Entry
 from app.features.runs.models import Run
 from app.features.runs.sandbox_setup import HARNESSES, TOKEN_VARIABLE
 from app.features.runs.schemas import ALL_BOARDS, HarnessSetup, RunKit, RunOut
-from app.features.runs.task_kinds import OUTSIDE_TOOLS, SOURCE_TESTS, TASK_KINDS
+from app.features.runs.task_kinds import SOURCE_TESTS, TASK_KINDS
 
 # Every run gets these skills, before its task's and its agent's own.
 CORE_SKILLS = ("open-studio", "studio-collaborator")
 
 
 def build_kit(
-    run_out: RunOut, run: Run, token: str, api_url: str, start: Entry | None, agent_skills: list[str]
+    run_out: RunOut, run: Run, token: str, api_url: str, start: Entry | None, agent_skills: list[str],
+    sandbox_services: list[str],
 ) -> RunKit:
     api_url = api_url.rstrip("/")
-    sandbox_url = f"{api_url}/api/runs/{run.id}/sandbox.sh"
+    sandbox_url = f"{api_url}/api/runs/current/sandbox.sh"
     setups = {
         harness: HarnessSetup(
-            command=_sandbox_lines(token, f"{sandbox_url}?harness={harness}"),
-            allowed_tools=parts.allowed_tools(run.tools),
+            command=_sandbox_line(token, f"{sandbox_url}?harness={harness}"),
+            allowed_tools=parts.allowed_tools(sandbox_services),
         )
         for harness, parts in HARNESSES.items()
     }
@@ -51,13 +52,13 @@ def run_skill_names(run: Run, agent_skills: list[str]) -> list[str]:
     return list(dict.fromkeys([*CORE_SKILLS, *TASK_KINDS[run.kind].skills, *agent_skills]))
 
 
-def _sandbox_lines(token: str, script_url: str) -> str:
-    """Set the token, then fetch the run's setup script with it and run it. Without curl's
-    --fail, a refusal arrives as a script too, which says why."""
-    return "\n".join([
-        f"export {TOKEN_VARIABLE}={shlex.quote(token)}",
-        f'curl -sS -H "Authorization: Bearer ${TOKEN_VARIABLE}" {shlex.quote(script_url)} | sh',
-    ])
+def _sandbox_line(token: str, script_url: str) -> str:
+    """Set the token, then fetch the run's setup script with it and run it, in one line.
+    Without curl's --fail, a refusal arrives as a script too, which says why."""
+    return (
+        f"export {TOKEN_VARIABLE}={shlex.quote(token)}; "
+        f'curl -sS -H "Authorization: Bearer ${TOKEN_VARIABLE}" {shlex.quote(script_url)} | sh'
+    )
 
 
 def build_prompt(run: Run, start: Entry | None, api_url: str, agent_skills: list[str]) -> str:
@@ -69,7 +70,7 @@ def build_prompt(run: Run, start: Entry | None, api_url: str, agent_skills: list
         if start
         else "There is no starting entry; the owner's note says where to start."
     )
-    outside = "; ".join(OUTSIDE_TOOLS[tool] for tool in run.tools) or "nothing else"
+    addons = ", ".join(run.addons) or "none"
     if run.boards == [ALL_BOARDS]:
         boards = "every board you're signed on to (list_boards shows them)"
         first_read = "For each board you work on, start with get_board_brief, then read_log for it."
@@ -80,13 +81,6 @@ def build_prompt(run: Run, start: Entry | None, api_url: str, agent_skills: list
         first_read = f"Start with {first_read}, then read_log for each."
         reach = f"{boards} only"
     session_sites = f" (on {', '.join(settings.session_link_sites)})" if settings.session_link_sites else ""
-    toolkits = (
-        f"Through the studio, the tools of these toolkits: {', '.join(run.toolkits)}. list_toolkit_tools shows\n"
-        "them and their pinned arguments, call_toolkit_tool runs one as the account the owner chose (over HTTP:\n"
-        "GET /toolkits/tools, POST /toolkits/tools/{tool}); you never need their keys. "
-        if run.toolkits
-        else ""
-    )
     skills = ", ".join(run_skill_names(run, agent_skills))
     return f"""\
 You are {run.agent}, an agent working for an Open Studio (one person's collection of their
@@ -106,7 +100,8 @@ What you may use: the open-studio tools (add entries, link them and log on {reac
 Without MCP, the same actions are plain HTTP under {api_url}/api, with your token as
 "Authorization: Bearer <token>": GET /boards, /search?q=, /entries/{{id}}, /runs/{run.id};
 POST /entries, /entries/{{id}}/builds-on, /agent-log, /runs/{run.id}/session, /runs/{run.id}/finish.
-Outside the studio: {outside}. {toolkits}Nothing more.
+Your add-ons: {addons}. AGENTS.md in your folder says what each one is, how to reach it and how
+the owner wants it used; read it first. Nothing more.
 Work in the open: set_status when you start, log your plan and findings as you go.
 If your harness has a link to this session{session_sites}, a page where it can be watched,
 leave it once with set_run_session; only the owner sees it. Skip it if there's none.

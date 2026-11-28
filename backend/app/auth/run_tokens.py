@@ -10,9 +10,7 @@ its scopes and when it stops working). The signature is an HMAC-SHA256 of the
 rest with RUN_TOKEN_SECRET (config.py), so nobody can widen a token without
 the studio's secret, and every backend machine can check one without asking
 the others. Scopes are short strings: "board:<slug>" (add, link and log on
-that board), the outside tools in features/runs/task_kinds.py ("web",
-"code", "github") and "toolkit:<name>" (call that toolkit's granted tools
-through the studio, features/toolkits/).
+that board) and "addon:<name>" (use that add-on, features/addons/).
 
 Only making and reading the token is here. Which run it belongs to, and
 whether that run has been finished, is checked in auth/viewer.py.

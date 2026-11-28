@@ -1,8 +1,6 @@
 """
-Task kinds and outside tools: what the owner can give an agent to do, and
-what each kind of task may reach beyond the studio.
+Task kinds: what the owner can give an agent to do.
 
-Task kinds (the offerings):
   open        - no set task: a session for whatever the owner's note says, on the
                 boards it may reach (a harness that keeps working, say)
   study       - one source (a reel, an article, a talk): pull out what it says,
@@ -12,35 +10,19 @@ Task kinds (the offerings):
   prototype   - an idea: a new repository with a first working sketch, and an
                 entry recording what was tried
 
-Outside tools are what a run may use beyond the studio. The studio can't
-enforce them itself (it never runs them); they are written into the run's
-token and kit, and whatever harness runs the agent allows only those
-(harness-specific setups, such as claude_code_setup.py, translate them). The studio's own tools are always there. What "github"
-can reach is really decided by the GitHub credentials the harness holds
-(best: a GitHub App allowed only on new repositories), since "code" gives a
-shell that can run git and gh too.
-
-The instructions here are the run's prompt; run_kit.py puts them together.
+What a run may use beyond the studio comes from its agent's add-ons
+(features/addons/), the same for every kind; each kind names the skills (in
+skills/) an agent should load for it. The instructions here are the run's
+prompt; run_kit.py puts them together.
 The full guide to judging a source is skills/gathering-sources/SKILL.md;
 SOURCE_TESTS is its short form, for harnesses without skills. Keep them in step.
-Each kind also names the skills (in skills/) an agent should load for it.
 """
 
 from dataclasses import dataclass
 
-# Each outside tool, and what it lets a run do.
-OUTSIDE_TOOLS: dict[str, str] = {
-    "web": "search the web and read pages",
-    "code": "write and run code in its own sandbox",
-    "github": "create one new GitHub repository and push to it",
-}
-
-
 @dataclass(frozen=True)
 class TaskKind:
     title: str
-    # The outside tools it gets unless the run asks for fewer.
-    tools: tuple[str, ...]
     # The skills in skills/ for this kind of work, beside open-studio and studio-collaborator.
     skills: tuple[str, ...]
     instructions: str
@@ -62,7 +44,6 @@ finding with your quotes, and one for strong candidates you turned down and why.
 TASK_KINDS: dict[str, TaskKind] = {
     "open": TaskKind(
         title="Work on the boards",
-        tools=(),
         skills=(),
         instructions="""\
 There is no set task. Work as the owner's note says, on the boards you may reach:
@@ -73,7 +54,6 @@ read each board's brief and log first, and stay inside them.
     ),
     "study": TaskKind(
         title="Study a source",
-        tools=("web",),
         skills=("studying-sources", "gathering-sources"),
         instructions="""\
 The owner handed you one source: the starting entry, or the link in their note.
@@ -87,7 +67,6 @@ The owner handed you one source: the starting entry, or the link in their note.
     ),
     "references": TaskKind(
         title="Gather references",
-        tools=("web",),
         skills=("gathering-sources",),
         instructions="""\
 The owner has work in progress (the starting entry and its chain) and wants a reference
@@ -102,7 +81,6 @@ shelf: other directions it could take, studies and prior work, what others have 
     ),
     "prototype": TaskKind(
         title="Start a project",
-        tools=("web", "code", "github"),
         skills=("building",),
         instructions="""\
 The owner has an idea (the starting entry, or their note) and wants it off the ground.

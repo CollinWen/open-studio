@@ -1,57 +1,60 @@
 /**
  * AgentForm: add an agent or change one, in plain fields: its name (only
  * when adding; it can't change later), what it's for, the boards it may add
- * to, the outside tools its tokens may be given (web, code, github), the
- * skills it works with, picked from the agent resources (SkillPicker), and
- * the toolkits it may use through the studio, each with its tools, account
- * and pinned arguments (ToolkitGrantsEditor). Boards, tools and skills are
- * ovals, filled when on. The last line holds "add" (or "save"), a solid ink
+ * to, the skills it works with, picked from the agent resources
+ * (SkillPicker), and the add-ons it uses, each with the owner's
+ * instructions for it (AddonPicker). Boards, skills and add-ons are ovals,
+ * filled when on. The last line holds "add" (or "save"), a solid ink
  * square, and "cancel".
  *
  * Used by AgentManager, in a PaperWindow. Tokens are issued separately
- * (TokenForm); an agent has none of its own.
+ * (TokenForm); an agent has none of its own. What its runs get from all of
+ * this is its AGENTS.md (AgentsMdView).
  */
 
 import { useState } from "react";
 import { addAgent, updateAgent } from "../../api/agentsApi";
 import { LoadingWord } from "../../components/LoadingWord";
 import { WordChoice } from "../../components/WordChoice";
-import { OUTSIDE_TOOLS, type Agent, type OutsideTool } from "../../types/agent";
+import type { Addon } from "../../types/addon";
+import type { Agent } from "../../types/agent";
 import type { Board } from "../../types/entry";
 import { HOME_BOARD } from "../grid/boardPath";
-import type { ToolkitGrant } from "../../types/toolkit";
+import { AddonPicker } from "./AddonPicker";
 import { SkillPicker } from "./SkillPicker";
-import { ToolkitGrantsEditor } from "./ToolkitGrantsEditor";
 
 interface Props {
   /** The agent to change, or null to add one. */
   agent: Agent | null;
   boards: Board[];
+  addons: Addon[];
   onSaved: () => void;
   onCancel: () => void;
 }
 
 const SAVING = "saving";
 
-export function AgentForm({ agent, boards, onSaved, onCancel }: Props) {
+export function AgentForm({ agent, boards, addons, onSaved, onCancel }: Props) {
   const [name, setName] = useState(agent?.name ?? "");
   const [description, setDescription] = useState(agent?.description ?? "");
   const [onBoards, setOnBoards] = useState<string[]>(agent?.boards ?? []);
-  const [tools, setTools] = useState<OutsideTool[]>(agent?.tools ?? []);
   const [skills, setSkills] = useState<string[]>(agent?.skills ?? []);
-  const [toolkits, setToolkits] = useState<Record<string, ToolkitGrant>>(agent?.toolkits ?? {});
+  const [picked, setPicked] = useState<string[]>(agent?.addons ?? []);
+  const [instructions, setInstructions] = useState<Record<string, string>>(agent?.addon_instructions ?? {});
   const [status, setStatus] = useState("");
 
-  const toggle = <T,>(list: T[], item: T) =>
-    list.includes(item) ? list.filter((one) => one !== item) : [...list, item];
+  const toggleBoard = (slug: string) =>
+    setOnBoards(onBoards.includes(slug) ? onBoards.filter((one) => one !== slug) : [...onBoards, slug]);
 
   const save = () => {
+    // An add-on removed from the studio since is dropped (AddonPicker says so).
+    const kept = picked.filter((one) => addons.some((addon) => addon.name === one));
     const settings = {
       description: description.trim(),
       boards: onBoards,
-      tools,
       skills,
-      toolkits,
+      addons: kept,
+      addon_instructions: Object.fromEntries(kept.map((one) => [one, (instructions[one] ?? "").trim()])),
     };
     setStatus(SAVING);
     const saved = agent
@@ -76,24 +79,19 @@ export function AgentForm({ agent, boards, onSaved, onCancel }: Props) {
               label={board.slug}
               look="oval"
               active={onBoards.includes(board.slug)}
-              onPick={() => setOnBoards(toggle(onBoards, board.slug))}
+              onPick={() => toggleBoard(board.slug)}
             />
           ))}
       </p>
-      <p className="word-list is-ovals" role="group" aria-label="outside tools">
-        <span className="quiet">outside tools</span>
-        {OUTSIDE_TOOLS.map((tool) => (
-          <WordChoice
-            key={tool}
-            label={tool}
-            look="oval"
-            active={tools.includes(tool)}
-            onPick={() => setTools(toggle(tools, tool))}
-          />
-        ))}
-      </p>
       <SkillPicker picked={skills} onChange={setSkills} />
-      <ToolkitGrantsEditor grants={toolkits} onChange={setToolkits} />
+      <AddonPicker
+        agent={agent?.name ?? name.trim().toLowerCase()}
+        addons={addons}
+        picked={picked}
+        instructions={instructions}
+        onPick={setPicked}
+        onInstruct={setInstructions}
+      />
       <p className="word-list studio-form-actions">
         <button type="submit" className="square is-primary" disabled={status === SAVING || (!agent && !name.trim())}>
           {agent ? "save" : "add"}

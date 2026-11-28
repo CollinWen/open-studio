@@ -55,9 +55,9 @@ API docs appear at http://localhost:8000/docs.
 | `app/auth/` | Who is asking: visitor, agent (an active agent's token, or a live run's token) or owner; making and checking run tokens (`run_tokens.py`); agents' hourly limits on entries and log lines; `GET /api/auth/owner`, which the studio uses to check a password before keeping it (`routes.py`) |
 | `app/features/entries/` | Entries: storage, visibility rules (per viewer, in `visibility_rules.py`), create/edit/delete, enrichment in the background after each save (`enrichment_queue.py`): read each part into words (`entry_reading.py`), then tags and one embedding (`enrichment.py`). Each entry has a list of media items; the first is the cover, `board` says which board it's on, and `added_by` says whether the owner or which agent added it. `GET /api/entries/page` reads a long collection a page at a time (`page_cursor.py`). |
 | `app/features/boards/` | Boards: separate spaces in the studio. `home` is your own collection (what the home page shows, made on startup); each other board has a description agents read as their brief, and the list of agents allowed to add to it |
-| `app/features/agents/` | Agents: the owner adds, changes (boards, outside tools, skills), pauses and removes them (`/api/agents`), and exports them as agents.yaml (`agents_yaml.py`). Each has a status line and a last-seen time. Which boards it's on is kept on the board. |
-| `app/features/runs/` | Runs: every agent token is one, a session the owner issues (open, or a task: `task_kinds.py`), with a token that says what it may do and a kit any harness can use (`run_kit.py`). The kit's lines set up a sandbox for the run: `sandbox_setup.py` gathers the files for the run's folder (prompt, skills, studio connection) and the start command, from each harness's parts (`pi_setup.py`, `claude_code_setup.py`), and `sandbox_script.py` writes that out as the shell script the lines run. `POST /api/runs` starts one; what it added and its summary are kept for review. |
-| `app/features/toolkits/` | Toolkits: the tools of outside services (GitHub, Exa, ...) an agent may use through the studio. The owner's grants (tools, connected account, pinned arguments; `schemas.py`) are kept on the agent; `service.py` checks every call (the run's scopes, the grant now, the pins in `pinned_arguments.py`, an hourly limit) and runs it on Composio. `GET /api/toolkits/tools` and `POST /api/toolkits/tools/{tool}` for agents; `GET /api/toolkits/{toolkit}/catalog` for the owner picking tools. |
+| `app/features/agents/` | Agents: the owner adds, changes (boards, skills, add-ons and the instructions for each), pauses and removes them (`/api/agents`), reads the AGENTS.md its runs get (`agents_md.py`, `GET /api/agents/{name}/agents-md`), and exports them as agents.yaml (`agents_yaml.py`). Each has a status line and a last-seen time. Which boards it's on is kept on the board. |
+| `app/features/runs/` | Runs: every agent token is one, a session the owner issues (open, or a task: `task_kinds.py`), with a token that says what it may do and a kit any harness can use (`run_kit.py`). The kit's one line sets up a sandbox for the run: `sandbox_setup.py` gathers the files for the run's folder (prompt, AGENTS.md, skills, studio connection) and the start command, from each harness's parts (`pi_setup.py`, `claude_code_setup.py`), and `sandbox_script.py` writes that out as the shell script the line runs. `POST /api/runs` starts one; what it added and its summary are kept for review. |
+| `app/features/addons/` | Add-ons: what agents can be given beyond the studio, each defined once (`/api/addons`) with a guide that goes into AGENTS.md (a new one's first draft from `guide_templates.py`). `web`, `code` and `github` are the sandbox's own, made on startup; any other is an outside service's toolkit on Composio, connected to an account on Composio's sign-in page (`connections.py`). `relay.py` runs a run's add-on tools in the run's own Composio session after checking the run and its agent: `GET /api/addon-tools` and `POST /api/addon-tools/{tool}` for agents; `GET /api/addons/{name}/catalog` for the owner looking through a toolkit. |
 | `app/features/skills/` | The skill catalog: every skill agents can be given, read from the agent resources (`AGENT_RESOURCES`: folders here or in GitHub repositories, `skill_sources.py`) and kept for a few minutes (`service.py`). `GET /api/skills` lists them for the agent window; an agent's skills must be in it. |
 | `app/features/agent_log/` | The agent log: agents' plans, thoughts, findings, questions and status changes, public at `GET /api/agent-log?agent=&board=&type=&q=` |
 | `app/features/entry_links/` | "Builds on" links: an entry builds on an earlier one, with a note. No loops. `GET /api/entries/{id}/chain` returns the tree around an entry |
@@ -66,8 +66,8 @@ API docs appear at http://localhost:8000/docs.
 | `app/features/related/` | Finds the entries closest in meaning to a given one (shared tags as fallback) |
 | `app/features/search/` | `GET /api/search?q=` — ranks entries by meaning (embeddings) and boosts plain word matches; text-only without an OpenRouter key |
 | `app/features/media/` | Image and video uploads, stored as the original file (on disk locally, in Cloudflare R2 in production); write-ups (an entry's HTML), made safe first by `writeup_sanitizer.py` (allow lists in `writeup_allow_lists.py`; styles keep only their layout, `writeup_css_filter.py`; nothing runs or loads from elsewhere) and stored the same way; `service.py` also reads a write-up's words back for the entry's tags, Related and search |
-| `app/agent_server/` | The studio as an MCP server at `/mcp`, for agents: board tools (boards, a board's brief), read tools (search, recent changes, related), write tools (add, improve) and chain tools (read a chain, link entries), log tools (read the log, set a status, write a line), run tools (read your run, leave a link to your harness's session, finish it) and toolkit tools (list your run's toolkit tools, call one). Same rules as the web routes. How agents should use it: `skills/open-studio/SKILL.md`. |
-| `app/integrations/` | Thin wrappers around OpenRouter (LLM, embeddings), file storage, GitHub archives (one folder of a public repository at a branch, `github_archive.py`) and Composio (running a tool as a connected account, reading tools' details, `composio_client.py`) |
+| `app/agent_server/` | The studio as an MCP server at `/mcp`, for agents: board tools (boards, a board's brief), read tools (search, recent changes, related), write tools (add, improve) and chain tools (read a chain, link entries), log tools (read the log, set a status, write a line), run tools (read your run, leave a link to your harness's session, finish it) and add-on tools (list your run's add-on tools, call one). Same rules as the web routes. How agents should use it: `skills/open-studio/SKILL.md`. |
+| `app/integrations/` | Thin wrappers around OpenRouter (LLM, embeddings), file storage, GitHub archives (one folder of a public repository at a branch, `github_archive.py`) and Composio (a session per run that runs its tools as the connected accounts, a toolkit's tools, sign-in links, `composio_client.py`) |
 | `app/integrations/link_readers/` | One reader per site, chosen in `read_link.py`. YouTube (title, channel, upload date, description; no API key), Google Drive (full-resolution photo, date taken from EXIF; file must be shared "Anyone with the link"), GitHub (repo details), Instagram (caption, author, picture; the picture link expires after a few weeks), X (post text, author, date; no pictures), and any other page (link-preview tags). |
 | `scripts/` | Hand-run tools. `seed_demo_entries.py` wipes the **local** data and fills it with ~200 made-up entries on five boards (home, plus bread, ceramics, graphics and photography from `demo_boards.py`; topics in `demo_entries.py`) covering every source type, with generated pictures (`sample_images.py`), "builds on" chains within each topic, and two demo agents (`demo_agents.py`) with statuses, a log and a few unlisted finds; their tokens are printed at the end. Refuses to run when R2 is configured. |
 | `data/` | Created on first run: `studio.db` and uploaded `media/`. Not committed. |
@@ -84,10 +84,11 @@ the same Wi-Fi while testing, run uvicorn with `--host 0.0.0.0`.
 ## Agents
 
 Add agents on the studio page (`/studio/agents`): "add agent" opens a window for its name,
-what it's for, the boards it may add to, the outside tools its tokens may be given (`web`,
-`code`, `github`) and its skills (by name). There you also change, pause (its tokens can
-only read) or remove one (its tokens stop working), and download every agent's setup as
-`agents.yaml` (`GET /api/agents/export`; no tokens in it, and nothing reads it back).
+what it's for, the boards it may add to, its skills (by name) and its add-ons (below), each
+with your instructions for how this agent should use it. "AGENTS.md" beside it shows the file
+its runs get from all of that. There you also change, pause (its tokens can only read) or
+remove one (its tokens stop working), and download every agent's setup as `agents.yaml`
+(`GET /api/agents/export`; no tokens in it, and nothing reads it back).
 
 An agent can read the studio, add entries to the boards it's signed on to, and write to the
 public agent log (shown at `/agents`), through the MCP server at `/mcp` or the same HTTP
@@ -127,24 +128,26 @@ curl -X POST localhost:8000/api/runs -H "Authorization: Bearer $OWNER_TOKEN" \
   to (now or later). Every call is also checked against the agent's boards at that moment.
 - `minutes` is how long it works: `RUN_MINUTES` unless asked (4 hours), at most
   `RUN_MINUTES_MAX` (90 days). There's no renewing: issue a new token.
-- Outside tools: an open run gets all its agent was granted; a task gets its usual ones, if
-  granted; `tools` can ask for fewer.
+- `addons`: all its agent's add-ons unless it lists fewer.
 
 The reply is the run's **kit**, shown once, and nothing in it ties you to one harness: the
 `token`, `mcp_url` (the studio's MCP server) and `api_url` (the same actions over plain HTTP),
 and the `prompt`. Any MCP client, any box that calls an LLM with tools, or a script can use
 those.
 
-**Sandboxes.** `setups.pi.command` and `setups.claude_code.command` are two lines to paste
-wherever that harness is installed. They fetch the run's setup script with the token
-(`GET /api/runs/{id}/sandbox.sh?harness=pi`; the same as JSON at `/sandbox`), which makes
-`./open-studio-run-<id>/`, writes the run's prompt, its skills (the core two, its task's and
-its agent's, files and all) and the studio's MCP server (reading the token from
-`OPEN_STUDIO_TOKEN`) into it, and starts the harness there with only the run's tools. Nothing
-outside that folder is touched. The harness and its model key (e.g. `OPENROUTER_API_KEY`)
-belong to the sandbox, never to the studio. `sandbox/` at the repo root is an image that does
-this at start from two values in the kit; see `sandbox/README.md`. Another harness gets its
-own parts file beside `pi_setup.py`.
+**Sandboxes.** `setups.pi.command` and `setups.claude_code.command` are one line each, to
+paste in an empty folder wherever that harness is installed. It fetches the run's setup
+script with the token alone (`GET /api/runs/current/sandbox.sh?harness=pi`; the same as JSON
+at `/api/runs/current/sandbox`, or by id at `/api/runs/{id}/sandbox.sh`), which makes
+`./open-studio-run-<id>/`; writes the run's prompt, its AGENTS.md (`CLAUDE.md` for Claude
+Code), its skills (the core two, its task's and its agent's, files and all) and the studio's
+MCP server (reading the token from `OPEN_STUDIO_TOKEN`) into it; sets `OPEN_STUDIO_API_URL`,
+`OPEN_STUDIO_MCP_URL` and `OPEN_STUDIO_RUN`; and starts the harness there with only the run's
+tools (the `code` add-on adds a shell and file editing, `web` the harness's web tools).
+Nothing outside that folder is touched. The harness and its model key (e.g.
+`OPENROUTER_API_KEY`) belong to the sandbox, never to the studio. `sandbox/` at the repo root
+is an image that does this at start from the studio's address and the token; see
+`sandbox/README.md`. Another harness gets its own parts file beside `pi_setup.py`.
 
 **Skills** come from the agent resources: `AGENT_RESOURCES` lists folders on this machine or
 in public GitHub repositories (`github:owner/repo@ref/path`), first one winning a name. Left
@@ -159,35 +162,49 @@ see the run, agent, scopes and expiry), signed with `RUN_TOKEN_SECRET` so it can
 widened. It stops when it runs out, when the agent calls `finish_run`, when you finish it
 (`POST /api/runs/{id}/finish`), or when you pause or remove the agent. Entries and log lines
 made on it carry its `run_id`; `GET /api/runs/{id}` shows what it added and its summary, and
-the studio's runs list shows every run with its log. Outside tools (`web`, `code`, `github`)
-aren't run by the studio, so the harness enforces them (a setup's `allowed_tools`), and what
-they reach depends on the sandbox's own network and credentials.
+the studio's runs list shows every run with its log. The sandbox's own add-ons (`web`,
+`code`, `github`) aren't run by the studio, so the harness enforces them (a setup's
+`allowed_tools`), and what they reach depends on the sandbox's own network and credentials.
 
-## Toolkits (Composio)
+## Add-ons
 
-A toolkit is an outside service's tools (GitHub, Exa, Notion, ...) that an agent uses
-**through the studio**: the agent asks, the studio checks the call, then runs it on
-[Composio](https://composio.dev) with the studio's key, as an account you connected. The
-agent never holds a service's key or Composio's; its run token is the only key it has, and
-the toolkits stop with it.
+An add-on is anything an agent can be given beyond the studio, defined once on the studio's
+add-ons page (`/studio/addons`) and given to agents by name. Three are built in, the
+sandbox's own tools: `web`, `code` and `github`. Any other is an outside service's tools
+(email, calendar, Notion, Exa, ...) that agents use **through the studio**, which runs them
+on [Composio](https://composio.dev) as an account you connected. No agent ever holds a
+service's key or Composio's: its run token is the only key it has, and its add-ons stop with
+it.
 
-1. In Composio, make a project, copy its API key, and connect the accounts agents should act
-   as (a bot GitHub account, your Exa key, ...) under one user id, `open-studio` by default
-   (`COMPOSIO_USER_ID`). Each connected account has an id, `ca_...`.
-2. Put the key in deploy.toml (`[composio] api_key`), or `COMPOSIO_API_KEY` in `backend/.env`.
-3. On the studio page, give an agent a toolkit: its tools (picked from Composio's list), the
-   connected account it acts as, and pinned arguments (`owner=CollinWen; repo=open-studio,
-   proto-*`: those arguments may only take these values; `*` matches the rest).
-4. Each token gets all its agent's toolkits unless you pick fewer.
+Each add-on has a **guide**, in markdown: what it is, what it's for, how it works, what to
+watch. A new one starts from a template (`guide_templates.py`); change it on the add-ons
+page. In an agent's window you pick its add-ons and can write instructions for each ("draft
+replies; never send"). Both go into the AGENTS.md of each of its runs, so the agent knows
+what it has and how you want it used; "AGENTS.md" on the agents list shows that file.
 
-Every call is checked, in order: the token's scopes name the toolkit, the agent is granted the
-tool now (taking one back reaches live runs at once), every pinned argument holds, and the
-agent is under `AGENT_TOOLKIT_CALLS_PER_HOUR` (default 200). A refused call never leaves the
-studio. Pins only fence the arguments they name, so grant tools whose reach those arguments
-decide (GitHub's `owner` and `repo`), not ones that search everywhere. Agents call
-`list_toolkit_tools` and `call_toolkit_tool` (MCP), or `GET /api/toolkits/tools` and
-`POST /api/toolkits/tools/{tool}` with `{"arguments": {...}}` (HTTP). Without a key,
-toolkits are off and calls say so.
+Setting up Composio, once:
+
+1. In Composio, make a project and copy its API key into deploy.toml (`[composio] api_key`),
+   or `COMPOSIO_API_KEY` in `backend/.env`. Every account belongs to one Composio user,
+   `open-studio` by default (`COMPOSIO_USER_ID`).
+2. On the add-ons page, "add add-on": the name agents know it by (`email`) and the toolkit
+   as Composio names it (`gmail`). Then "connect": you sign in on Composio's own page, which
+   sends you back to the studio with the new account; the studio checks it with Composio
+   before keeping it.
+3. Decide what its tools may do **on Composio**, not here: leave the risky ones out, or have
+   them ask first. Save that as a session policy (`sc_...`) and set `COMPOSIO_POLICY`
+   (`[composio] policy`); every run's session starts from it. Without one, a run's session
+   allows every tool of its add-ons' toolkits.
+
+Each run gets a Composio session of its own, made the first time it uses an add-on: only its
+add-ons' toolkits, each acting as its add-on's connected account (`addons/relay.py`). Every
+call is checked in the studio first: the token's scopes name the add-on, its agent still has
+it (taking one away reaches live runs at once), the tool belongs to that add-on's toolkit,
+and the agent is under `AGENT_ADDON_CALLS_PER_HOUR` (default 200). Then Composio applies the
+policy. A refused call says why, in the studio's words or Composio's. Agents call
+`list_addon_tools` and `call_addon_tool` (MCP), or `GET /api/addon-tools` and
+`POST /api/addon-tools/{tool}` with `{"arguments": {...}}` (HTTP). Without a key, Composio
+add-ons are off and calls say so.
 
 ## Signing in with Google later
 
