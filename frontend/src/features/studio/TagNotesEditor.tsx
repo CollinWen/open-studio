@@ -17,6 +17,7 @@ import { LedgerRow } from "../../components/LedgerRow";
 import { SearchField } from "../../components/SearchField";
 import { WordChoice } from "../../components/WordChoice";
 import type { Tag, TagImportance } from "../../types/entry";
+import { TextEditor } from "../../components/TextEditor";
 
 interface Props {
   tags: Tag[];
@@ -77,11 +78,12 @@ function TagNotesRow({ tag }: { tag: Tag }) {
           {tag.name} <span className="quiet">{tag.count}</span>
           <span className="quiet ledger-note">{status === SAVING ? <LoadingWord>{status}</LoadingWord> : status}</span>
         </>,
-        <textarea
+        <TextEditor
+          compact
           rows={1}
           placeholder="saved when you click away"
           value={description}
-          onChange={(event) => setDescription(event.target.value)}
+          onChange={setDescription}
           onBlur={() => description !== tag.description && save({ description, importance })}
         />,
         <span className="word-list">

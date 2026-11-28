@@ -36,6 +36,7 @@ from sqlmodel import Session, SQLModel  # noqa: E402
 from app.auth.viewer import Viewer  # noqa: E402
 from app.config import settings  # noqa: E402
 from app.database import create_tables, engine  # noqa: E402
+from app.features.addons import service as addons_service  # noqa: E402
 from app.features.agent_log import service as log_service  # noqa: E402
 from app.features.agent_log.models import AgentLogLine  # noqa: E402
 from app.features.agent_log.schemas import LogLineCreate  # noqa: E402
@@ -151,7 +152,15 @@ def add_demo_agents(db: Session, by_title: dict, now: datetime) -> dict[str, str
     tokens = {}
     for name, agent in AGENTS.items():
         made = agents_service.create_agent(
-            db, AgentCreate(name=name, description=agent["description"], boards=agent["boards"])
+            db,
+            AgentCreate(
+                name=name,
+                description=agent["description"],
+                manifest=agent["manifest"],
+                skills=agent["skills"],
+                addons=agent["addons"],
+                boards=agent["boards"],
+            ),
         )
         _, tokens[name] = runs_service.start_run(
             db, RunCreate(agent=name, boards=[ALL_BOARDS], minutes=DEMO_TOKEN_MINUTES), OWNER
@@ -181,6 +190,7 @@ def wipe_local_data() -> None:
     create_tables()
     with Session(engine) as db:
         boards_service.ensure_home_board(db)
+        addons_service.ensure_builtin_addons(db)
     settings.media_dir.mkdir(parents=True, exist_ok=True)
     for file in settings.media_dir.iterdir():
         if file.is_file():

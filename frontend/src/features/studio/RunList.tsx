@@ -1,13 +1,12 @@
 /**
  * RunList: the studio's "runs": every token issued, since each is a run (one
- * session). A Ledger of them, newest first: the task kind (open, or a task)
- * with the owner's note under it (and, once it's done, the agent's summary),
- * then links to its lines in the agent log and to each entry it added; the
- * agent, with the add-ons the run may use; the boards; its state and how
- * long ago; and a link to the harness's own session (a claude.ai/code page,
- * say) when the agent left one, to watch how it worked. The agent sets that
- * link, so the site it goes to is written beside it. A run that ran out
- * without finishing is faded.
+ * session). A Ledger of them, newest first: the run's id (and, once it's
+ * done, the agent's summary), then links to its lines in the agent log and
+ * to each entry it added; the agent, with the add-ons the run may use; the
+ * boards; its state and how long ago; and a link to the harness's own
+ * session (a claude.ai/code page, say) when the agent left one, to watch
+ * how it worked. The agent sets that link, so the site it goes to is written
+ * beside it. A run that ran out without finishing is faded.
  *
  * Used by StudioPage, which loads the runs and the entries (for the titles
  * of what each run added), and narrows them to one agent on ?agent=. Tokens
@@ -73,8 +72,7 @@ export function RunList({ runs, entries, agent }: Props) {
               className={run.state === "expired" ? "is-faded" : undefined}
               cells={[
                 <>
-                  {run.kind}
-                  {run.brief && <span className="quiet ledger-note">{run.brief}</span>}
+                  <span className="quiet">{run.id}</span>
                   {run.summary && <span className="ledger-note">{run.summary}</span>}
                   <span className="ledger-note">
                     <span className="word-list">

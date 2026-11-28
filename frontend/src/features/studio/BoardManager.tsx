@@ -19,6 +19,7 @@ import { Ledger } from "../../components/Ledger";
 import { LedgerRow } from "../../components/LedgerRow";
 import type { Board } from "../../types/entry";
 import { boardPath } from "../grid/boardPath";
+import { TextEditor } from "../../components/TextEditor";
 
 interface Props {
   boards: Board[];
@@ -121,11 +122,12 @@ function BoardRow({ board }: { board: Board }) {
             <span className="quiet"> {status === SAVING ? <LoadingWord>{status}</LoadingWord> : status}</span>
           </span>
         </>,
-        <textarea
+        <TextEditor
+          compact
           rows={2}
           placeholder="what this board is for (saved when you click away)"
           value={description}
-          onChange={(event) => setDescription(event.target.value)}
+          onChange={setDescription}
           onBlur={() => description !== board.description && save({ description })}
         />,
       ]}

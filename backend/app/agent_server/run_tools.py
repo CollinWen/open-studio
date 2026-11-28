@@ -1,6 +1,6 @@
 """
-Run tools: how an agent on a run token reads its task (the owner's brief,
-its board, where to start, what it may use, when it ends), leaves a link to
+Run tools: how an agent on a run token reads its run (its boards, what it
+may use, when it ends), leaves a link to
 its harness's own session (for the owner to watch), and finishes it with a
 summary, which ends the run and its token.
 
@@ -24,9 +24,8 @@ from app.features.runs.schemas import RunOut, RunSession
 def register_run_tools(server: MCPServer) -> None:
     @server.tool()
     def get_my_run(ctx: Context) -> RunOut:
-        """Your run: the task kind, the owner's brief (in their words), the board you may add
-        to, the entry to start from, the add-ons you may use (scopes), when your token
-        stops working, and the entries you've added so far."""
+        """Your run: the boards you may add to, the add-ons you may use (scopes), when
+        your token stops working, and the entries you've added so far."""
         viewer = viewer_for(ctx)
         with Session(engine) as db:
             return runs_service.describe_run(db, _own_run(db, viewer))
@@ -51,7 +50,7 @@ def register_run_tools(server: MCPServer) -> None:
 
     @server.tool()
     def finish_run(summary: str, ctx: Context) -> RunOut:
-        """End your run when the task is done. summary: what you did and found, in a few plain
+        """End your run when your work is done. summary: what you did and found, in a few plain
         sentences, with what the owner should read first and what's still open. Your token
         stops working once this returns."""
         viewer = viewer_for(ctx)

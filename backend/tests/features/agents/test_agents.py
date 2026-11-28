@@ -3,7 +3,9 @@ Tests for agents: only the owner adds, changes, pauses and removes agents; a
 new agent has no token of its own (the owner issues it one, as a run), and
 none is ever listed; an agent's boards can be set in one change; a paused
 agent's tokens are treated as a visitor's, and removing an agent takes it
-off its boards and stops its tokens.
+off its boards and stops its tokens; its skills must be in the agent
+resources' catalog and are named in its runs, and its manifest is written
+into its runs.
 """
 
 import uuid
@@ -71,11 +73,12 @@ def test_removing_an_agent_takes_it_off_its_boards(client):
 
 def test_an_agents_skills_are_kept_and_named_in_its_runs(client):
     name = f"a-{uuid.uuid4().hex[:8]}"
-    body = {"name": name, "boards": [AGENT_BOARD], "skills": ["gathering-sources", "linking-entries"]}
+    body = {"name": name, "boards": [AGENT_BOARD], "skills": ["gathering-sources", "building"]}
     assert client.post("/api/agents", json=body, headers=OWNER_HEADERS).json()["skills"] == body["skills"]
-    assert client.post("/api/agents", json={"name": "x-bad", "skills": ["Not A Name"]}, headers=OWNER_HEADERS).status_code == 422
+    unknown = {"name": "x-bad", "skills": ["exa-search"]}
+    assert client.post("/api/agents", json=unknown, headers=OWNER_HEADERS).status_code == 422
     kit = client.post("/api/runs", json={"agent": name, "boards": ["*"]}, headers=OWNER_HEADERS).json()
-    assert "open-studio, studio-collaborator, gathering-sources, linking-entries" in kit["prompt"]
+    assert "open-studio, studio-collaborator, gathering-sources, building" in kit["prompt"]
 
 
 def test_an_agents_skills_must_be_in_the_agent_resources(client):
@@ -86,6 +89,17 @@ def test_an_agents_skills_must_be_in_the_agent_resources(client):
     client.post("/api/agents", json={"name": name}, headers=OWNER_HEADERS)
     assert client.patch(f"/api/agents/{name}", json={"skills": ["no-such-skill"]}, headers=OWNER_HEADERS).status_code == 422
     assert client.patch(f"/api/agents/{name}", json={"skills": ["building"]}, headers=OWNER_HEADERS).json()["skills"] == ["building"]
+
+
+def test_an_agents_manifest_is_kept_and_written_into_its_runs(client):
+    name = f"a-{uuid.uuid4().hex[:8]}"
+    manifest = "Objective: find the sources behind each bread entry.\nUse the web only for primary sources."
+    body = {"name": name, "boards": [AGENT_BOARD], "manifest": manifest}
+    assert client.post("/api/agents", json=body, headers=OWNER_HEADERS).json()["manifest"] == manifest
+    kit = client.post("/api/runs", json={"agent": name, "boards": ["*"]}, headers=OWNER_HEADERS).json()
+    assert manifest in kit["prompt"]
+    changed = client.patch(f"/api/agents/{name}", json={"manifest": "Tidy descriptions."}, headers=OWNER_HEADERS)
+    assert changed.json()["manifest"] == "Tidy descriptions."
 
 
 def test_the_owner_exports_every_agent_as_yaml_without_tokens(client):
@@ -99,8 +113,9 @@ def test_the_owner_exports_every_agent_as_yaml_without_tokens(client):
     text = response.text
     assert "version: 1" in text and "run." not in text
     block = text[text.index(f"  - name: {name}"):]
-    assert block.splitlines()[1:7] == [
+    assert block.splitlines()[1:8] == [
         '    description: "says \\"hi\\""',
+        '    manifest: ""',
         "    active: true",
         f'    boards: ["{AGENT_BOARD}"]',
         '    skills: ["building"]',

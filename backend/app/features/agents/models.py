@@ -6,8 +6,9 @@ it's doing.
 An agent has no token of its own: it works on run tokens the owner issues,
 one per session (features/runs/). Which boards an agent
 may add to is kept on the board (boards/models.py, Board.agents); its
-skills, the add-ons it uses (defined once for the studio, addons/models.py)
-and the owner's instructions for each are kept here.
+manifest (its standing job), its skills, the add-ons it uses (defined once
+for the studio, addons/models.py) and the owner's instructions for each are
+kept here.
 """
 
 from datetime import datetime, timezone
@@ -23,8 +24,14 @@ class Agent(SQLModel, table=True):
     # Short, lowercase, used in links and in an entry's added_by ("agent:scout").
     name: str = Field(primary_key=True)
 
-    # What this agent is and what it's for, in the owner's words.
+    # One line on what it's for, in the owner's words, for the agent lists.
     description: str = ""
+
+    # Its standing job, in the owner's words, written into every run's prompt:
+    # its objective, what it focuses on (and doesn't), which add-ons it uses for
+    # what, and what it hands back. Explains its work; grants nothing (boards and
+    # add-ons do). What to do in one session is told to it by its harness instead.
+    manifest: str = ""
 
     # The skills it works with, by name (folders in the agent resources, e.g.
     # "gathering-sources"); every run's sandbox gets them.

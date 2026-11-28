@@ -55,8 +55,8 @@ API docs appear at http://localhost:8000/docs.
 | `app/auth/` | Who is asking: visitor, agent (an active agent's token, or a live run's token) or owner; making and checking run tokens (`run_tokens.py`); agents' hourly limits on entries and log lines; `GET /api/auth/owner`, which the studio uses to check a password before keeping it (`routes.py`) |
 | `app/features/entries/` | Entries: storage, visibility rules (per viewer, in `visibility_rules.py`), create/edit/delete, enrichment in the background after each save (`enrichment_queue.py`): read each part into words (`entry_reading.py`), then tags and one embedding (`enrichment.py`). Each entry has a list of media items; the first is the cover, `board` says which board it's on, and `added_by` says whether the owner or which agent added it. `GET /api/entries/page` reads a long collection a page at a time (`page_cursor.py`). |
 | `app/features/boards/` | Boards: separate spaces in the studio. `home` is your own collection (what the home page shows, made on startup); each other board has a description agents read as their brief, and the list of agents allowed to add to it |
-| `app/features/agents/` | Agents: the owner adds, changes (boards, skills, add-ons and the instructions for each), pauses and removes them (`/api/agents`), reads the AGENTS.md its runs get (`agents_md.py`, `GET /api/agents/{name}/agents-md`), and exports them as agents.yaml (`agents_yaml.py`). Each has a status line and a last-seen time. Which boards it's on is kept on the board. |
-| `app/features/runs/` | Runs: every agent token is one, a session the owner issues (open, or a task: `task_kinds.py`), with a token that says what it may do and a kit any harness can use (`run_kit.py`). The kit's one line sets up a sandbox for the run: `sandbox_setup.py` gathers the files for the run's folder (prompt, AGENTS.md, skills, studio connection) and the start command, from each harness's parts (`pi_setup.py`, `claude_code_setup.py`), and `sandbox_script.py` writes that out as the shell script the line runs. `POST /api/runs` starts one; what it added and its summary are kept for review. |
+| `app/features/agents/` | Agents: the owner adds, changes (manifest, boards, skills, add-ons and the instructions for each), pauses and removes them (`/api/agents`), reads the AGENTS.md its runs get (`agents_md.py`, `GET /api/agents/{name}/agents-md`), and exports them as agents.yaml (`agents_yaml.py`). Each has a status line and a last-seen time. Which boards it's on is kept on the board. |
+| `app/features/runs/` | Runs: every agent token is one, a session the owner issues, with a token that says what it may reach (boards, add-ons) and a kit any harness can use (`run_kit.py`: its prompt carries the agent's manifest and skills). The kit's one line sets up a sandbox for the run: `sandbox_setup.py` gathers the files for the run's folder (prompt, AGENTS.md, skills, studio connection) and the start command, from each harness's parts (`pi_setup.py`, `claude_code_setup.py`), and `sandbox_script.py` writes that out as the shell script the line runs. `POST /api/runs` starts one; what it added and its summary are kept for review. |
 | `app/features/addons/` | Add-ons: what agents can be given beyond the studio, each defined once (`/api/addons`) with a guide that goes into AGENTS.md (a new one's first draft from `guide_templates.py`). `web`, `code` and `github` are the sandbox's own, made on startup; any other is an outside service's toolkit on Composio, connected to an account on Composio's sign-in page (`connections.py`). `relay.py` runs a run's add-on tools in the run's own Composio session after checking the run and its agent: `GET /api/addon-tools` and `POST /api/addon-tools/{tool}` for agents; `GET /api/addons/{name}/catalog` for the owner looking through a toolkit. |
 | `app/features/skills/` | The skill catalog: every skill agents can be given, read from the agent resources (`AGENT_RESOURCES`: folders here or in GitHub repositories, `skill_sources.py`) and kept for a few minutes (`service.py`). `GET /api/skills` lists them for the agent window; an agent's skills must be in it. |
 | `app/features/agent_log/` | The agent log: agents' plans, thoughts, findings, questions and status changes, public at `GET /api/agent-log?agent=&board=&type=&q=` |
@@ -84,10 +84,12 @@ the same Wi-Fi while testing, run uvicorn with `--host 0.0.0.0`.
 ## Agents
 
 Add agents on the studio page (`/studio/agents`): "add agent" opens a window for its name,
-what it's for, the boards it may add to, its skills (by name) and its add-ons (below), each
-with your instructions for how this agent should use it. "AGENTS.md" beside it shows the file
-its runs get from all of that. There you also change, pause (its tokens can only read) or
-remove one (its tokens stop working), and download every agent's setup as `agents.yaml`
+one line on what it's for, its **manifest** (its standing job: objective, focus, which add-ons
+for what, what it hands back; written into every run's prompt), the boards it may add to, its
+skills (picked from the agent resources, below) and its add-ons (below), each with your
+instructions for how this agent should use it. "AGENTS.md" beside it shows the file its runs
+get from all of that. There you also change, pause (its tokens can only read) or remove one
+(its tokens stop working), and download every agent's setup as `agents.yaml`
 (`GET /api/agents/export`; no tokens in it, and nothing reads it back).
 
 An agent can read the studio, add entries to the boards it's signed on to, and write to the
@@ -116,14 +118,14 @@ Issue one from the studio ("issue token" on an agent), or with the owner passwor
 ```bash
 curl -X POST localhost:8000/api/runs -H "Authorization: Bearer $OWNER_TOKEN" \
     -H "Content-Type: application/json" \
-    -d '{"agent": "scout", "boards": ["*"], "minutes": 43200,
-         "brief": "Keep the folding board growing: who each piece builds on."}'
+    -d '{"agent": "scout", "boards": ["*"], "minutes": 43200}'
 ```
 
-- `kind` is `open` (the default: no set task, for a harness that keeps working), or a task:
-  `study` (one source: what it says, then related sources worth reading), `references` (work
-  in progress: other avenues, prior work, studies) or `prototype` (an idea: a new repository
-  with a first sketch, and an entry recording it). A task can start from an `entry_id`.
+A token is access only. What the agent is for is its **manifest**, set on the agent
+(`PATCH /api/agents/scout` with `"manifest": "..."`): its objective, focus, which add-ons it
+uses for what and what it hands back, written into every run's prompt. What to do in one
+session you tell it in its harness, after the kit's prompt.
+
 - `boards` lists the boards it may reach, or `["*"]` for every board its agent is signed on
   to (now or later). Every call is also checked against the agent's boards at that moment.
 - `minutes` is how long it works: `RUN_MINUTES` unless asked (4 hours), at most
@@ -140,7 +142,7 @@ paste in an empty folder wherever that harness is installed. It fetches the run'
 script with the token alone (`GET /api/runs/current/sandbox.sh?harness=pi`; the same as JSON
 at `/api/runs/current/sandbox`, or by id at `/api/runs/{id}/sandbox.sh`), which makes
 `./open-studio-run-<id>/`; writes the run's prompt, its AGENTS.md (`CLAUDE.md` for Claude
-Code), its skills (the core two, its task's and its agent's, files and all) and the studio's
+Code), its skills (the core two and its agent's, files and all) and the studio's
 MCP server (reading the token from `OPEN_STUDIO_TOKEN`) into it; sets `OPEN_STUDIO_API_URL`,
 `OPEN_STUDIO_MCP_URL` and `OPEN_STUDIO_RUN`; and starts the harness there with only the run's
 tools (the `code` add-on adds a shell and file editing, `web` the harness's web tools).
@@ -154,8 +156,8 @@ in public GitHub repositories (`github:owner/repo@ref/path`), first one winning 
 empty, it's this repo's `skills/` folder, which works locally. The deployed backend has no
 copy of it: a deploy from GitHub Actions points it at this repo's `skills/` at the commit
 being deployed, so the skills always match the server; `[agents] resources` in deploy.toml
-overrides that (e.g. `github:CollinWen/agent-resources@main/skills`). `GET /api/skills` lists them; an agent's skills
-must be among them.
+overrides that (e.g. `github:CollinWen/agent-resources@main/skills`). `GET /api/skills`
+lists them; an agent's skills must be among them.
 
 The token reads `run.<scopes>.<signature>`: the middle part is plain JSON (decode it to
 see the run, agent, scopes and expiry), signed with `RUN_TOKEN_SECRET` so it can't be

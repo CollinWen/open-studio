@@ -35,14 +35,26 @@ MIGRATIONS: list[str] = [
     "DROP INDEX IF EXISTS ix_agent_token_hash",
     "ALTER TABLE agent DROP COLUMN token_hash",
     "ALTER TABLE agent ADD COLUMN skills JSON NOT NULL DEFAULT '[]'",
+    # An agent's standing job lives on the agent; runs lose their task kind, note and
+    # starting entry. SQLite can't drop a foreign-key column, so the run table is rebuilt.
+    "ALTER TABLE agent ADD COLUMN manifest VARCHAR NOT NULL DEFAULT ''",
+    "CREATE TABLE run_rebuilt (id VARCHAR NOT NULL PRIMARY KEY, agent VARCHAR NOT NULL, "
+    "boards JSON, tools JSON, started_by VARCHAR NOT NULL, created_at DATETIME NOT NULL, "
+    "expires_at DATETIME NOT NULL, finished_at DATETIME, session_url VARCHAR NOT NULL, summary VARCHAR NOT NULL)",
+    "INSERT INTO run_rebuilt SELECT id, agent, boards, tools, started_by, created_at, expires_at, "
+    "finished_at, session_url, summary FROM run",
+    "DROP TABLE run",
+    "ALTER TABLE run_rebuilt RENAME TO run",
+    "CREATE INDEX IF NOT EXISTS ix_run_agent ON run (agent)",
+    "CREATE INDEX IF NOT EXISTS ix_run_created_at ON run (created_at)",
     # Add-ons: an agent's outside tools (web, code, github) become its first add-ons, of the
     # same names (made on startup as built-in add-ons), and its runs' with them.
     "ALTER TABLE agent ADD COLUMN addons JSON NOT NULL DEFAULT '[]'",
-    "UPDATE agent SET addons = tools",
+    "UPDATE agent SET addons = COALESCE(tools, '[]')",
     "ALTER TABLE agent DROP COLUMN tools",
     "ALTER TABLE agent ADD COLUMN addon_instructions JSON NOT NULL DEFAULT '{}'",
     "ALTER TABLE run ADD COLUMN addons JSON NOT NULL DEFAULT '[]'",
-    "UPDATE run SET addons = tools",
+    "UPDATE run SET addons = COALESCE(tools, '[]')",
     "ALTER TABLE run DROP COLUMN tools",
 ]
 

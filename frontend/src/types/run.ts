@@ -1,14 +1,11 @@
 /**
  * Run data shapes, matching backend/app/features/runs/schemas.py: a run is
- * one session of one agent, which is one token (open, or with a task); what
- * the owner sends to issue one; and the kit that comes back once, with the token.
+ * one session of one agent, which is one token: what it may reach and for how
+ * long; what the owner sends to issue one; and the kit that comes back once,
+ * with the token. What the agent is for is its manifest (types/agent.ts).
  */
 
 export type RunState = "running" | "finished" | "expired";
-
-/** What a run is: no set task (open), or one of the task kinds. */
-export const RUN_KINDS = ["open", "study", "references", "prototype"] as const;
-export type RunKind = (typeof RUN_KINDS)[number];
 
 /** In a run's boards: every board its agent is signed on to, now or later. */
 export const ALL_BOARDS = "*";
@@ -16,13 +13,8 @@ export const ALL_BOARDS = "*";
 export interface Run {
   id: string;
   agent: string;
-  /** open, study, references or prototype (backend/app/features/runs/task_kinds.py). */
-  kind: RunKind;
   /** Slugs, or ["*"]: every board its agent is signed on to. */
   boards: string[];
-  /** The owner's note: what to do, in their words. */
-  brief: string;
-  entry_id: string | null;
   /** The add-ons it may use, by name: its agent's, or fewer. */
   addons: string[];
   /** "owner" or "agent:<name>". */
@@ -43,9 +35,7 @@ export interface Run {
 /** What the owner sends to issue a token. */
 export interface RunCreate {
   agent: string;
-  kind: RunKind;
   boards: string[];
-  brief: string;
   /** Leave out for all its agent's add-ons. */
   addons?: string[];
   minutes: number;

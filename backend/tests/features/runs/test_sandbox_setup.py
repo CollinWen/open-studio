@@ -24,12 +24,12 @@ from conftest import AGENT_BOARD, OWNER_HEADERS, SCOUT_HEADERS
 from app.features.skills import service as skills_service
 
 
-def _agent_with_run(client, addons=(), skills=(), kind="open", instructions=None) -> tuple[str, dict]:
+def _agent_with_run(client, addons=(), skills=(), instructions=None) -> tuple[str, dict]:
     name = f"s-{uuid.uuid4().hex[:8]}"
     body = {"name": name, "boards": [AGENT_BOARD], "addons": list(addons), "skills": list(skills),
             "addon_instructions": instructions or {}, "description": "Finds sources for the research board"}
     assert client.post("/api/agents", json=body, headers=OWNER_HEADERS).status_code == 200
-    run = {"agent": name, "boards": [AGENT_BOARD], "kind": kind, "brief": "a note from the owner"}
+    run = {"agent": name, "boards": [AGENT_BOARD]}
     kit = client.post("/api/runs", json=run, headers=OWNER_HEADERS).json()
     return name, kit
 
@@ -61,11 +61,11 @@ def test_the_owner_and_the_runs_agent_get_the_setup_and_no_one_else(client):
 
 def test_a_pi_setup_holds_the_prompt_the_skills_and_the_studio(client):
     instructions = {"web": "Prefer primary sources; quote the passage you rely on."}
-    _, kit = _agent_with_run(client, skills=["studio-writeup"], kind="study", addons=["web"], instructions=instructions)
+    _, kit = _agent_with_run(client, skills=["studio-writeup"], addons=["web"], instructions=instructions)
     setup = client.get(f"/api/runs/{kit['run']['id']}/sandbox", headers=_bearer(kit)).json()
     files = _files(setup)
     assert setup["folder"] == f"open-studio-run-{kit['run']['id']}"
-    assert setup["skills"] == ["open-studio", "studio-collaborator", "studying-sources", "gathering-sources", "studio-writeup"]
+    assert setup["skills"] == ["open-studio", "studio-collaborator", "studio-writeup"]
     assert files[".open-studio/prompt.md"].decode() == kit["prompt"]
     agents_md = files["AGENTS.md"].decode()
     assert agents_md.startswith(f"# What you have, {kit['run']['agent']}\n\nFinds sources for the research board")

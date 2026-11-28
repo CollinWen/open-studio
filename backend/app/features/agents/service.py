@@ -1,10 +1,10 @@
 """
 Agent service: the owner adding, changing, pausing and removing agents
-(their description, boards, skills, add-ons and the instructions for each
-add-on), and an agent setting its own status line. An agent's skills must
-be in the skill catalog (skills/service.py) and its add-ons defined
-(addons/service.py), so a run can always set them up. Its instructions are
-shown only to the owner.
+(their description, manifest, boards, skills, add-ons and the instructions
+for each add-on), and an agent setting its own status line. An agent's
+skills must be in the skill catalog (skills/service.py) and its add-ons
+defined (addons/service.py), so a run can always set them up. Its
+instructions are shown only to the owner.
 
 Which boards an agent may add to is kept on each board, so setting an
 agent's boards, and removing one, go through boards/service.py. Agents have
@@ -62,6 +62,7 @@ def create_agent(db: Session, data: AgentCreate) -> Agent:
     agent = Agent(
         name=data.name,
         description=data.description,
+        manifest=data.manifest,
         skills=data.skills,
         addons=list(dict.fromkeys(data.addons)),
         addon_instructions=_kept_instructions(data.addons, data.addon_instructions),

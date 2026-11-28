@@ -1,9 +1,10 @@
 /**
- * AddonGuideEditor: an add-on's guide, to write: what it is, what it's for,
- * how it works and what to watch, in markdown, as it goes into the AGENTS.md
- * of every run that has it. Above the text, what provides it and the
- * account it acts as. "save", a solid ink square, keeps it. How one agent
- * in particular should use it is written in that agent's window instead.
+ * AddonGuideEditor: an add-on's guide, to write in a TextEditor: what it
+ * is, what it's for, how it works and what to watch, in markdown, as it goes
+ * into the AGENTS.md of every run that has it. Above the text, what provides
+ * it and the account it acts as. "save", a solid ink square, keeps it. How
+ * one agent in particular should use it is written in that agent's window
+ * instead.
  *
  * Used by AddonManager, in a PaperWindow; a Composio add-on's tools are
  * listed under it (AddonToolList).
@@ -12,6 +13,7 @@
 import { useState } from "react";
 import { updateAddonGuide } from "../../api/addonsApi";
 import { LoadingWord } from "../../components/LoadingWord";
+import { TextEditor } from "../../components/TextEditor";
 import type { Addon } from "../../types/addon";
 
 interface Props {
@@ -42,12 +44,12 @@ export function AddonGuideEditor({ addon, onSaved, onCancel }: Props) {
       <p className="quiet">
         {addon.name}: {provider}.
       </p>
-      <textarea
-        rows={10}
-        aria-label="its guide"
+      <TextEditor
+        rows={8}
+        label="its guide"
         placeholder="**What it is:** … **Use it for:** … **How it works:** … **Watch:** …"
         value={guide}
-        onChange={(e) => setGuide(e.target.value)}
+        onChange={setGuide}
       />
       <p className="word-list studio-form-actions">
         <button type="submit" className="square is-primary" disabled={status === SAVING}>

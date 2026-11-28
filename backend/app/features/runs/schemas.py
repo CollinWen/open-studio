@@ -13,7 +13,6 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
-RunKindName = Literal["open", "study", "references", "prototype"]
 # In a run's boards: every board its agent is signed on to, now or later.
 ALL_BOARDS = "*"
 # The harnesses a sandbox can be set up for (runs/sandbox_setup.py).
@@ -23,12 +22,8 @@ SESSION_URL_MAX_LENGTH = 500
 
 class RunCreate(BaseModel):
     agent: str
-    # "open" (no set task) unless it's one of the task kinds.
-    kind: RunKindName = "open"
     # The boards it may add to and log on: slugs, or ["*"] for all its agent's boards.
     boards: list[str] = Field(min_length=1)
-    brief: str = ""
-    entry_id: str | None = None
     # Leave out for all its agent's add-ons; a narrower list gives fewer.
     addons: list[str] | None = None
     # How long its token works; the default and the most allowed are in config.py.
@@ -56,11 +51,8 @@ class RunSession(BaseModel):
 class RunOut(BaseModel):
     id: str
     agent: str
-    kind: str
     # Slugs, or ["*"]: every board its agent is signed on to.
     boards: list[str]
-    brief: str
-    entry_id: str | None
     # The add-ons it may use, by name.
     addons: list[str]
     started_by: str
@@ -81,7 +73,7 @@ class HarnessSetup(BaseModel):
     """A ready way to run the kit in one particular harness."""
 
     # One line to paste into a shell where that harness is installed: it sets up a sandbox
-    # folder for the run (prompt, AGENTS.md, skills, studio connection) and runs the whole task.
+    # folder for the run (prompt, AGENTS.md, skills, studio connection) and starts the agent.
     command: str
     # That harness's names for the tools the run may use.
     allowed_tools: list[str]
@@ -96,12 +88,12 @@ class RunKit(BaseModel):
     token: str
     mcp_url: str
     api_url: str
-    # The run's instructions: the task kind, the owner's brief, its limits.
+    # Who the agent is (its manifest), how to reach the studio, the run's limits.
     prompt: str
     # The shell script that sets up a sandbox for the run whose token fetches it;
     # add ?harness=claude_code for Claude Code (Pi otherwise).
     sandbox_url: str
-    # By harness name ("pi", "claude_code"): one line that sets up a sandbox and runs the task.
+    # By harness name ("pi", "claude_code"): one line that sets up a sandbox and starts the agent.
     setups: dict[str, HarnessSetup]
 
 

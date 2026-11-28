@@ -1,6 +1,7 @@
 /**
  * EntryForm: write a new entry or edit an existing one. Plain text fields,
- * no boxes. Leaving tags blank asks the backend to suggest them.
+ * no boxes; "why it's here" is a TextEditor, so it takes markdown and links.
+ * Leaving tags blank asks the backend to suggest them.
  *
  * A new entry asks only for the essentials (a title, a link, why it's here,
  * which space it goes in, who sees it, whether it's pinned first on its board); kind, date, source name, tags and pictures sit behind "more",
@@ -18,6 +19,7 @@
 import { useState } from "react";
 import { createEntry, updateEntry } from "../../api/entriesApi";
 import { LoadingWord } from "../../components/LoadingWord";
+import { TextEditor } from "../../components/TextEditor";
 import { WordChoice } from "../../components/WordChoice";
 import type { Board, CapturedLink, Entry, EntryDraft, Visibility } from "../../types/entry";
 import { LinkCaptureField } from "./LinkCaptureField";
@@ -87,11 +89,11 @@ export function EntryForm({ editing, boards, defaultBoard, onSaved, onCancel }: 
         onChange={(url) => set("source_url", url)}
         onCaptured={applyCaptured}
       />
-      <textarea
+      <TextEditor
         placeholder="why it's here"
         rows={4}
         value={draft.description}
-        onChange={(e) => set("description", e.target.value)}
+        onChange={(text) => set("description", text)}
       />
 
       {!showMore && (

@@ -2,8 +2,9 @@
  * Controls: the shapes of what can be picked, used on every page. A mode
  * word on a square, a filter in an oval, a view as a mark in a small square
  * (components/WordChoice, MarkChoice), the thin line icons and icon buttons
- * (components/Icon), the caret that opens a control band, and the search
- * field (components/SearchField). Every pick sits on the accent.
+ * (components/Icon), the caret that opens a control band, the search
+ * field (components/SearchField) and the text editor (components/TextEditor).
+ * Every pick sits on the accent.
  *
  * Part of global.css.
  */
@@ -194,5 +195,62 @@ button[type="submit"]:disabled {
 }
 
 .search-field::-webkit-search-cancel-button {
+  display: none;
+}
+
+/* The text editor: a field that grows with its text (no scrolling inside
+   it, no drag handle), underlined like every field, with a quiet row of
+   line icons under it, each in a small square like the view marks. Its preview takes the field's place and room. */
+.text-editor {
+  width: 100%;
+}
+
+.text-editor textarea,
+.text-editor-preview {
+  display: block;
+  width: 100%;
+  min-height: var(--line);
+  box-shadow: var(--underline-faint);
+}
+
+.text-editor textarea {
+  resize: none;
+  overflow: hidden;
+}
+
+.text-editor textarea:focus {
+  box-shadow: var(--underline);
+}
+
+.text-editor-preview {
+  cursor: text;
+  padding-bottom: calc(var(--line) / 2);
+}
+
+.text-editor-tools {
+  display: flex;
+  /* Each icon's square is wider than its mark; the row reaches past both
+     ends by the difference, so the marks line up with the text's edges. */
+  --icon-inset: calc((var(--mark-choice) - var(--dot-large)) / 2);
+  width: calc(100% + 2 * var(--icon-inset));
+  margin: 0 calc(-1 * var(--icon-inset));
+}
+
+/* The icons rest in soft ink, so the row stays quiet beside the text. */
+.text-editor-tools .mark-choice:not(.is-picked) {
+  color: var(--ink-soft);
+}
+
+.text-editor-tools .mark-choice:hover {
+  color: var(--ink);
+}
+
+/* The preview eye sits at the row's far end, apart from the icons that change the text. */
+.text-editor-preview-toggle {
+  margin-left: auto;
+}
+
+/* Inside a list, the line of words shows only while you're writing in it. */
+.text-editor.is-compact:not(:focus-within, .is-previewing) .text-editor-tools {
   display: none;
 }

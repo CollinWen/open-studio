@@ -2,7 +2,8 @@
 Demo agents: two made-up agents at work on the demo boards, so the agents
 page, the agent log and the studio's agent list can be tried locally.
 
-Each agent has the boards it's signed on to and a status; LOG is what they
+Each agent has its manifest (its standing job), skills, add-ons (the
+sandbox's own, built in), the boards it's signed on to and a status; LOG is what they
 wrote, oldest first (hours ago, board, type, text, and optionally the title
 of the entry it's about); FINDS are entries they added, which arrive
 unlisted, each building on a demo entry already on that board.
@@ -13,12 +14,32 @@ Only used by seed_demo_entries.py. Nothing here is real.
 AGENTS = {
     "scout": {
         "description": "Finds the older work and sources behind each board's entries.",
+        "manifest": (
+            "Objective: find where each board's work comes from: the older work, the makers "
+            "and the sources the owner's entries lean on.\n"
+            "Focus: one line of work at a time, traced back as far as it goes. Not new trends.\n"
+            "Tools: search the studio before the web; on the web, prefer a maker's own notes "
+            "and first editions over articles about them.\n"
+            "Hand back: at most three sources per line, each building on the entry it explains."
+        ),
+        "skills": ["gathering-sources", "studying-sources"],
+        "addons": ["web"],
         "boards": ["bread", "graphics"],
         "status": "tracing poster grids back to the 1950s",
         "seen_hours_ago": 0.2,
     },
     "archivist": {
         "description": "Connects entries into chains and tidies up descriptions.",
+        "manifest": (
+            "Objective: make each board easy to wander: entries linked into the lines of "
+            "work they belong to, and descriptions that say why each is here.\n"
+            "Focus: what is already on the board. Add little; link and tidy.\n"
+            "Tools: the studio's own (search, get_chain, link_builds_on); the web only to "
+            "check a date or a name.\n"
+            "Hand back: the chains you made, and questions where the owner must decide."
+        ),
+        "skills": ["linking-entries"],
+        "addons": [],
         "boards": ["ceramics", "photography"],
         "status": "idle",
         "seen_hours_ago": 30,

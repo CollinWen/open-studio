@@ -1,7 +1,7 @@
 /**
  * EntryCard: one entry in the home grid. Its cover picture (if any), then a
  * small wall label: title, "kind · date" (plus how many pictures, if several),
- * and the first lines of "why it's here". A write-up has no picture: its
+ * and the first lines of "why it's here" (its markdown marks dropped). A write-up has no picture: its
  * title is set large in its place, and its line says "write-up".
  * The whole card links to the entry's page.
  *
@@ -13,6 +13,7 @@
 import type { CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import type { Entry } from "../../types/entry";
+import { markdownToPlainText } from "../../components/markdownParser";
 import { formatDate } from "../entries/formatDate";
 import { EntryCover } from "./EntryCover";
 
@@ -37,7 +38,7 @@ export function EntryCard({ entry, faded, arriveOrder }: Props) {
         {writeup ? "write-up" : entry.kind} · {formatDate(entry.occurred_at)}
         {!writeup && entry.media.length > 1 && ` · ${entry.media.length} pictures`}
       </span>
-      {entry.description && <span className="entry-card-why">{entry.description}</span>}
+      {entry.description && <span className="entry-card-why">{markdownToPlainText(entry.description)}</span>}
     </Link>
   );
 }

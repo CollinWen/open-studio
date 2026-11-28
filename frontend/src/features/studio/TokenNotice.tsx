@@ -33,7 +33,7 @@ export function TokenNotice({ kit, onDone }: Props) {
   return (
     <div className="studio-form token-notice">
       <p>
-        {run.agent}'s token for run {run.id} ({run.kind}, on {boards}, {addons}), until{" "}
+        {run.agent}'s token for run {run.id} (on {boards}, {addons}), until{" "}
         {parseServerTime(run.expires_at).toLocaleString()}. It is shown only now: copy it before you close this.
       </p>
       <pre>{kit.token}</pre>

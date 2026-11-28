@@ -5,7 +5,10 @@
 
 export interface Agent {
   name: string;
+  /** One line on what it's for, for the agent lists. */
   description: string;
+  /** Its standing job, written into every run's prompt: objective, focus, which tools for what, what it hands back. */
+  manifest: string;
   /** A paused agent can read, but not add or log anything. */
   active: boolean;
   /** One line the agent sets on itself: what it's doing now. */

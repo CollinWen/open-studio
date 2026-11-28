@@ -1,10 +1,10 @@
 /**
- * TokenForm: issue an agent a token, which starts a run (one session).
- * Pick what it's for (open: no set task, or study, references, prototype),
- * leave a note in your own words, pick the boards it may reach (all its
- * boards, which follows the agent's boards later, or some of them), the
- * add-ons it may use (all its agent's unless you pick fewer) and how long
- * it lasts (20 minutes to 90 days; 4 hours unless you pick).
+ * TokenForm: issue an agent a token, which starts a run (one session). A
+ * token is access only: pick the boards it may reach (all its boards, which
+ * follows the agent's boards later, or some of them), the add-ons it may
+ * use (all its agent's unless you pick fewer) and how long it lasts (20
+ * minutes to 90 days; 4 hours unless you pick). What the agent is for is its
+ * manifest (AgentForm); what to do this session you tell it in its harness.
  * "issue token", a solid ink square, sends it; the kit comes back to onIssued.
  *
  * Used by AgentManager, in a PaperWindow; TokenNotice then shows the token once.
@@ -15,7 +15,7 @@ import { issueToken } from "../../api/runsApi";
 import { LoadingWord } from "../../components/LoadingWord";
 import { WordChoice } from "../../components/WordChoice";
 import type { Agent } from "../../types/agent";
-import { ALL_BOARDS, RUN_KINDS, type RunKind, type RunKit } from "../../types/run";
+import { ALL_BOARDS, type RunKit } from "../../types/run";
 import { TOKEN_LENGTHS, DEFAULT_TOKEN_LENGTH } from "./tokenLengths";
 
 interface Props {
@@ -27,8 +27,6 @@ interface Props {
 const ISSUING = "issuing";
 
 export function TokenForm({ agent, onIssued, onCancel }: Props) {
-  const [kind, setKind] = useState<RunKind>("open");
-  const [brief, setBrief] = useState("");
   const [boards, setBoards] = useState<string[]>([ALL_BOARDS]);
   // null: all its agent's add-ons.
   const [addons, setAddons] = useState<string[] | null>(null);
@@ -49,24 +47,13 @@ export function TokenForm({ agent, onIssued, onCancel }: Props) {
 
   const issue = () => {
     setStatus(ISSUING);
-    issueToken({ agent: agent.name, kind, boards, brief: brief.trim(), minutes, ...(addons ? { addons } : {}) })
+    issueToken({ agent: agent.name, boards, minutes, ...(addons ? { addons } : {}) })
       .then(onIssued)
       .catch((error) => setStatus(error instanceof Error ? error.message : String(error)));
   };
 
   return (
     <form className="studio-form" onSubmit={(event) => (event.preventDefault(), issue())}>
-      <p className="word-list" role="group" aria-label="what it's for">
-        {RUN_KINDS.map((one) => (
-          <WordChoice key={one} label={one} active={kind === one} onPick={() => setKind(one)} />
-        ))}
-      </p>
-      <textarea
-        rows={3}
-        placeholder="a note: what to do, in your words (may hold a link)"
-        value={brief}
-        onChange={(e) => setBrief(e.target.value)}
-      />
       <p className="word-list is-ovals" role="group" aria-label="boards it may reach">
         <span className="quiet">boards</span>
         <WordChoice

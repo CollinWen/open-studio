@@ -25,15 +25,12 @@
   margin-top: calc(var(--line) / 2);
 }
 
-.studio-form input,
-.studio-form textarea {
+.studio-form input {
   width: 100%;
-  resize: vertical;
   box-shadow: var(--underline-faint);
 }
 
-.studio-form input:focus,
-.studio-form textarea:focus {
+.studio-form input:focus {
   box-shadow: var(--underline);
 }
 

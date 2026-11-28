@@ -114,16 +114,15 @@ def test_setting_a_status_is_shown_and_logged(running_client):
     assert logged["structuredContent"]["result"][0]["text"] == "reading folding papers"
 
 
-def test_an_agent_on_a_run_reads_its_task_and_finishes_it(running_client):
+def test_an_agent_on_a_run_reads_its_run_and_finishes_it(running_client):
     name = f"r-{uuid.uuid4().hex[:8]}"
     agent = {"name": name, "boards": [AGENT_BOARD], "addons": ["web"]}
     running_client.post("/api/agents", json=agent, headers=OWNER_HEADERS)
-    run = {"agent": name, "kind": "references", "boards": [AGENT_BOARD], "brief": "find prior work"}
+    run = {"agent": name, "boards": [AGENT_BOARD]}
     kit = running_client.post("/api/runs", json=run, headers=OWNER_HEADERS).json()
     run_headers = {"Authorization": f"Bearer {kit['token']}"}
 
     task = _tool(running_client, "get_my_run", {}, run_headers)["structuredContent"]
-    assert task["brief"] == "find prior work"
     assert task["scopes"] == ["addon:web", f"board:{AGENT_BOARD}"]
 
     link = "https://claude.ai/code/session_abc"
