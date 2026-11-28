@@ -11,13 +11,15 @@ The rules for what a run may be given:
     (all of them unless the owner picks fewer)
   - its token works for RUN_MINUTES (or as asked, up to RUN_MINUTES_MAX)
   - its session link may only go to a site in SESSION_LINK_SITES, and only
-    while the run is live
+    while the run is live; a link that browsers could read as another site
+    (a "\", a "name@" before the host) is refused
 
 Used by runs/routes.py and agent_server/run_tools.py. The token itself is
 made in auth/run_tokens.py; the kit's prompt and command in run_kit.py.
 """
 
 from datetime import datetime, timedelta, timezone
+import re
 from urllib.parse import urlsplit
 
 from sqlmodel import Session, select
@@ -34,6 +36,8 @@ from app.features.runs.schemas import ALL_BOARDS, RunCreate, RunKit, RunOut
 
 LIST_LIMIT = 100
 SUMMARY_MAX_LENGTH = 4000
+# A session link's host: letters, digits, dots and hyphens, which browsers and Python read alike.
+_PLAIN_HOST = re.compile(r"[a-z0-9.-]+")
 
 
 class RunNotAllowedError(Exception):
@@ -162,7 +166,15 @@ def _checked_boards(db: Session, agent_viewer: Viewer, asked: list[str]) -> list
 def _is_allowed_session_site(url: str) -> bool:
     if not settings.session_link_sites:
         return True
-    host = (urlsplit(url).hostname or "").lower()
+    parts = urlsplit(url)
+    # Browsers read "\" as "/" where Python doesn't, so "https://evil.example\@claude.ai" looks
+    # like claude.ai here but opens evil.example. A session link needs no "\" and no "name@"
+    # before its host, so either is refused, as is a host Python and browsers could read apart.
+    if "\\" in url or "@" in parts.netloc:
+        return False
+    host = (parts.hostname or "").lower()
+    if not _PLAIN_HOST.fullmatch(host):
+        return False
     return any(host == site or host.endswith(f".{site}") for site in settings.session_link_sites)
 
 
