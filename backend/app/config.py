@@ -11,6 +11,8 @@ from dataclasses import dataclass
 from pathlib import Path
 
 BACKEND_DIR = Path(__file__).resolve().parent.parent
+# This repository's own skills folder: where skills are read from when AGENT_RESOURCES is empty.
+REPO_SKILLS_DIR = BACKEND_DIR.parent / "skills"
 
 
 def _load_dotenv() -> None:
@@ -38,6 +40,9 @@ class Settings:
     agent_writes_per_hour: int = int(os.environ.get("AGENT_WRITES_PER_HOUR", "60"))
     # How many lines one agent may write to the agent log per hour (plans, thoughts, findings).
     agent_log_lines_per_hour: int = int(os.environ.get("AGENT_LOG_LINES_PER_HOUR", "120"))
+    # How many add-on tools one agent may call per hour (features/addons/): each may cost a
+    # paid API call (an Exa search, say) on one of your accounts.
+    agent_addon_calls_per_hour: int = int(os.environ.get("AGENT_ADDON_CALLS_PER_HOUR", "200"))
 
     # Runs: every token an agent works with is a run (features/runs/): one session, with
     # what it may do written into it. Tokens are signed with RUN_TOKEN_SECRET; left empty, a
@@ -57,6 +62,29 @@ class Settings:
     # This API's public address, put in each run's kit so the agent knows where to connect
     # (e.g. https://api.yourdomain.com). Empty: the address the request came in on.
     public_api_url: str = os.environ.get("PUBLIC_API_URL", "")
+
+    # Agent resources: where the skills agents can be given are read from (features/skills/),
+    # comma separated, first source winning when two hold the same skill. Each is a folder
+    # on this machine, or a folder in a public GitHub repository at a branch, tag or commit:
+    # "github:owner/repo@ref/path" (e.g. github:CollinWen/open-studio@main/skills).
+    # Empty: this repository's own skills/ folder, when it's there (local development).
+    agent_resources: tuple[str, ...] = tuple(
+        source.strip() for source in os.environ.get("AGENT_RESOURCES", "").split(",") if source.strip()
+    ) or ((str(REPO_SKILLS_DIR),) if REPO_SKILLS_DIR.is_dir() else ())
+    # How long the skills read from those sources are kept before they're read again.
+    agent_resources_cache_minutes: int = int(os.environ.get("AGENT_RESOURCES_CACHE_MINUTES", "10"))
+
+    # Composio (integrations/composio_client.py): runs the tools of outside services (email,
+    # search, ...) for agents' add-ons, as accounts you connected. The key stays here: agents call
+    # through the studio (features/addons/), which checks each call against the run first.
+    # Leave the key empty to turn Composio add-ons off.
+    composio_api_key: str = os.environ.get("COMPOSIO_API_KEY", "")
+    # The Composio user your connected accounts belong to (one for the whole studio).
+    composio_user_id: str = os.environ.get("COMPOSIO_USER_ID", "open-studio")
+    # Optional: the saved session policy ("sc_...") built in Composio's dashboard (Sessions,
+    # Configs) that every run's session starts from: what's too risky for any agent lives there.
+    composio_policy: str = os.environ.get("COMPOSIO_POLICY", "")
+    composio_base_url: str = os.environ.get("COMPOSIO_BASE_URL", "https://backend.composio.dev")
 
     # OpenRouter: one key covers both the tag model and the embedding model.
     openrouter_api_key: str = os.environ.get("OPENROUTER_API_KEY", "")

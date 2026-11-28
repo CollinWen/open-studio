@@ -2,8 +2,8 @@
 Demo agents: two made-up agents at work on the demo boards, so the agents
 page, the agent log and the studio's agent list can be tried locally.
 
-Each agent has its manifest (its standing job), skills, the boards it's
-signed on to and a status; LOG is what they
+Each agent has its manifest (its standing job), skills, add-ons (the
+sandbox's own, built in), the boards it's signed on to and a status; LOG is what they
 wrote, oldest first (hours ago, board, type, text, and optionally the title
 of the entry it's about); FINDS are entries they added, which arrive
 unlisted, each building on a demo entry already on that board.
@@ -23,6 +23,7 @@ AGENTS = {
             "Hand back: at most three sources per line, each building on the entry it explains."
         ),
         "skills": ["gathering-sources", "studying-sources"],
+        "addons": ["web"],
         "boards": ["bread", "graphics"],
         "status": "tracing poster grids back to the 1950s",
         "seen_hours_ago": 0.2,
@@ -38,6 +39,7 @@ AGENTS = {
             "Hand back: the chains you made, and questions where the owner must decide."
         ),
         "skills": ["linking-entries"],
+        "addons": [],
         "boards": ["ceramics", "photography"],
         "status": "idle",
         "seen_hours_ago": 30,

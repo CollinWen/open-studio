@@ -2,7 +2,7 @@
  * CopyButton: a word that copies some text to the clipboard and says
  * "copied" for a moment after.
  *
- * Used by TokenNotice (a token and its setups).
+ * Used by TokenNotice (a token and its setups) and AgentsMdView.
  */
 
 import { useState } from "react";

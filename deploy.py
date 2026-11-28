@@ -80,6 +80,21 @@ def send_fly_secrets(config: dict, stage: bool) -> None:
         # Written into each run's kit, so agents know where to connect.
         "PUBLIC_API_URL": f"https://api.{domain}",
     }
+    # Where agents' skills are read from; the deployed backend has no copy of skills/.
+    resources = config.get("agents", {}).get("resources") or this_commits_skills()
+    if resources:
+        settings["AGENT_RESOURCES"] = resources
+    else:
+        print("Note: no [agents] resources in deploy.toml, so the deployed studio has no skills to give agents.")
+    # Optional: Composio, which runs the add-on tools agents call through the studio,
+    # with the session policy (which tools, which ask first) every run's session starts from.
+    composio = config.get("composio", {})
+    if composio.get("api_key"):
+        settings["COMPOSIO_API_KEY"] = composio["api_key"]
+    if composio.get("user_id"):
+        settings["COMPOSIO_USER_ID"] = composio["user_id"]
+    if composio.get("policy"):
+        settings["COMPOSIO_POLICY"] = composio["policy"]
     # Optional: the key run tokens are signed with. Without it one is made from owner_token.
     if secrets.get("run_token_secret"):
         settings["RUN_TOKEN_SECRET"] = secrets["run_token_secret"]
@@ -87,6 +102,13 @@ def send_fly_secrets(config: dict, stage: bool) -> None:
     secret_lines = "\n".join(f"{key}={value}" for key, value in settings.items())
     command = ["flyctl", "secrets", "import", "--app", config["fly"]["app"]]
     run(command + (["--stage"] if stage else []), cwd="backend", stdin=secret_lines)
+
+
+def this_commits_skills() -> str:
+    """This repo's skills/ at the commit being deployed, when GitHub Actions is deploying it,
+    so the studio gives agents exactly the skills that match it. Empty otherwise."""
+    repository, commit = os.environ.get("GITHUB_REPOSITORY"), os.environ.get("GITHUB_SHA")
+    return f"github:{repository}@{commit}/skills" if repository and commit else ""
 
 
 def deploy_frontend(config: dict) -> None:

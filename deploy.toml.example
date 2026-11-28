@@ -17,6 +17,18 @@ access_key_id = ""               # from the R2 API token
 secret_access_key = ""
 bucket = "open-studio-media"
 
+[agents]
+# Where agents' skills are read from (AGENT_RESOURCES): GitHub folders at a branch, comma separated.
+# Left out, a deploy from GitHub Actions uses this repo's skills/ at the commit it deploys.
+# resources = "github:CollinWen/open-studio@main/skills"
+
+[composio]
+# Optional: add-ons that are outside services' tools (email, Exa, ...), which agents use through
+# the studio and Composio runs. Leave empty for none; connect accounts on the studio's add-ons page.
+api_key = ""                     # Composio project → Settings → API key
+# user_id = "open-studio"        # the Composio user your connected accounts belong to
+# policy = "sc_..."              # a saved session policy: which tools runs may call, which ask first
+
 [secrets]
 owner_token = ""                 # your admin password; long and random
 openrouter_api_key = ""

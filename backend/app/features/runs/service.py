@@ -1,20 +1,21 @@
 """
 Run service: issuing a token, which starts a run (one session of one agent,
-with a token that says what it may do), describing one, noting where its
-harness keeps the session, and finishing it.
+with a token that says what it may do), describing one, setting up a sandbox
+for it, noting where its harness keeps the session, and finishing it.
 
 The rules for what a run may be given:
   - only the owner issues tokens; a run token can't start more runs
   - the agent must be active and signed on to each of the run's boards (or
     the run reaches all its boards, "*")
-  - its outside tools must be among those the owner granted the agent
-    (all of them unless the owner picks fewer)
+  - its add-ons must be its agent's (all of them, unless the owner picks fewer)
   - its token works for RUN_MINUTES (or as asked, up to RUN_MINUTES_MAX)
   - its session link may only go to a site in SESSION_LINK_SITES, and only
     while the run is live
 
 Used by runs/routes.py and agent_server/run_tools.py. The token itself is
-made in auth/run_tokens.py; the kit's prompt and command in run_kit.py.
+made in auth/run_tokens.py; the kit's prompt and lines in run_kit.py; the
+sandbox's files and start command in sandbox_setup.py, its AGENTS.md in
+agents/agents_md.py.
 """
 
 from datetime import datetime, timedelta, timezone
@@ -25,12 +26,16 @@ from sqlmodel import Session, select
 from app.auth.run_tokens import RunClaims, make_run_token
 from app.auth.viewer import Viewer
 from app.config import settings
+from app.features.addons import service as addons_service
 from app.features.agents import service as agents_service
+from app.features.agents.agents_md import write_agents_md
+from app.features.agents.models import Agent
 from app.features.boards import service as boards_service
 from app.features.entries import service as entries_service
 from app.features.runs.models import Run
-from app.features.runs.run_kit import build_kit
-from app.features.runs.schemas import ALL_BOARDS, RunCreate, RunKit, RunOut
+from app.features.runs.run_kit import build_kit, build_prompt, run_skill_names
+from app.features.runs.sandbox_setup import build_sandbox_setup
+from app.features.runs.schemas import ALL_BOARDS, RunCreate, RunKit, RunOut, SandboxSetup
 
 LIST_LIMIT = 100
 SUMMARY_MAX_LENGTH = 4000
@@ -54,10 +59,7 @@ def start_run(db: Session, data: RunCreate, starter: Viewer) -> tuple[Run, str]:
     agent_viewer = Viewer(role="agent", agent_name=agent.name)
     boards = _checked_boards(db, agent_viewer, data.boards)
 
-    tools = list(agent.tools) if data.tools is None else list(dict.fromkeys(data.tools))
-    missing = [tool for tool in tools if tool not in agent.tools]
-    if missing:
-        raise RunNotAllowedError(f"{agent.name} hasn't been granted: {', '.join(missing)}")
+    addons = _checked_addons(db, agent, data.addons)
 
     minutes = data.minutes or settings.run_minutes
     if minutes > settings.run_minutes_max:
@@ -68,7 +70,7 @@ def start_run(db: Session, data: RunCreate, starter: Viewer) -> tuple[Run, str]:
     run = Run(
         agent=agent.name,
         boards=boards,
-        tools=tools,
+        addons=addons,
         started_by=starter.added_by,
         expires_at=datetime.now(timezone.utc) + timedelta(minutes=minutes),
     )
@@ -80,17 +82,38 @@ def start_run(db: Session, data: RunCreate, starter: Viewer) -> tuple[Run, str]:
 
 
 def make_kit(db: Session, run: Run, token: str, api_url: str) -> RunKit:
-    """The kit for a run just started: its token, where to connect, and its prompt."""
-    api_url = settings.public_api_url or api_url
-    agent = agents_service.get_agent(db, run.agent)
-    if agent is None:
-        raise RunNotAllowedError(f"No agent {run.agent}")
-    return build_kit(describe_run(db, run), run, agent, token, api_url)
+    """The kit for a run just started: its token, where to connect, its prompt, and the
+    line that sets up a sandbox for it."""
+    agent = _agent_of(db, run)
+    return build_kit(describe_run(db, run), run, agent, token, _public(api_url), _sandbox_services(db, run))
+
+
+def make_sandbox_setup(db: Session, run: Run, harness: str, api_url: str) -> SandboxSetup:
+    """What a fresh sandbox writes and runs to start this run in this harness: its prompt,
+    skills, AGENTS.md and studio connection. Only while the run is live. Raises
+    skills_service.UnknownSkillsError if one of its skills has gone."""
+    if _state(run) != "running":
+        raise RunNotAllowedError(f"This run has {'finished' if run.finished_at else 'run out'}")
+    agent = _agent_of(db, run)
+    api_url = _public(api_url)
+    skills = run_skill_names(agent)
+    addons = [addons_service.describe_addon(addon) for addon in addons_service.find_addons(db, run.addons)]
+    agents_md = write_agents_md(run.agent, agent.description, run.boards, addons, agent.addon_instructions, skills)
+    prompt = build_prompt(run, agent, api_url)
+    return build_sandbox_setup(run, harness, prompt, skills, api_url, agents_md, _sandbox_services(db, run))
+
+
+def preview_agents_md(db: Session, agent: Agent) -> str:
+    """The AGENTS.md a run of this agent would get, on all its boards and with all its add-ons."""
+    addons = [addons_service.describe_addon(addon) for addon in addons_service.find_addons(db, agent.addons)]
+    boards = agents_service.agent_boards(db, agent)
+    return write_agents_md(agent.name, agent.description, boards, addons, agent.addon_instructions, run_skill_names(agent))
 
 
 def scopes_of(run: Run) -> list[str]:
-    """What the run's token allows, as written in it: "board:<slug>" (or "board:*") and its tools."""
-    return sorted([*(f"board:{board}" for board in run.boards), *run.tools])
+    """What the run's token allows, as written in it: "board:<slug>" (or "board:*") and
+    "addon:<name>" for each of its add-ons."""
+    return sorted([*(f"board:{board}" for board in run.boards), *(f"addon:{name}" for name in run.addons)])
 
 
 def get_run(db: Session, run_id: str) -> Run | None:
@@ -142,6 +165,35 @@ def finish_run(db: Session, run: Run, summary: str) -> Run:
         db.commit()
         db.refresh(run)
     return run
+
+
+def _agent_of(db: Session, run: Run) -> Agent:
+    """The run's agent; a run whose agent was removed has nothing to set up."""
+    agent = agents_service.get_agent(db, run.agent)
+    if agent is None:
+        raise RunNotAllowedError(f"No agent {run.agent}")
+    return agent
+
+
+def _sandbox_services(db: Session, run: Run) -> list[str]:
+    """The sandbox's own tools the run's add-ons allow (web, code, github), for its harness."""
+    return [addon.service for addon in addons_service.find_addons(db, run.addons) if addon.kind == "sandbox"]
+
+
+def _checked_addons(db: Session, agent: Agent, asked: list[str] | None) -> list[str]:
+    """All the agent's add-ons that are still defined, or the ones asked for, each the agent's."""
+    has = [addon.name for addon in addons_service.find_addons(db, agent.addons)]
+    if asked is None:
+        return has
+    missing = [name for name in dict.fromkeys(asked) if name not in has]
+    if missing:
+        raise RunNotAllowedError(f"{agent.name} doesn't have the add-ons: {', '.join(missing)}")
+    return list(dict.fromkeys(asked))
+
+
+def _public(api_url: str) -> str:
+    """The address agents reach this API at: PUBLIC_API_URL, or the one the request came in on."""
+    return (settings.public_api_url or api_url).rstrip("/")
 
 
 def _checked_boards(db: Session, agent_viewer: Viewer, asked: list[str]) -> list[str]:

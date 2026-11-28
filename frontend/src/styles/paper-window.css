@@ -1,7 +1,7 @@
 /*
  * Paper window: the one kind of overlay, a window of paper over any page
  * (components/PaperWindow.tsx), and the page fading back behind it. The
- * entry form opens in one, and so do the studio's agent and token windows.
+ * entry form opens in one, and so do the studio's add-on, agent and token windows.
  *
  * Part of global.css. The forms' own lines are studio.css.
  */

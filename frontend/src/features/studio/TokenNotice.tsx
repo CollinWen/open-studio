@@ -1,9 +1,10 @@
 /**
  * TokenNotice: a token just issued, shown this once. It says which run it
  * is, what it reaches and when it stops working, shows the token with
- * "copy", then the ways to hand it to a harness (environment, mcp, http,
- * the prompt, and ready-made setups such as a claude command), one at a
- * time, each with "copy". Closing the window forgets the token for good.
+ * "copy", then the ways to hand it to a harness, one at a time, each with
+ * "copy": first the line that sets up a sandbox for Pi or Claude Code, then
+ * environment, mcp, http and the prompt. Closing the window forgets the
+ * token for good.
  *
  * Used by AgentManager, in a PaperWindow, after TokenForm. The setups'
  * text is built in tokenSetups.ts.
@@ -27,11 +28,12 @@ export function TokenNotice({ kit, onDone }: Props) {
   const setup = setups.find((one) => one.label === shown) ?? setups[0];
   const { run } = kit;
   const boards = run.boards[0] === ALL_BOARDS ? "all its boards" : run.boards.join(", ");
+  const addons = run.addons.length ? `with ${run.addons.join(", ")}` : "with no add-ons";
 
   return (
     <div className="studio-form token-notice">
       <p>
-        {run.agent}'s token for run {run.id} (on {boards}), until{" "}
+        {run.agent}'s token for run {run.id} (on {boards}, {addons}), until{" "}
         {parseServerTime(run.expires_at).toLocaleString()}. It is shown only now: copy it before you close this.
       </p>
       <pre>{kit.token}</pre>

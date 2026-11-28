@@ -1,11 +1,12 @@
 /**
  * RunList: the studio's "runs": every token issued, since each is a run (one
- * session). A Ledger of them, newest first: the
- * run's id (and, once it's done, the agent's summary), then links to its lines in the agent log and to each entry it
- * added; the agent, the board, its state and how long ago, and a link to
- * the harness's own session (a claude.ai/code page, say) when the agent left
- * one, to watch how it worked. The agent sets that link, so the site it goes
- * to is written beside it. A run that ran out without finishing is faded.
+ * session). A Ledger of them, newest first: the run's id (and, once it's
+ * done, the agent's summary), then links to its lines in the agent log and
+ * to each entry it added; the agent, with the add-ons the run may use; the
+ * boards; its state and how long ago; and a link to the harness's own
+ * session (a claude.ai/code page, say) when the agent left one, to watch
+ * how it worked. The agent sets that link, so the site it goes to is written
+ * beside it. A run that ran out without finishing is faded.
  *
  * Used by StudioPage, which loads the runs and the entries (for the titles
  * of what each run added), and narrows them to one agent on ?agent=. Tokens
@@ -84,7 +85,10 @@ export function RunList({ runs, entries, agent }: Props) {
                     </span>
                   </span>
                 </>,
-                run.agent,
+                <>
+                  {run.agent}
+                  <span className="quiet ledger-note">{run.addons.join(", ") || "no add-ons"}</span>
+                </>,
                 run.boards[0] === ALL_BOARDS ? (
                   <span className="quiet">all its boards</span>
                 ) : (

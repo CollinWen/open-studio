@@ -3,19 +3,14 @@ Tests for agents: only the owner adds, changes, pauses and removes agents; a
 new agent has no token of its own (the owner issues it one, as a run), and
 none is ever listed; an agent's boards can be set in one change; a paused
 agent's tokens are treated as a visitor's, and removing an agent takes it
-off its boards and stops its tokens; its skills are picked from the list
-(each a folder in skills/), and its manifest is written into its runs.
+off its boards and stops its tokens; its skills must be in the agent
+resources' catalog and are named in its runs, and its manifest is written
+into its runs.
 """
 
 import uuid
-from pathlib import Path
 
 from conftest import AGENT_BOARD, OWNER_HEADERS, SCOUT_HEADERS, issue_token
-
-from app.features.agents.schemas import AGENT_SKILLS
-from app.features.runs.run_kit import BASE_SKILLS
-
-SKILLS_FOLDER = Path(__file__).resolve().parents[4] / "skills"
 
 
 def _add_agent(client, boards: list[str] | None = None) -> tuple[str, dict]:
@@ -76,7 +71,7 @@ def test_removing_an_agent_takes_it_off_its_boards(client):
     assert client.post("/api/entries", json=_entry(), headers=headers).status_code == 401
 
 
-def test_an_agents_skills_are_picked_from_the_list_and_named_in_its_runs(client):
+def test_an_agents_skills_are_kept_and_named_in_its_runs(client):
     name = f"a-{uuid.uuid4().hex[:8]}"
     body = {"name": name, "boards": [AGENT_BOARD], "skills": ["gathering-sources", "building"]}
     assert client.post("/api/agents", json=body, headers=OWNER_HEADERS).json()["skills"] == body["skills"]
@@ -86,10 +81,14 @@ def test_an_agents_skills_are_picked_from_the_list_and_named_in_its_runs(client)
     assert "open-studio, studio-collaborator, gathering-sources, building" in kit["prompt"]
 
 
-def test_every_skill_on_the_list_is_a_folder_in_skills():
-    folders = {path.parent.name for path in SKILLS_FOLDER.glob("*/SKILL.md")}
-    assert set(AGENT_SKILLS) <= folders
-    assert folders - set(AGENT_SKILLS) == set(BASE_SKILLS)
+def test_an_agents_skills_must_be_in_the_agent_resources(client):
+    name = f"a-{uuid.uuid4().hex[:8]}"
+    refused = client.post("/api/agents", json={"name": name, "skills": ["building", "no-such-skill"]}, headers=OWNER_HEADERS)
+    assert refused.status_code == 422
+    assert "no-such-skill" in refused.json()["detail"] and "building" not in refused.json()["detail"]
+    client.post("/api/agents", json={"name": name}, headers=OWNER_HEADERS)
+    assert client.patch(f"/api/agents/{name}", json={"skills": ["no-such-skill"]}, headers=OWNER_HEADERS).status_code == 422
+    assert client.patch(f"/api/agents/{name}", json={"skills": ["building"]}, headers=OWNER_HEADERS).json()["skills"] == ["building"]
 
 
 def test_an_agents_manifest_is_kept_and_written_into_its_runs(client):
@@ -105,7 +104,8 @@ def test_an_agents_manifest_is_kept_and_written_into_its_runs(client):
 
 def test_the_owner_exports_every_agent_as_yaml_without_tokens(client):
     name, _ = _add_agent(client)
-    client.patch(f"/api/agents/{name}", json={"description": 'says "hi"', "skills": ["building"]}, headers=OWNER_HEADERS)
+    changes = {"description": 'says "hi"', "skills": ["building"], "addons": ["web"], "addon_instructions": {"web": "Cite pages."}}
+    client.patch(f"/api/agents/{name}", json=changes, headers=OWNER_HEADERS)
     assert client.get("/api/agents/export").status_code == 401
     response = client.get("/api/agents/export", headers=OWNER_HEADERS)
     assert response.status_code == 200
@@ -113,11 +113,12 @@ def test_the_owner_exports_every_agent_as_yaml_without_tokens(client):
     text = response.text
     assert "version: 1" in text and "run." not in text
     block = text[text.index(f"  - name: {name}"):]
-    assert block.splitlines()[1:7] == [
+    assert block.splitlines()[1:8] == [
         '    description: "says \\"hi\\""',
         '    manifest: ""',
         "    active: true",
         f'    boards: ["{AGENT_BOARD}"]',
-        "    tools: []",
         '    skills: ["building"]',
+        '    addons: ["web"]',
+        '    addon_instructions: {"web": "Cite pages."}',
     ]

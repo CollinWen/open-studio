@@ -47,6 +47,15 @@ MIGRATIONS: list[str] = [
     "ALTER TABLE run_rebuilt RENAME TO run",
     "CREATE INDEX IF NOT EXISTS ix_run_agent ON run (agent)",
     "CREATE INDEX IF NOT EXISTS ix_run_created_at ON run (created_at)",
+    # Add-ons: an agent's outside tools (web, code, github) become its first add-ons, of the
+    # same names (made on startup as built-in add-ons), and its runs' with them.
+    "ALTER TABLE agent ADD COLUMN addons JSON NOT NULL DEFAULT '[]'",
+    "UPDATE agent SET addons = COALESCE(tools, '[]')",
+    "ALTER TABLE agent DROP COLUMN tools",
+    "ALTER TABLE agent ADD COLUMN addon_instructions JSON NOT NULL DEFAULT '{}'",
+    "ALTER TABLE run ADD COLUMN addons JSON NOT NULL DEFAULT '[]'",
+    "UPDATE run SET addons = COALESCE(tools, '[]')",
+    "ALTER TABLE run DROP COLUMN tools",
 ]
 
 

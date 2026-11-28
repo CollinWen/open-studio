@@ -1,12 +1,12 @@
 """
 Run table: one session of one agent, which is one token: what it may reach
-(its boards and outside tools), how long, and how it ended. Every token an
+(its boards and add-ons), how long, and how it ended. Every token an
 agent works with is a run; only the owner issues them. What the agent is for
 is its manifest (agents/models.py), not the run's; what to do this session
 is told to it by whatever runs it, not kept here.
 
 The run's token is never stored; it is signed (auth/run_tokens.py) and
-carries the same scopes as `tools` and `boards` here. This row is the record:
+carries the same scopes as `boards` and `addons` here. This row is the record:
 who started it, where to watch the agent work (its harness's own session
 link, set by the agent; owner-only), and the summary it leaves when it
 finishes.
@@ -34,8 +34,8 @@ class Run(SQLModel, table=True):
     # The boards it may add to and log on: slugs, or ["*"] for every board its agent is
     # signed on to. Either way, each call is also checked against the agent's boards then.
     boards: list[str] = Field(default_factory=list, sa_column=Column(JSON))
-    # Outside tools it may use (outside_tools.py).
-    tools: list[str] = Field(default_factory=list, sa_column=Column(JSON))
+    # The add-ons it may use (features/addons/), by name: its agent's, or fewer.
+    addons: list[str] = Field(default_factory=list, sa_column=Column(JSON))
 
     # "owner" or "agent:<name>": who started it.
     started_by: str

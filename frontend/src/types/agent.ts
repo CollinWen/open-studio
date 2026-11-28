@@ -17,30 +17,13 @@ export interface Agent {
   created_at: string;
   /** Boards it's signed on to. */
   boards: string[];
-  /** Outside tools its runs may be given (backend/app/features/runs/outside_tools.py). */
-  tools: OutsideTool[];
-  /** Skills it works with, picked from AGENT_SKILLS. */
-  skills: AgentSkill[];
+  /** Skills it works with, by name (folders in the agent resources). */
+  skills: string[];
+  /** The add-ons it uses, by name (types/addon.ts). */
+  addons: string[];
+  /** The owner's instructions for any of its add-ons, by add-on. Only the owner sees them; others get {}. */
+  addon_instructions: Record<string, string>;
 }
-
-/**
- * The skills the owner can pick for an agent, one folder each in skills/
- * (backend/app/features/agents/schemas.py keeps the same list). Every agent
- * also loads open-studio and studio-collaborator, so they aren't here.
- */
-export const AGENT_SKILLS = [
-  "gathering-sources",
-  "studying-sources",
-  "brainstorming",
-  "building",
-  "studio-writeup",
-  "linking-entries",
-] as const;
-export type AgentSkill = (typeof AGENT_SKILLS)[number];
-
-/** What a run may use beyond the studio: search and read the web, run code, make a GitHub repository. */
-export const OUTSIDE_TOOLS = ["web", "code", "github"] as const;
-export type OutsideTool = (typeof OUTSIDE_TOOLS)[number];
 
 export type LogLineType = "plan" | "thought" | "finding" | "question" | "status";
 

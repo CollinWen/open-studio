@@ -1,7 +1,8 @@
 """
 Agents as YAML: every agent written out as one agents.yaml file, so the
 owner can see (and keep) the whole setup in one place: each agent's
-description, manifest, whether it's active, its boards, outside tools and skills.
+description, manifest, whether it's active, its boards, skills, add-ons
+and the owner's instructions for each add-on.
 
 Export only, for visibility; the database stays the truth, and nothing reads
 this file back in. Tokens are never in it (they're runs, issued one per
@@ -32,7 +33,8 @@ def write_agents_yaml(agents: list[AgentOut]) -> str:
             f"    manifest: {json.dumps(agent.manifest, ensure_ascii=False)}",
             f"    active: {'true' if agent.active else 'false'}",
             f"    boards: {json.dumps(sorted(agent.boards))}",
-            f"    tools: {json.dumps(agent.tools)}",
             f"    skills: {json.dumps(agent.skills)}",
+            f"    addons: {json.dumps(agent.addons)}",
+            f"    addon_instructions: {json.dumps(agent.addon_instructions, ensure_ascii=False)}",
         ]
     return "\n".join(lines) + "\n"

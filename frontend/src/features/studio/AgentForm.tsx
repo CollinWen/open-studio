@@ -2,13 +2,16 @@
  * AgentForm: add an agent or change one, in plain fields: its name (only
  * when adding; it can't change later), one line on what it's for, its
  * manifest (its standing job, written into every run's prompt, in a
- * TextEditor; a starting outline is offered while it's empty), the boards it may add to, the outside
- * tools its tokens may be given (web, code, github) and the skills it works
- * with, picked from the list. Boards, tools and skills are ovals, filled when on. The last line holds "add" (or "save"), a solid ink square,
- * and "cancel".
+ * TextEditor; a starting outline is offered while it's empty), the boards it
+ * may add to, the skills it works with, picked from the agent resources
+ * (SkillPicker), and the add-ons it uses, each with the owner's instructions
+ * for it (AddonPicker). Boards, skills and add-ons are ovals, filled when
+ * on. The last line holds "add" (or "save"), a solid ink square, and
+ * "cancel".
  *
  * Used by AgentManager, in a PaperWindow. Tokens are issued separately
- * (TokenForm); an agent has none of its own.
+ * (TokenForm); an agent has none of its own. What its runs get from all of
+ * this is its AGENTS.md (AgentsMdView).
  */
 
 import { useState } from "react";
@@ -16,14 +19,18 @@ import { addAgent, updateAgent } from "../../api/agentsApi";
 import { LoadingWord } from "../../components/LoadingWord";
 import { TextEditor } from "../../components/TextEditor";
 import { WordChoice } from "../../components/WordChoice";
-import { AGENT_SKILLS, OUTSIDE_TOOLS, type Agent, type AgentSkill, type OutsideTool } from "../../types/agent";
+import type { Addon } from "../../types/addon";
+import type { Agent } from "../../types/agent";
 import type { Board } from "../../types/entry";
 import { HOME_BOARD } from "../grid/boardPath";
+import { AddonPicker } from "./AddonPicker";
+import { SkillPicker } from "./SkillPicker";
 
 interface Props {
   /** The agent to change, or null to add one. */
   agent: Agent | null;
   boards: Board[];
+  addons: Addon[];
   onSaved: () => void;
   onCancel: () => void;
 }
@@ -35,32 +42,33 @@ const MANIFEST_OUTLINE = [
   "its manifest, the job every run starts from:",
   "Objective: what it is ultimately for.",
   "Focus: what it works on, and what it leaves alone.",
-  "Tools: which it uses for what (the studio first, then the web, code or github).",
+  "Tools: which it uses for what (the studio first, then its add-ons).",
   "Hand back: what it adds and logs, and how much.",
 ].join("\n");
 
-export function AgentForm({ agent, boards, onSaved, onCancel }: Props) {
+export function AgentForm({ agent, boards, addons, onSaved, onCancel }: Props) {
   const [name, setName] = useState(agent?.name ?? "");
   const [description, setDescription] = useState(agent?.description ?? "");
   const [manifest, setManifest] = useState(agent?.manifest ?? "");
   const [onBoards, setOnBoards] = useState<string[]>(agent?.boards ?? []);
-  const [tools, setTools] = useState<OutsideTool[]>(agent?.tools ?? []);
-  // Skills no longer on the list are dropped on save, so the agent stays valid.
-  const [skills, setSkills] = useState<AgentSkill[]>(
-    (agent?.skills ?? []).filter((skill) => (AGENT_SKILLS as readonly string[]).includes(skill)),
-  );
+  const [skills, setSkills] = useState<string[]>(agent?.skills ?? []);
+  const [picked, setPicked] = useState<string[]>(agent?.addons ?? []);
+  const [instructions, setInstructions] = useState<Record<string, string>>(agent?.addon_instructions ?? {});
   const [status, setStatus] = useState("");
 
-  const toggle = <T,>(list: T[], item: T) =>
-    list.includes(item) ? list.filter((one) => one !== item) : [...list, item];
+  const toggleBoard = (slug: string) =>
+    setOnBoards(onBoards.includes(slug) ? onBoards.filter((one) => one !== slug) : [...onBoards, slug]);
 
   const save = () => {
+    // An add-on removed from the studio since is dropped (AddonPicker says so).
+    const kept = picked.filter((one) => addons.some((addon) => addon.name === one));
     const settings = {
       description: description.trim(),
       manifest: manifest.trim(),
       boards: onBoards,
-      tools,
       skills,
+      addons: kept,
+      addon_instructions: Object.fromEntries(kept.map((one) => [one, (instructions[one] ?? "").trim()])),
     };
     setStatus(SAVING);
     const saved = agent
@@ -92,34 +100,19 @@ export function AgentForm({ agent, boards, onSaved, onCancel }: Props) {
               label={board.slug}
               look="oval"
               active={onBoards.includes(board.slug)}
-              onPick={() => setOnBoards(toggle(onBoards, board.slug))}
+              onPick={() => toggleBoard(board.slug)}
             />
           ))}
       </p>
-      <p className="word-list is-ovals" role="group" aria-label="outside tools">
-        <span className="quiet">outside tools</span>
-        {OUTSIDE_TOOLS.map((tool) => (
-          <WordChoice
-            key={tool}
-            label={tool}
-            look="oval"
-            active={tools.includes(tool)}
-            onPick={() => setTools(toggle(tools, tool))}
-          />
-        ))}
-      </p>
-      <p className="word-list is-ovals" role="group" aria-label="skills">
-        <span className="quiet">skills</span>
-        {AGENT_SKILLS.map((skill) => (
-          <WordChoice
-            key={skill}
-            label={skill}
-            look="oval"
-            active={skills.includes(skill)}
-            onPick={() => setSkills(toggle(skills, skill))}
-          />
-        ))}
-      </p>
+      <SkillPicker picked={skills} onChange={setSkills} />
+      <AddonPicker
+        agent={agent?.name ?? name.trim().toLowerCase()}
+        addons={addons}
+        picked={picked}
+        instructions={instructions}
+        onPick={setPicked}
+        onInstruct={setInstructions}
+      />
       <p className="word-list studio-form-actions">
         <button type="submit" className="square is-primary" disabled={status === SAVING || (!agent && !name.trim())}>
           {agent ? "save" : "add"}

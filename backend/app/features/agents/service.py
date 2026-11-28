@@ -1,7 +1,10 @@
 """
 Agent service: the owner adding, changing, pausing and removing agents
-(their description, manifest, boards, outside tools and skills), and an agent setting its own
-status line.
+(their description, manifest, boards, skills, add-ons and the instructions
+for each add-on), and an agent setting its own status line. An agent's
+skills must be in the skill catalog (skills/service.py) and its add-ons
+defined (addons/service.py), so a run can always set them up. Its
+instructions are shown only to the owner.
 
 Which boards an agent may add to is kept on each board, so setting an
 agent's boards, and removing one, go through boards/service.py. Agents have
@@ -12,10 +15,12 @@ Used by agents/routes.py and agent_server/log_tools.py.
 
 from sqlmodel import Session, select
 
+from app.features.addons import service as addons_service
 from app.features.agents.models import Agent
 from app.features.agents.schemas import AgentCreate, AgentOut, AgentUpdate
 from app.features.boards import service as boards_service
 from app.features.boards.schemas import BoardUpdate
+from app.features.skills import service as skills_service
 
 STATUS_MAX_LENGTH = 200
 
@@ -24,28 +29,43 @@ class AgentExistsError(Exception):
     """An agent with this name is already there."""
 
 
-def list_agents(db: Session) -> list[AgentOut]:
+def list_agents(db: Session, for_owner: bool = False) -> list[AgentOut]:
     """Most recently seen first; agents never seen yet at the end, newest first."""
     agents = list(db.exec(select(Agent).order_by(Agent.created_at.desc())))
     seen = sorted((agent for agent in agents if agent.last_seen_at), key=lambda a: a.last_seen_at, reverse=True)
     never_seen = [agent for agent in agents if not agent.last_seen_at]
-    return [describe_agent(db, agent) for agent in [*seen, *never_seen]]
+    return [describe_agent(db, agent, for_owner) for agent in [*seen, *never_seen]]
 
 
 def get_agent(db: Session, name: str) -> Agent | None:
     return db.get(Agent, name)
 
 
-def describe_agent(db: Session, agent: Agent) -> AgentOut:
-    boards = [board.slug for board in boards_service.list_boards(db) if agent.name in board.agents]
-    return AgentOut(**agent.model_dump(), boards=boards)
+def describe_agent(db: Session, agent: Agent, for_owner: bool = False) -> AgentOut:
+    """The agent as the owner sees it, or (for_owner False) as everyone else does: no instructions."""
+    fields = agent.model_dump()
+    if not for_owner:
+        fields["addon_instructions"] = {}
+    return AgentOut(**fields, boards=agent_boards(db, agent))
+
+
+def agent_boards(db: Session, agent: Agent) -> list[str]:
+    """The boards it's signed on to (each board keeps its own list of agents)."""
+    return [board.slug for board in boards_service.list_boards(db) if agent.name in board.agents]
 
 
 def create_agent(db: Session, data: AgentCreate) -> Agent:
     if db.get(Agent, data.name) is not None:
         raise AgentExistsError(f"Agent {data.name} already exists")
+    skills_service.check_skill_names(data.skills)
+    addons_service.check_addon_names(db, data.addons)
     agent = Agent(
-        name=data.name, description=data.description, manifest=data.manifest, tools=data.tools, skills=data.skills
+        name=data.name,
+        description=data.description,
+        manifest=data.manifest,
+        skills=data.skills,
+        addons=list(dict.fromkeys(data.addons)),
+        addon_instructions=_kept_instructions(data.addons, data.addon_instructions),
     )
     db.add(agent)
     db.commit()
@@ -56,6 +76,15 @@ def create_agent(db: Session, data: AgentCreate) -> Agent:
 
 def update_agent(db: Session, agent: Agent, changes: AgentUpdate) -> Agent:
     fields = changes.model_dump(exclude_unset=True)
+    if fields.get("skills"):
+        skills_service.check_skill_names(fields["skills"])
+    if "addons" in fields:
+        addons_service.check_addon_names(db, fields["addons"])
+        fields["addons"] = list(dict.fromkeys(fields["addons"]))
+    if "addons" in fields or "addon_instructions" in fields:
+        fields["addon_instructions"] = _kept_instructions(
+            fields.get("addons", agent.addons), fields.get("addon_instructions", agent.addon_instructions)
+        )
     boards = fields.pop("boards", None)
     for field, value in fields.items():
         setattr(agent, field, value)
@@ -65,6 +94,11 @@ def update_agent(db: Session, agent: Agent, changes: AgentUpdate) -> Agent:
         _sign_on_to_boards(db, agent.name, boards)
     db.refresh(agent)
     return agent
+
+
+def _kept_instructions(addons: list[str], instructions: dict[str, str]) -> dict[str, str]:
+    """Only instructions for add-ons it has, and only ones with words in them."""
+    return {name: text.strip() for name, text in instructions.items() if name in addons and text.strip()}
 
 
 def _sign_on_to_boards(db: Session, name: str, slugs: list[str]) -> None:

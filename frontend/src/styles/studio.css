@@ -1,6 +1,8 @@
 /*
  * Studio: the owner's pieces (features/studio/). The lines of the studio's
- * forms (entry, agent, token), the media list editor, and a token, shown once.
+ * forms (entry, add-on, agent with its add-on instructions, token), the
+ * media list editor, an add-on's tools, and text shown whole: a token,
+ * shown once, and an agent's AGENTS.md.
  *
  * Part of global.css. The window the forms open in is paper-window.css.
  */
@@ -64,11 +66,32 @@
   flex: 1;
 }
 
-/* A token, shown once in its window, and the setups beside it. */
-.token-notice pre {
+/* The owner's instructions for one add-on, in the agent window: a caption over its box. */
+.addon-instructions {
+  display: flex;
+  flex-direction: column;
+}
+
+/* A Composio add-on's tools, under its guide: a line of room above, set off by a faint rule. */
+.addon-tools {
+  margin-top: var(--line);
+  padding-top: calc(var(--line) / 2);
+  background: var(--rule-above-faint);
+}
+
+.addon-tools > p {
   margin: 0 0 calc(var(--line) / 2);
+}
+
+/* Text shown whole in its window, in the one typeface: a token and its
+   setups, an agent's AGENTS.md. Lines wrap between words; only a word too
+   long for the line (a token) breaks inside. */
+.token-notice pre,
+.agents-md pre {
+  margin: 0 0 calc(var(--line) / 2);
+  font-family: var(--font);
   font-size: var(--size-small);
   line-height: var(--leading-small);
   white-space: pre-wrap;
-  word-break: break-all;
+  overflow-wrap: anywhere;
 }

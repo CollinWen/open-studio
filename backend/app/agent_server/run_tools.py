@@ -24,7 +24,7 @@ from app.features.runs.schemas import RunOut, RunSession
 def register_run_tools(server: MCPServer) -> None:
     @server.tool()
     def get_my_run(ctx: Context) -> RunOut:
-        """Your run: the boards you may add to, the outside tools you may use (scopes), when
+        """Your run: the boards you may add to, the add-ons you may use (scopes), when
         your token stops working, and the entries you've added so far."""
         viewer = viewer_for(ctx)
         with Session(engine) as db:
