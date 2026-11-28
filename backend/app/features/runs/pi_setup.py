@@ -55,6 +55,6 @@ def allowed_tools(services: list[str]) -> list[str]:
 
 
 def start_command(prompt_file: str, mcp_url: str, services: list[str]) -> str:
-    """The shell command that runs the task in Pi, from inside the run's folder."""
+    """The shell command that starts the agent in Pi, from inside the run's folder."""
     tools = ",".join(allowed_tools(services))
     return f'exec pi --approve --print --tools {shlex.quote(tools)} "$(cat {shlex.quote(prompt_file)})"'

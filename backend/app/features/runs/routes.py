@@ -5,7 +5,7 @@ Run endpoints:
                                session); its kit (with the token) comes back once
                                (owner only)
   GET  /api/runs?agent=        runs, newest first (owner only)
-  GET  /api/runs/{id}          one run: its brief, state, scopes, what it added
+  GET  /api/runs/{id}          one run: its boards, add-ons, state, scopes, what it added
                                (the owner, or the run's agent)
   GET  /api/runs/current/sandbox?harness=pi|claude_code
                                what a fresh sandbox needs to start the run of the

@@ -58,6 +58,6 @@ export interface RunKit {
   prompt: string;
   /** The script that sets up a sandbox for whichever run's token fetches it (?harness=claude_code for Claude Code). */
   sandbox_url: string;
-  /** By harness name ("pi", "claude_code"): one line that sets up a sandbox and runs the task. */
+  /** By harness name ("pi", "claude_code"): one line that sets up a sandbox and starts the agent. */
   setups: Record<string, HarnessSetup>;
 }

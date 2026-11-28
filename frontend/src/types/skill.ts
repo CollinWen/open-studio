@@ -12,5 +12,5 @@ export interface Skill {
   source: string;
 }
 
-/** Every run gets these before its task's skills and its agent's own (backend runs/run_kit.py). */
+/** Every run gets these before its agent's own (backend runs/run_kit.py). */
 export const CORE_SKILLS = ["open-studio", "studio-collaborator"];

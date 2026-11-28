@@ -12,8 +12,8 @@
  *                                acts as (connected on Composio's page)
  *   agents   ( /studio/agents )  add, pause, remove, issue tokens; the boards,
  *                                skills and add-ons of each, and its AGENTS.md
- *   runs     ( /studio/runs )    every token issued (each is a run): its task,
- *                                agent, boards, state, and a link to watch its
+ *   runs     ( /studio/runs )    every token issued (each is a run): its agent,
+ *                                add-ons, boards, state, and a link to watch its
  *                                harness's session; ?agent= narrows to one agent
  *
  * This page loads all six lists (for the counts) and reloads them after

@@ -45,7 +45,7 @@ def allowed_tools(services: list[str]) -> list[str]:
 
 
 def start_command(prompt_file: str, mcp_url: str, services: list[str]) -> str:
-    """The shell commands that run the task in Claude Code, from inside the run's folder.
+    """The shell commands that start the agent in Claude Code, from inside the run's folder.
     printf puts the token into the MCP config as it starts, so it's never written to a file."""
     server = {"type": "http", "url": mcp_url, "headers": {"Authorization": f"Bearer {_TOKEN_PLACE}"}}
     template = json.dumps({"mcpServers": {MCP_SERVER_NAME: server}}).replace("%", "%%").replace(_TOKEN_PLACE, "%s")

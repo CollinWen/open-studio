@@ -38,7 +38,7 @@ def write_agents_md(
         "- Its tools are already connected (the MCP server \"open-studio\"). Add-on tools that run "
         "through the studio: `list_addon_tools`, then `call_addon_tool`.\n"
         "- Without MCP: `$OPEN_STUDIO_API_URL/api`, with `Authorization: Bearer $OPEN_STUDIO_TOKEN`.\n"
-        "- Your run is `$OPEN_STUDIO_RUN`: `get_my_run` shows its task, the owner's note and when it ends.",
+        "- Your run is `$OPEN_STUDIO_RUN`: `get_my_run` shows its boards, add-ons and when it ends.",
     ]
     return "\n\n".join(sections) + "\n"
 

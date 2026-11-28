@@ -4,7 +4,7 @@ harness, from its token alone: the files for the run's own folder (its
 prompt, its AGENTS.md, its skills, how to reach the studio), the studio's
 addresses for the harness's environment, and the command that starts the
 harness there with only the run's tools. The skills are the run's
-(open-studio, studio-collaborator, its task's and its agent's), read from
+(open-studio, studio-collaborator and its agent's), read from
 the agent resources, files and all.
 
 Holds no secret: the token stays in the sandbox's OPEN_STUDIO_TOKEN. The

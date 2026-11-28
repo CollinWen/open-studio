@@ -55,7 +55,7 @@ export function SkillPicker({ picked, onChange }: Props) {
           <WordChoice key={name} label={`${name} (gone)`} look="oval" active onPick={() => toggle(name)} />
         ))}
       </p>
-      <p className="quiet">Every run also gets {CORE_SKILLS.join(" and ")}, and its task's own skills.</p>
+      <p className="quiet">Every run also gets {CORE_SKILLS.join(" and ")}.</p>
     </>
   );
 }
