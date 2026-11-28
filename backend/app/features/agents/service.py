@@ -15,6 +15,7 @@ from sqlmodel import Session, select
 from app.features.agents.models import Agent
 from app.features.agents.schemas import AgentCreate, AgentOut, AgentUpdate
 from app.features.boards import service as boards_service
+from app.features.boards.models import Board
 from app.features.boards.schemas import BoardUpdate
 
 STATUS_MAX_LENGTH = 200
@@ -29,7 +30,8 @@ def list_agents(db: Session) -> list[AgentOut]:
     agents = list(db.exec(select(Agent).order_by(Agent.created_at.desc())))
     seen = sorted((agent for agent in agents if agent.last_seen_at), key=lambda a: a.last_seen_at, reverse=True)
     never_seen = [agent for agent in agents if not agent.last_seen_at]
-    return [describe_agent(db, agent) for agent in [*seen, *never_seen]]
+    boards = boards_service.list_boards(db)  # read once, not once per agent
+    return [_describe(agent, boards) for agent in [*seen, *never_seen]]
 
 
 def get_agent(db: Session, name: str) -> Agent | None:
@@ -37,8 +39,11 @@ def get_agent(db: Session, name: str) -> Agent | None:
 
 
 def describe_agent(db: Session, agent: Agent) -> AgentOut:
-    boards = [board.slug for board in boards_service.list_boards(db) if agent.name in board.agents]
-    return AgentOut(**agent.model_dump(), boards=boards)
+    return _describe(agent, boards_service.list_boards(db))
+
+
+def _describe(agent: Agent, boards: list[Board]) -> AgentOut:
+    return AgentOut(**agent.model_dump(), boards=[board.slug for board in boards if agent.name in board.agents])
 
 
 def create_agent(db: Session, data: AgentCreate) -> Agent:

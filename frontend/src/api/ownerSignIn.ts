@@ -3,8 +3,9 @@
  * Today that's the admin password (OWNER_TOKEN in backend/.env), typed once,
  * checked with the backend (GET /api/auth/owner) and kept in this browser only
  * if it's right. A kept password is checked again when the site starts
- * (main.tsx), so one that was changed since is forgotten instead of leaving
- * owner controls that would fail. Visitors never sign in.
+ * (main.tsx, alongside the first page rather than before it), so one that
+ * was changed since is forgotten instead of leaving owner controls that
+ * would fail. Visitors never sign in.
  *
  * Everything else asks only isOwnerSignedIn() and ownerAuthorization(), so
  * moving to Google sign-in (Firebase Auth) means changing this file and
@@ -18,7 +19,7 @@ import { API_URL } from "./backendRequest";
 
 // The iPhone app signs in by writing to this key (ios/OpenStudio/StudioWebView.swift); change both together.
 const STORAGE_KEY = "open-studio-owner-token";
-// How long the start-up check may take before the site shows anyway, still signed in.
+// How long the start-up check may take before it gives up, still signed in.
 const START_CHECK_TIMEOUT_MS = 3000;
 
 export function isOwnerSignedIn(): boolean {
@@ -49,17 +50,21 @@ export async function signInWithPassword(password: string): Promise<"signed-in" 
 }
 
 /**
- * Forgets the kept password if the backend now refuses it (it was changed).
- * A slow or unreachable backend keeps it: an outage never signs the owner out.
+ * Forgets the kept password if the backend now refuses it (it was changed),
+ * and says whether it did. A slow or unreachable backend keeps it: an outage
+ * never signs the owner out.
  */
-export async function forgetRefusedPassword(): Promise<void> {
+export async function forgetRefusedPassword(): Promise<boolean> {
   const password = readPassword();
-  if (!password) return;
+  if (!password) return false;
   try {
     const response = await askIfOwner(password, AbortSignal.timeout(START_CHECK_TIMEOUT_MS));
-    if (response.status === 401) signOwnerOut();
+    if (response.status !== 401) return false;
+    signOwnerOut();
+    return true;
   } catch {
     // Unreachable or too slow: stay signed in; a save will say what's wrong.
+    return false;
   }
 }
 

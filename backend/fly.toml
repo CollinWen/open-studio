@@ -19,7 +19,8 @@ primary_region = 'ewr'
   force_https = true
   auto_stop_machines = 'stop'
   auto_start_machines = true
-  min_machines_running = 0
+  # One machine stays awake: waking a stopped one makes the first visit wait several seconds.
+  min_machines_running = 1
 
 [[vm]]
   size = 'shared-cpu-1x'
