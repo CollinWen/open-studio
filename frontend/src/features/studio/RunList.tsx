@@ -1,8 +1,7 @@
 /**
  * RunList: the studio's "runs": every token issued, since each is a run (one
  * session). A Ledger of them, newest first: the
- * task kind (open, or a task) with the owner's note under it (and, once it's done, the agent's
- * summary), then links to its lines in the agent log and to each entry it
+ * run's id (and, once it's done, the agent's summary), then links to its lines in the agent log and to each entry it
  * added; the agent, the board, its state and how long ago, and a link to
  * the harness's own session (a claude.ai/code page, say) when the agent left
  * one, to watch how it worked. The agent sets that link, so the site it goes
@@ -72,8 +71,7 @@ export function RunList({ runs, entries, agent }: Props) {
               className={run.state === "expired" ? "is-faded" : undefined}
               cells={[
                 <>
-                  {run.kind}
-                  {run.brief && <span className="quiet ledger-note">{run.brief}</span>}
+                  <span className="quiet">{run.id}</span>
                   {run.summary && <span className="ledger-note">{run.summary}</span>}
                   <span className="ledger-note">
                     <span className="word-list">

@@ -151,7 +151,14 @@ def add_demo_agents(db: Session, by_title: dict, now: datetime) -> dict[str, str
     tokens = {}
     for name, agent in AGENTS.items():
         made = agents_service.create_agent(
-            db, AgentCreate(name=name, description=agent["description"], boards=agent["boards"])
+            db,
+            AgentCreate(
+                name=name,
+                description=agent["description"],
+                manifest=agent["manifest"],
+                skills=agent["skills"],
+                boards=agent["boards"],
+            ),
         )
         _, tokens[name] = runs_service.start_run(
             db, RunCreate(agent=name, boards=[ALL_BOARDS], minutes=DEMO_TOKEN_MINUTES), OWNER

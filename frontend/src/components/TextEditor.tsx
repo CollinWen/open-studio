@@ -1,7 +1,7 @@
 /**
  * TextEditor: the one field for writing more than a line, used everywhere
  * the site takes running text (an entry's notes, a board's brief, a tag's
- * description, a run's note). It grows with what you write instead of
+ * description, an agent's manifest). It grows with what you write instead of
  * scrolling inside itself, and reads markdown: **bold**, *italic*, `code`,
  * [links](address), lists, quotes and headings.
  *
@@ -28,6 +28,8 @@ interface Props {
   value: string;
   onChange: (text: string) => void;
   placeholder?: string;
+  /** What screen readers call the field, when the placeholder is too long to (defaults to the placeholder). */
+  label?: string;
   /** The fewest lines it shows when empty. */
   rows?: number;
   /** Called when focus leaves the whole editor (field and its words), not when you click one of its words. */
@@ -53,7 +55,7 @@ const SHORTCUTS: Record<string, (field: HTMLTextAreaElement) => void> = {
   k: TOOLS[2].run,
 };
 
-export function TextEditor({ value, onChange, placeholder, rows = 3, onBlur, autoFocus, compact }: Props) {
+export function TextEditor({ value, onChange, placeholder, label, rows = 3, onBlur, autoFocus, compact }: Props) {
   const fieldRef = useRef<HTMLTextAreaElement>(null);
   const [previewing, setPreviewing] = useState(false);
 
@@ -104,7 +106,7 @@ export function TextEditor({ value, onChange, placeholder, rows = 3, onBlur, aut
           rows={rows}
           value={value}
           placeholder={placeholder}
-          aria-label={placeholder}
+          aria-label={label ?? placeholder}
           autoFocus={autoFocus}
           onChange={(event) => onChange(event.target.value)}
           onKeyDown={onKeyDown}
