@@ -1,21 +1,22 @@
 /**
  * Calls to the backend's agent endpoints (backend/app/features/agents/routes.py):
  * every agent and what it's doing (anyone), and, for the owner, adding,
- * changing (description, boards, outside tools, skills), pausing and removing
+ * changing (description, manifest, boards, outside tools, skills), pausing and removing
  * agents, and every agent as agents.yaml. Agents have no token of their own:
  * tokens are runs (runsApi.ts).
  */
 
-import type { Agent, OutsideTool } from "../types/agent";
+import type { Agent, AgentSkill, OutsideTool } from "../types/agent";
 import { backendRequest } from "./backendRequest";
 
 export const fetchAgents = () => backendRequest<Agent[]>("/api/agents");
 
 export interface AgentSettings {
   description: string;
+  manifest: string;
   boards: string[];
   tools: OutsideTool[];
-  skills: string[];
+  skills: AgentSkill[];
 }
 
 export const addAgent = (agent: { name: string } & AgentSettings) =>

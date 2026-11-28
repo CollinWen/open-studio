@@ -1,14 +1,14 @@
 """
 Run service: issuing a token, which starts a run (one session of one agent,
-open or with a task, with a token that says what it may do), describing one,
-noting where its harness keeps the session, and finishing it.
+with a token that says what it may do), describing one, noting where its
+harness keeps the session, and finishing it.
 
 The rules for what a run may be given:
   - only the owner issues tokens; a run token can't start more runs
   - the agent must be active and signed on to each of the run's boards (or
     the run reaches all its boards, "*")
   - its outside tools must be among those the owner granted the agent
-  - it may start from an entry only if the agent can open that entry
+    (all of them unless the owner picks fewer)
   - its token works for RUN_MINUTES (or as asked, up to RUN_MINUTES_MAX)
   - its session link may only go to a site in SESSION_LINK_SITES, and only
     while the run is live
@@ -31,7 +31,6 @@ from app.features.entries import service as entries_service
 from app.features.runs.models import Run
 from app.features.runs.run_kit import build_kit
 from app.features.runs.schemas import ALL_BOARDS, RunCreate, RunKit, RunOut
-from app.features.runs.task_kinds import TASK_KINDS
 
 LIST_LIMIT = 100
 SUMMARY_MAX_LENGTH = 4000
@@ -55,16 +54,10 @@ def start_run(db: Session, data: RunCreate, starter: Viewer) -> tuple[Run, str]:
     agent_viewer = Viewer(role="agent", agent_name=agent.name)
     boards = _checked_boards(db, agent_viewer, data.boards)
 
-    if data.tools is not None:
-        tools = list(data.tools)
-    else:
-        tools = list(agent.tools) if data.kind == "open" else list(TASK_KINDS[data.kind].tools)
+    tools = list(agent.tools) if data.tools is None else list(dict.fromkeys(data.tools))
     missing = [tool for tool in tools if tool not in agent.tools]
     if missing:
         raise RunNotAllowedError(f"{agent.name} hasn't been granted: {', '.join(missing)}")
-
-    if data.entry_id and entries_service.get_entry(db, data.entry_id, agent_viewer) is None:
-        raise RunNotAllowedError(f"{agent.name} can't open entry {data.entry_id} (missing or private)")
 
     minutes = data.minutes or settings.run_minutes
     if minutes > settings.run_minutes_max:
@@ -74,10 +67,7 @@ def start_run(db: Session, data: RunCreate, starter: Viewer) -> tuple[Run, str]:
 
     run = Run(
         agent=agent.name,
-        kind=data.kind,
         boards=boards,
-        brief=data.brief.strip(),
-        entry_id=data.entry_id or None,
         tools=tools,
         started_by=starter.added_by,
         expires_at=datetime.now(timezone.utc) + timedelta(minutes=minutes),
@@ -91,11 +81,11 @@ def start_run(db: Session, data: RunCreate, starter: Viewer) -> tuple[Run, str]:
 
 def make_kit(db: Session, run: Run, token: str, api_url: str) -> RunKit:
     """The kit for a run just started: its token, where to connect, and its prompt."""
-    agent_viewer = Viewer(role="agent", agent_name=run.agent)
-    start = entries_service.get_entry(db, run.entry_id, agent_viewer) if run.entry_id else None
     api_url = settings.public_api_url or api_url
     agent = agents_service.get_agent(db, run.agent)
-    return build_kit(describe_run(db, run), run, token, api_url, start, agent.skills if agent else [])
+    if agent is None:
+        raise RunNotAllowedError(f"No agent {run.agent}")
+    return build_kit(describe_run(db, run), run, agent, token, api_url)
 
 
 def scopes_of(run: Run) -> list[str]:
